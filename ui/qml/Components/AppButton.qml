@@ -23,25 +23,34 @@ import QtQuick.Controls
 Button {
     id: control
     
+    // Design for Driving: Minimum touch target 76 x 76dp
+    implicitWidth: 76
+    implicitHeight: 76
+    
     contentItem: Text {
         text: control.text
-        font.pixelSize: Theme.fontSizeBody
+        // Primary text: 24dp minimum per guidelines
+        font.pixelSize: 24
         font.bold: true
+        // Ensure 4.5:1 contrast ratio
         color: control.pressed ? Theme.primary : (control.hovered ? Theme.primaryVariant : Theme.textPrimary)
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
+        elide: Text.ElideRight
     }
     
     background: Rectangle {
-        implicitWidth: 120
-        implicitHeight: 48
+        implicitWidth: 76
+        implicitHeight: 76
+        // High contrast background for visibility
         color: control.pressed ? Theme.surfaceVariant : (control.hovered ? Theme.surface : "transparent")
         border.color: Theme.primary
         border.width: 2
-        radius: Theme.radiusMd
+        radius: 4  // 4dp border radius
         
+        // Quick feedback (250ms requirement)
         Behavior on color {
-            ColorAnimation { duration: Theme.animationDuration }
+            ColorAnimation { duration: 150 }
         }
     }
 }

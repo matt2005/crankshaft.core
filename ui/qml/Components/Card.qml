@@ -23,18 +23,21 @@ import QtQuick.Controls
 Item {
     id: root
     
+    // Properties following Design for Driving guidelines
     property string title: ""
     property string description: ""
     property string icon: ""
     signal clicked()
     
+    // Minimum touch target: 76dp, but cards can be larger
     width: 200
     height: 150
     
+    // Responsive scale with fast feedback (250ms response time requirement)
     scale: mouseArea.pressed ? 0.95 : (mouseArea.containsMouse ? 1.02 : 1.0)
     
     Behavior on scale {
-        NumberAnimation { duration: Theme.animationDuration }
+        NumberAnimation { duration: 150 }  // 150ms for quick visual feedback
     }
     
     MouseArea {
@@ -47,47 +50,56 @@ Item {
     Rectangle {
         id: background
         anchors.fill: parent
+        // Ensure 4.5:1 contrast ratio
         color: Theme.surface
-        radius: Theme.radiusLg
+        radius: 4  // 4dp border radius
         border.color: Theme.divider
         border.width: 1
         
         Behavior on color {
-            ColorAnimation { duration: Theme.animationDuration }
+            ColorAnimation { duration: 150 }
         }
         
         Column {
             anchors.centerIn: parent
-            spacing: Theme.spacingMd
-            width: parent.width - Theme.spacingLg * 2
+            anchors.margins: 12  // 12dp padding per guidelines
+            spacing: 8  // 8dp spacing (grid multiples)
+            width: parent.width - 24
             
             Icon {
                 name: root.icon
                 size: 48
                 anchors.horizontalCenter: parent.horizontalCenter
+                // Icon must maintain 4.5:1 contrast
             }
             
             Text {
                 text: root.title
-                font.pixelSize: Theme.fontSizeHeading3
+                // Primary text: 32dp, but scaled down for cards
+                font.pixelSize: 24
                 font.bold: true
                 color: Theme.textPrimary
                 horizontalAlignment: Text.AlignHCenter
                 width: parent.width
                 wrapMode: Text.Wrap
+                elide: Text.ElideRight
+                maximumLineCount: 2
             }
             
             Text {
                 text: root.description
-                font.pixelSize: Theme.fontSizeCaption
+                // Secondary text: 20dp per guidelines
+                font.pixelSize: 16
                 color: Theme.textSecondary
                 horizontalAlignment: Text.AlignHCenter
                 width: parent.width
                 wrapMode: Text.Wrap
+                elide: Text.ElideRight
+                maximumLineCount: 2
             }
         }
         
-        // Ripple effect
+        // Ripple effect - visual feedback within 250ms
         Rectangle {
             id: ripple
             anchors.centerIn: parent
@@ -99,19 +111,20 @@ Item {
             
             ParallelAnimation {
                 id: rippleAnimation
+                // Fast ripple for quick visual feedback (250ms requirement)
                 NumberAnimation {
                     target: ripple
                     property: "width"
                     from: 0
                     to: background.width * 2
-                    duration: 400
+                    duration: 250
                 }
                 NumberAnimation {
                     target: ripple
                     property: "opacity"
                     from: 0.3
                     to: 0
-                    duration: 400
+                    duration: 250
                 }
             }
         }

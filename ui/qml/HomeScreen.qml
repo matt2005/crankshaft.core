@@ -37,97 +37,142 @@ Page {
         
         RowLayout {
             anchors.fill: parent
-            anchors.margins: Theme.spacingMd
+            anchors.margins: 16
+            spacing: 16
             
             Text {
                 text: Strings.appTitle
-                font.pixelSize: Theme.fontSizeHeading2
+                font.pixelSize: 32
                 font.bold: true
                 color: Theme.textPrimary
                 Layout.fillWidth: true
             }
             
             AppButton {
-                text: Strings.buttonSettings
+                text: "⚙"
+                implicitWidth: 76
+                implicitHeight: 76
                 onClicked: stackView.push(settingsScreen)
             }
         }
     }
     
-    // Main content
+    // Main content area following Design for Driving guidelines
     ColumnLayout {
-        anchors.centerIn: parent
-        spacing: Theme.spacingXl
+        anchors.fill: parent
+        anchors.margins: 16
+        spacing: 16
         
-        Text {
-            text: Strings.homeWelcome
-            font.pixelSize: Theme.fontSizeHeading1
-            font.bold: true
-            color: Theme.textPrimary
-            Layout.alignment: Qt.AlignHCenter
+        // Status bar - Primary driving information
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: 64
+            color: Theme.surface
+            radius: 4
+            
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 12
+                spacing: 12
+                
+                Text {
+                    text: Strings.homeWelcome
+                    font.pixelSize: 28
+                    font.bold: true
+                    color: Theme.textPrimary
+                    Layout.fillWidth: true
+                }
+                
+                Text {
+                    text: Qt.formatTime(new Date(), "hh:mm")
+                    font.pixelSize: 20
+                    color: Theme.textSecondary
+                }
+            }
         }
         
-        GridLayout {
-            columns: 2
-            rowSpacing: Theme.spacingMd
-            columnSpacing: Theme.spacingMd
-            Layout.alignment: Qt.AlignHCenter
+        // Primary action cards (60% of screen) - Navigation and Media
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.preferredHeight: parent.height * 0.6
+            color: "transparent"
             
-            Card {
-                title: Strings.cardNavigationTitle
-                description: Strings.cardNavigationDesc
-                icon: "navigation"
-                Layout.preferredWidth: 250
-                Layout.preferredHeight: 200
+            GridLayout {
+                anchors.fill: parent
+                columns: 2
+                rowSpacing: 12
+                columnSpacing: 12
                 
-                onClicked: {
-                    wsClient.publish("ui/navigation/opened", {})
+                // Navigation - Primary driving task
+                Card {
+                    title: Strings.cardNavigationTitle
+                    description: Strings.cardNavigationDesc
+                    icon: "navigation"
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.minimumHeight: 120
+                    
+                    onClicked: {
+                        wsClient.publish("ui/navigation/opened", {})
+                    }
+                }
+                
+                // Phone - Secondary driving task
+                Card {
+                    title: Strings.cardPhoneTitle
+                    description: Strings.cardPhoneDesc
+                    icon: "phone"
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.minimumHeight: 120
+                    
+                    onClicked: {
+                        wsClient.publish("ui/phone/opened", {})
+                    }
+                }
+                
+                // Media - Entertainment
+                Card {
+                    title: Strings.cardMediaTitle
+                    description: Strings.cardMediaDesc
+                    icon: "music"
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.minimumHeight: 120
+                    
+                    onClicked: {
+                        wsClient.publish("ui/media/opened", {})
+                    }
+                }
+                
+                // Android Auto
+                Card {
+                    title: Strings.cardAndroidAutoTitle
+                    description: Strings.cardAndroidAutoDesc
+                    icon: "phone"
+                    Layout.fillWidth: true
+                    Layout.fillHeight: true
+                    Layout.minimumHeight: 120
+                    
+                    onClicked: {
+                        stackView.push(androidautoScreen, { stack: stackView })
+                    }
                 }
             }
+        }
+        
+        // Secondary action - Settings (40% of screen)
+        Card {
+            title: Strings.cardSystemTitle
+            description: Strings.cardSystemDesc
+            icon: "settings"
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumHeight: 100
             
-            Card {
-                title: Strings.cardMediaTitle
-                description: Strings.cardMediaDesc
-                icon: "music"
-                Layout.preferredWidth: 250
-                Layout.preferredHeight: 200
-                
-                onClicked: {
-                    wsClient.publish("ui/media/opened", {})
-                }
-            }
-            
-            Card {
-                title: Strings.cardPhoneTitle
-                description: Strings.cardPhoneDesc
-                icon: "phone"
-                Layout.preferredWidth: 250
-                Layout.preferredHeight: 200
-                
-                onClicked: {
-                    wsClient.publish("ui/phone/opened", {})
-                }
-            }
-            Card {
-                title: Strings.cardAndroidAutoTitle
-                description: Strings.cardAndroidAutoDesc
-                icon: "phone"
-                Layout.preferredWidth: 250
-                Layout.preferredHeight: 200
-                onClicked: {
-                    stackView.push(androidautoScreen, { stack: stackView })
-                }
-            }
-            Card {
-                title: Strings.cardSystemTitle
-                description: Strings.cardSystemDesc
-                icon: "settings"
-                Layout.preferredWidth: 250
-                Layout.preferredHeight: 200
-                
-                onClicked: {
-                    stackView.push(settingsScreen)
-                }
+            onClicked: {
+                stackView.push(settingsScreen)
             }
         }
     }

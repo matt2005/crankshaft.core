@@ -590,6 +590,43 @@ All code must include GPL v3 license header (see existing files for template).
 - [WebSocket Protocol](https://datatracker.ietf.org/doc/html/rfc6455)
 - [Catch2 Documentation](https://github.com/catchorg/Catch2/tree/v2.x)
 - [Material Design](https://material.io/design)
+- [Google Design for Driving](https://developers.google.com/cars/design)
+- [UI Guidelines](./UI_GUIDELINES.md)
+
+---
+
+## UI Design Guidelines
+
+All UI components must follow the **Design for Driving** principles from Google to ensure safety, accessibility, and usability whilst driving. Refer to `docs/UI_GUIDELINES.md` for comprehensive guidelines covering:
+
+- **Interaction Principles:** Keep information glanceable (2-second rule), encourage hands-on driving, prioritise driving tasks, discourage distraction
+- **Visual Principles:** Legible text (24dp minimum), large touch targets (76×76dp minimum), consistent UI elements, high contrast (4.5:1 ratio)
+- **Typography:** Font scales, sizes, weights, and colour specifications
+- **Spacing & Layout:** Grid systems (8dp multiples), padding, margins, responsive layouts
+- **Colours:** Light/dark mode colour palettes with high contrast requirements
+- **Components:** Button sizing, card layouts, text fields, toggles, and accessibility
+- **Accessibility:** Keyboard navigation, screen readers, high contrast modes, voice support
+
+### Key Rules for Automotive UI
+
+1. **Touch Targets:** All interactive elements must be ≥76×76dp
+2. **Response Time:** System feedback within 250ms of user input
+3. **Text Length:** Limit text to ≤120 characters for glanceability
+4. **Contrast:** All text/icons must have ≥4.5:1 contrast ratio
+5. **Fonts:** Primary text 24dp+, secondary text 20dp+, avoid thin fonts
+6. **Spacing:** Use 8dp grid system for all spacing
+7. **No Distraction:** Disable games, auto-scrolling content, and non-essential features during driving
+8. **Voice Support:** Implement voice commands for critical functions
+9. **Night Mode:** Use negative polarity (light text on dark) for nighttime
+
+### UI Development Workflow
+
+1. Review `docs/UI_GUIDELINES.md` before starting new UI components
+2. Ensure all components follow the guidelines checklist
+3. Test contrast ratios with WebAIM Contrast Checker
+4. Test on automotive displays (day/night, high brightness)
+5. Verify response times with QML profiler
+6. Validate keyboard and voice interaction support
 
 ---
 
