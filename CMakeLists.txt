@@ -25,6 +25,13 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 # Enable QML language server configuration
 set(QT_QML_GENERATE_QMLLS_INI ON CACHE BOOL "Generate .qmllint.ini for QML language server" FORCE)
 
+# Add custom CMake modules
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+# Download Material Design Icons font
+include(DownloadMaterialDesignIcons)
+download_material_design_icons()
+
 # Find Qt6 packages
 find_package(Qt6 REQUIRED COMPONENTS Core Network WebSockets Gui Qml Quick)
 

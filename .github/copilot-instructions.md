@@ -62,6 +62,7 @@ The project will have a additional extension to support AndroidAuto using AASDK,
 
 - A toggle is provided to switch between light and dark mode.
 - Application should have a modern and clean design.
+- follow Design for Driving on https://developers.google.com/cars
 
 
 ## Commits

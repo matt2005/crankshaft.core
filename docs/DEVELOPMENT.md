@@ -87,6 +87,41 @@ cd build && cpack -G DEB
 - Tests: `build/tests/test_eventbus`, `build/tests/test_websocket`
 - Packages: `build/crankshaft-core_*.deb`, `build/crankshaft-ui_*.deb`
 
+### Material Design Icons
+
+The build system automatically downloads and includes the [Material Design Icons](https://materialdesignicons.com/) font (TTF format) during compilation. This font provides professional, consistent icons used throughout the UI.
+
+**Font Details:**
+- **Name:** Material Design Icons
+- **Version:** 7.4.47+
+- **Source:** https://github.com/Templarian/MaterialDesign
+- **Installation:** Fonts are automatically installed to `/usr/share/fonts/truetype/material-design-icons/` when installing the DEB package
+- **Development:** Font is cached in `build/ui/fonts/` during builds
+
+**Using Icons in QML:**
+The `Icon` component in `ui/qml/Components/Icon.qml` provides a convenient way to render icons:
+
+```qml
+import Crankshaft
+
+Icon {
+    name: "music"           // Icon name from Material Design Icons
+    size: 24                // Icon size in pixels
+    color: Theme.textColor  // Color
+}
+```
+
+**Available Icon Names:**
+Common icon names mapped to Material Design Icons include:
+- Navigation: `navigation`, `arrow-left`, `arrow-right`, `menu`, `close`
+- Media: `music`, `play`, `pause`, `stop`, `volume`, `mute`
+- Communication: `phone`, `message`, `bluetooth`
+- Home & Settings: `home`, `settings`, `gear`
+- Status: `star`, `heart`, `check`, `error`
+- Actions: `back`, `forward`, `refresh`, `search`, `add`, `remove`, `download`, `upload`, `info`, `help`
+
+For a complete list of available icons, visit: https://materialdesignicons.com/
+
 ---
 
 ## Running

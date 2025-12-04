@@ -18,6 +18,7 @@
  */
 
 import QtQuick
+import QtQuick.Controls
 
 Item {
     id: root
@@ -29,28 +30,63 @@ Item {
     width: size
     height: size
     
-    // Placeholder for Material Design Icons
-    // In a real implementation, this would load SVG icons or use an icon font
     Text {
         anchors.fill: parent
-        text: getIconChar(root.name)
+        text: getIcon(root.name)
         font.pixelSize: root.size
-        font.family: "Material Design Icons"
         color: root.color
         horizontalAlignment: Text.AlignHCenter
         verticalAlignment: Text.AlignVCenter
     }
     
-    function getIconChar(iconName) {
-        // Map icon names to unicode characters (placeholder)
+    function getIcon(iconName) {
+        // Icon mappings using Unicode characters for better compatibility
         const iconMap = {
+            // Navigation & UI
             "navigation": "🧭",
-            "music": "🎵",
-            "phone": "📱",
-            "settings": "⚙️",
-            "home": "🏠",
-            "back": "←"
-        }
-        return iconMap[iconName] || "?"
+            "arrow-left": "←",
+            "arrow-right": "→",
+            "close": "✕",
+            "menu": "☰",
+            
+            // Media & Entertainment
+            "music": "♫",
+            "play": "▶",
+            "pause": "⏸",
+            "stop": "⏹",
+            "volume": "🔊",
+            "mute": "🔇",
+            
+            // Communication
+            "phone": "☎",
+            "call": "📞",
+            "message": "💬",
+            "bluetooth": "🔵",
+            
+            // Home & Settings
+            "home": "⌂",
+            "settings": "⚙",
+            "gear": "⚙",
+            
+            // Status
+            "star": "★",
+            "heart": "♥",
+            "check": "✓",
+            "error": "⚠",
+            
+            // Common Actions
+            "back": "◄",
+            "forward": "►",
+            "refresh": "🔄",
+            "search": "🔍",
+            "add": "✚",
+            "remove": "✕",
+            "download": "⬇",
+            "upload": "⬆",
+            "info": "ⓘ",
+            "help": "?"
+        };
+        
+        return iconMap[iconName] || "?";
     }
 }

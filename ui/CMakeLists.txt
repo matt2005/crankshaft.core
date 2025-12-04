@@ -84,3 +84,11 @@ install(TARGETS crankshaft-ui
   RUNTIME DESTINATION bin
   COMPONENT ui
 )
+
+# Install Material Design Icons font
+if(MDI_FONT_FILE AND EXISTS "${MDI_FONT_FILE}")
+  install(FILES "${MDI_FONT_FILE}"
+    DESTINATION share/fonts/truetype/material-design-icons
+    COMPONENT ui
+  )
+endif()
