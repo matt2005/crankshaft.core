@@ -228,7 +228,15 @@ crankshaft-mvp/
 │   ├── EventBus.h/.cpp         # Pub/sub message bus
 │   ├── WebSocketServer.h/.cpp  # WebSocket server
 │   ├── ConfigService.h/.cpp    # Configuration service
-│   └── Logger.h/.cpp           # Logging service
+│   ├── Logger.h/.cpp           # Logging service
+│   └── hal/                    # Hardware Abstraction Layer
+│       ├── VehicleHAL.h/.cpp   # Vehicle hardware interface
+│       ├── HostHAL.h/.cpp      # Host/system hardware interface
+│       ├── DeviceHAL.h/.cpp    # Device hardware interfaces
+│       ├── MockVehicleHAL.h/.cpp    # Mock vehicle for testing
+│       ├── MockHostHAL.h/.cpp       # Mock host for testing
+│       ├── MockDeviceHAL.h/.cpp     # Mock devices for testing
+│       └── HALManager.h/.cpp   # HAL orchestrator (singleton)
 ├── ui/                         # UI frontend (Qt/QML)
 │   ├── CMakeLists.txt
 │   ├── main.cpp                # Entry point
@@ -267,6 +275,110 @@ crankshaft-mvp/
 
 ---
 
+## Hardware Abstraction Layer (HAL)
+
+Crankshaft uses a three-tier Hardware Abstraction Layer inspired by Android Automotive to provide flexible hardware integration.
+
+### Overview
+
+The HAL system consists of:
+
+1. **Vehicle HAL** - Vehicle hardware interface (speed, fuel, engine, climate, etc.)
+2. **Host HAL** - System/host hardware interface (time, device info, connectivity, etc.)
+3. **Device HAL** - Hardware device interfaces (CAN bus, I2C, GPIO, UART, GPS, etc.)
+4. **HAL Manager** - Singleton orchestrator managing all HALs
+
+### Quick Start
+
+The system uses realistic **mock implementations by default** for development and testing:
+
+```cpp
+// In core/main.cpp, HALManager is already initialized
+HALManager &halManager = HALManager::instance();
+// Mock Vehicle/Host/Device HALs created automatically
+
+// Get vehicle property
+QVariant speed = halManager.getVehicleProperty(VehicleHAL::PropertyType::Speed);
+
+// Subscribe to property changes (automatically broadcast to EventBus)
+QObject::connect(&halManager, &HALManager::vehiclePropertyChanged,
+    [](const VehicleHAL::PropertyType &type, const QVariant &value) {
+        // Property change published to EventBus → WebSocket → UI
+    });
+```
+
+### Mock Implementations
+
+**MockVehicleHAL** provides realistic driving simulation:
+- Speed ranges 0-120 km/h with 25-second acceleration/deceleration cycles
+- Fuel consumption linked to speed
+- Location tracking with circular driving pattern
+- Engine temperature variations
+- Odometer and trip distance tracking
+
+**MockHostHAL** simulates system properties:
+- System time updates every second
+- Memory usage with ±10 MB variations
+- CPU temperature with ±2°C variations
+- Connectivity status (WiFi, Bluetooth, GPS)
+
+**MockDeviceHAL** simulates hardware devices:
+- CAN Bus (500 kbps), I2C, GPIO, UART, GPS, etc.
+- State transitions: Offline → Connecting → Online
+- Data send/receive with realistic latencies
+
+### Extending with Real Hardware
+
+To implement a real hardware HAL (e.g., CAN-based vehicle data):
+
+1. **Create custom class** inheriting from base HAL:
+   ```cpp
+   class CANVehicleHAL : public VehicleHAL {
+       // Override: initialize(), shutdown(), getProperty(), setProperty(), etc.
+   };
+   ```
+
+2. **Register with HALManager**:
+   ```cpp
+   auto canHal = std::make_shared<CANVehicleHAL>();
+   canHal->initialize();
+   HALManager::instance().setVehicleHAL(canHal);
+   ```
+
+3. **Add to CMakeLists.txt** and rebuild
+
+For detailed implementation guide, see [HAL_ARCHITECTURE.md](HAL_ARCHITECTURE.md).
+
+### EventBus Integration
+
+HAL property changes automatically flow to the UI:
+
+```
+HALManager
+    ↓ (propertyChanged signal)
+EventBus (publishes "hal/vehicle/Speed", "hal/host/CPUTemperature", etc.)
+    ↓
+WebSocketServer (broadcasts to clients)
+    ↓
+UI (receives updates via WebSocket)
+```
+
+### Testing without Hardware
+
+The mock implementations provide realistic test data without any hardware:
+
+```bash
+# Run core with mock HALs (default)
+./build/core/crankshaft-core --port 8080
+
+# Run UI to visualize mock data
+./build/ui/crankshaft-ui
+
+# UI displays simulated vehicle data from mock HAL
+```
+
+---
+
 ## Development Workflow
 
 ### 1. Create a Feature Branch
@@ -278,6 +390,7 @@ git checkout -b feature/my-feature
 ### 2. Make Changes
 
 Edit files in `core/`, `ui/`, or `tests/`
+
 
 ### 3. Build and Test
 

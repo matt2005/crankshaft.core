@@ -28,11 +28,13 @@
 
 WebSocketServer::WebSocketServer(quint16 port, QObject* parent)
     : QObject(parent), m_server(new QWebSocketServer("CrankshaftCore", QWebSocketServer::NonSecureMode, this)) {
+  Logger::instance().info(QString("Initializing WebSocket server on port %1...").arg(port));
+  
   if (m_server->listen(QHostAddress::Any, port)) {
     Logger::instance().info(QString("WebSocket server listening on port %1").arg(port));
     connect(m_server, &QWebSocketServer::newConnection, this, &WebSocketServer::onNewConnection);
   } else {
-    Logger::instance().error(QString("Failed to start WebSocket server: %1").arg(m_server->errorString()));
+    Logger::instance().error(QString("Failed to start WebSocket server on port %1: %2").arg(port).arg(m_server->errorString()));
   }
 }
 

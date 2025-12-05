@@ -77,3 +77,4 @@ target_link_libraries(test_websocket PRIVATE
 )
 
 add_test(NAME WebSocketTest COMMAND test_websocket)
+

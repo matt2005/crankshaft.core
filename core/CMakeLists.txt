@@ -27,6 +27,13 @@ set(SOURCES
   WebSocketServer.cpp
   ConfigService.cpp
   Logger.cpp
+  hal/VehicleHAL.cpp
+  hal/HostHAL.cpp
+  hal/DeviceHAL.cpp
+  hal/MockVehicleHAL.cpp
+  hal/MockHostHAL.cpp
+  hal/MockDeviceHAL.cpp
+  hal/HALManager.cpp
 )
 
 set(HEADERS
@@ -34,6 +41,13 @@ set(HEADERS
   WebSocketServer.h
   ConfigService.h
   Logger.h
+  hal/VehicleHAL.h
+  hal/HostHAL.h
+  hal/DeviceHAL.h
+  hal/MockVehicleHAL.h
+  hal/MockHostHAL.h
+  hal/MockDeviceHAL.h
+  hal/HALManager.h
 )
 
 add_executable(crankshaft-core ${SOURCES} ${HEADERS})
