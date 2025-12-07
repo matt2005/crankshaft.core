@@ -188,8 +188,6 @@ Rectangle {
         }
     }
 
-    Component.onCompleted: {
-        console.log("AndroidAutoScreen loaded")
-        wsClient.publish("androidauto/status", {})
-    }
+    // Note: Status is queried via backend connection state changes
+    // Not publishing on component load to avoid duplicate events
 }

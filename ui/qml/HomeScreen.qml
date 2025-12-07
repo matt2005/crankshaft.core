@@ -120,7 +120,8 @@ Page {
                     Layout.minimumHeight: 120
                     
                     onClicked: {
-                        wsClient.publish("ui/navigation/opened", {})
+                        // TODO: Navigate to navigation screen when implemented
+                        console.log("Navigation requested")
                     }
                 }
                 
@@ -134,7 +135,8 @@ Page {
                     Layout.minimumHeight: 120
                     
                     onClicked: {
-                        wsClient.publish("ui/phone/opened", {})
+                        // TODO: Navigate to phone screen when implemented
+                        console.log("Phone requested")
                     }
                 }
                 
@@ -148,7 +150,8 @@ Page {
                     Layout.minimumHeight: 120
                     
                     onClicked: {
-                        wsClient.publish("ui/media/opened", {})
+                        // TODO: Navigate to media screen when implemented
+                        console.log("Media requested")
                     }
                 }
                 
