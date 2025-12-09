@@ -70,140 +70,6 @@ QtObject {
             ]
         },
         {
-            id: "androidauto",
-            name: "Android Auto",
-            icon: "🚗",
-            settings: [
-                {
-                    key: "androidauto.autoconnect",
-                    label: "Auto-connect on USB",
-                    description: "Automatically connect to Android Auto when USB device is detected",
-                    type: "toggle",
-                    value: true,
-                    onChange: function(val) {
-                        wsClient.publish("androidauto/settings/autoconnect", {
-                            "enabled": val
-                        })
-                    }
-                },
-                {
-                    key: "androidauto.wireless",
-                    label: "Enable wireless Android Auto",
-                    description: "Allow wireless connection to Android Auto",
-                    type: "toggle",
-                    value: false,
-                    onChange: function(val) {
-                        wsClient.publish("androidauto/settings/wireless", {
-                            "enabled": val
-                        })
-                    }
-                },
-                {
-                    key: "androidauto.resolution",
-                    label: "Video resolution",
-                    description: "Choose the video resolution for Android Auto display",
-                    type: "select",
-                    value: "1024x600",
-                    options: [
-                        { value: "800x480", label: "800x480" },
-                        { value: "1024x600", label: "1024x600" },
-                        { value: "1280x720", label: "1280x720" },
-                        { value: "1920x1080", label: "1920x1080" }
-                    ],
-                    onChange: function(val) {
-                        wsClient.publish("androidauto/settings/resolution", {
-                            "resolution": val
-                        })
-                    }
-                },
-                {
-                    key: "androidauto.framerate",
-                    label: "Video framerate",
-                    description: "Set the video framerate for Android Auto",
-                    type: "select",
-                    value: "60",
-                    options: [
-                        { value: "30", label: "30 FPS" },
-                        { value: "60", label: "60 FPS" }
-                    ],
-                    onChange: function(val) {
-                        wsClient.publish("androidauto/settings/framerate", {
-                            "framerate": parseInt(val)
-                        })
-                    }
-                },
-                {
-                    key: "androidauto.audiofocus",
-                    label: "Audio focus management",
-                    description: "Manage audio focus when Android Auto is active",
-                    type: "toggle",
-                    value: true,
-                    onChange: function(val) {
-                        wsClient.publish("androidauto/settings/audiofocus", {
-                            "enabled": val
-                        })
-                    }
-                },
-                {
-                    key: "androidauto.mediachenel",
-                    label: "Media audio channel",
-                    description: "Select the audio channel for media playback",
-                    type: "select",
-                    value: "System default",
-                    options: [
-                        { value: "System default", label: "System default" },
-                        { value: "Media", label: "Media" },
-                        { value: "Navigation", label: "Navigation" }
-                    ],
-                    onChange: function(val) {
-                        wsClient.publish("androidauto/settings/mediachenel", {
-                            "channel": val
-                        })
-                    }
-                },
-                {
-                    key: "androidauto.touchmode",
-                    label: "Touchscreen mode",
-                    description: "Choose how touch input is handled",
-                    type: "select",
-                    value: "Direct touch",
-                    options: [
-                        { value: "Direct touch", label: "Direct touch" },
-                        { value: "Simulated touch", label: "Simulated touch" }
-                    ],
-                    onChange: function(val) {
-                        wsClient.publish("androidauto/settings/touchmode", {
-                            "mode": val
-                        })
-                    }
-                },
-                {
-                    key: "androidauto.physicalbuttons",
-                    label: "Enable physical buttons",
-                    description: "Allow physical button input for Android Auto control",
-                    type: "toggle",
-                    value: true,
-                    onChange: function(val) {
-                        wsClient.publish("androidauto/settings/physicalbuttons", {
-                            "enabled": val
-                        })
-                    }
-                },
-                {
-                    key: "androidauto.debug",
-                    label: "Enable debug logging",
-                    description: "Turn on verbose debugging output for troubleshooting",
-                    type: "toggle",
-                    value: false,
-                    onChange: function(val) {
-                        wsClient.publish("androidauto/settings/debug", {
-                            "enabled": val
-                        })
-                    }
-                }
-            ]
-        },
-        {
             id: "system",
             name: "System",
             icon: "⚙",
@@ -318,11 +184,165 @@ QtObject {
                     }
                 },
                 {
-                    key: "connectivity.android-auto.page",
-                    label: "Android Auto Settings",
-                    description: "Configure Android Auto projection",
-                    type: "page",
-                    pageComponent: "AndroidAutoSettingsPage"
+                    key: "connectivity.android-auto.autoconnect",
+                    label: "Auto-connect on USB",
+                    description: "Automatically connect when USB device is detected",
+                    type: "toggle",
+                    value: true,
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/autoconnect", { "enabled": val })
+                    }
+                },
+                {
+                    key: "connectivity.android-auto.wireless",
+                    label: "Enable Wireless Android Auto",
+                    description: "Allow wireless connection over Bluetooth",
+                    type: "toggle",
+                    value: false,
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/wireless", { "enabled": val })
+                    }
+                },
+                {
+                    key: "connectivity.android-auto.resolution",
+                    label: "Video Resolution",
+                    description: "Choose the video resolution for display",
+                    type: "select",
+                    value: "1024x600",
+                    options: [
+                        { value: "800x480", label: "800x480" },
+                        { value: "1024x600", label: "1024x600" },
+                        { value: "1280x720", label: "1280x720" },
+                        { value: "1920x1080", label: "1920x1080" }
+                    ],
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/resolution", { "resolution": val })
+                    }
+                },
+                {
+                    key: "connectivity.android-auto.framerate",
+                    label: "Video Framerate",
+                    description: "Set the video framerate (fps)",
+                    type: "select",
+                    value: "30",
+                    options: [
+                        { value: "15", label: "15 FPS" },
+                        { value: "30", label: "30 FPS" },
+                        { value: "60", label: "60 FPS" }
+                    ],
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/fps", { "value": parseInt(val) })
+                    }
+                },
+                {
+                    key: "connectivity.android-auto.video-channel",
+                    label: "Video Channel",
+                    description: "Display projection from Android device",
+                    type: "toggle",
+                    value: true,
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/channels/video", { "enabled": val })
+                    }
+                },
+                {
+                    key: "connectivity.android-auto.media-audio",
+                    label: "Media Audio Channel",
+                    description: "Music and media playback audio",
+                    type: "toggle",
+                    value: true,
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/channels/media-audio", { "enabled": val })
+                    }
+                },
+                {
+                    key: "connectivity.android-auto.system-audio",
+                    label: "System Audio Channel",
+                    description: "System sounds and notifications",
+                    type: "toggle",
+                    value: true,
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/channels/system-audio", { "enabled": val })
+                    }
+                },
+                {
+                    key: "connectivity.android-auto.speech-audio",
+                    label: "Speech Audio Channel",
+                    description: "Navigation guidance and voice assistant",
+                    type: "toggle",
+                    value: true,
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/channels/speech-audio", { "enabled": val })
+                    }
+                },
+                {
+                    key: "connectivity.android-auto.microphone",
+                    label: "Microphone Channel",
+                    description: "Voice commands and phone calls",
+                    type: "toggle",
+                    value: true,
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/channels/microphone", { "enabled": val })
+                    }
+                },
+                {
+                    key: "connectivity.android-auto.input-channel",
+                    label: "Input Channel",
+                    description: "Touch screen and button inputs",
+                    type: "toggle",
+                    value: true,
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/channels/input", { "enabled": val })
+                    }
+                },
+                {
+                    key: "connectivity.android-auto.sensor-channel",
+                    label: "Sensor Channel",
+                    description: "GPS, speed and vehicle sensors",
+                    type: "toggle",
+                    value: true,
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/channels/sensor", { "enabled": val })
+                    }
+                },
+                {
+                    key: "connectivity.android-auto.bluetooth-channel",
+                    label: "Bluetooth Channel",
+                    description: "Wireless Android Auto over Bluetooth",
+                    type: "toggle",
+                    value: false,
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/channels/bluetooth", { "enabled": val })
+                    }
+                },
+                {
+                    key: "connectivity.android-auto.mock-device",
+                    label: "Use Mock Device",
+                    description: "Use simulated Android Auto for testing",
+                    type: "toggle",
+                    value: true,
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/use-mock", { "enabled": val })
+                    }
+                },
+                {
+                    key: "connectivity.android-auto.test-video",
+                    label: "Generate Test Video",
+                    description: "Display test pattern when using mock device",
+                    type: "toggle",
+                    value: true,
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/test-video", { "enabled": val })
+                    }
+                },
+                {
+                    key: "connectivity.android-auto.test-audio",
+                    label: "Generate Test Audio",
+                    description: "Play test tone when using mock device",
+                    type: "toggle",
+                    value: false,
+                    onChange: function(val) {
+                        wsClient.publish("android-auto/test-audio", { "enabled": val })
+                    }
                 },
                 {
                     key: "connectivity.wifi.enabled",
