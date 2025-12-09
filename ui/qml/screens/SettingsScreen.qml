@@ -498,9 +498,7 @@ Page {
                 onClicked: {
                     if (typeof stack === 'undefined' || !stack) return
                     
-                    if (setting.pageComponent === "AndroidAutoSettingsPage") {
-                        stack.push(androidautoSettingsScreen)
-                    } else if (setting.pageComponent === "WiFiSettingsPage") {
+                    if (setting.pageComponent === "WiFiSettingsPage") {
                         stack.push(wifiSettingsPage)
                     } else if (setting.pageComponent === "BluetoothSettingsPage") {
                         stack.push(bluetoothSettingsPage)
@@ -594,11 +592,6 @@ Page {
     }
     
     // Page components for navigation
-    Component {
-        id: androidautoSettingsScreen
-        AndroidAutoSettingsPage {}
-    }
-    
     Component {
         id: wifiSettingsPage
         WiFiSettingsPage {}
