@@ -58,9 +58,11 @@ Page {
         RowLayout {
             anchors.fill: parent
             anchors.margins: Theme.spacingMd
+            spacing: Theme.spacingMd
             
             AppButton {
                 text: "⬅ " + Strings.buttonBack
+                Layout.preferredWidth: implicitWidth
                 onClicked: {
                     if (stack) {
                         stack.pop()
@@ -74,6 +76,7 @@ Page {
                 font.bold: true
                 color: Theme.textPrimary
                 Layout.fillWidth: true
+                elide: Text.ElideRight
             }
         }
     }
@@ -491,19 +494,16 @@ Page {
             
             MouseArea {
                 anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    if (setting.pageComponent === "AndroidAutoSettingsScreen") {
-                        if (stack) {
-                            stack.push(androidautoSettingsScreen, { stack: stack })
-                        }
+                    if (!stack) return
+                    
+                    if (setting.pageComponent === "AndroidAutoSettingsPage") {
+                        stack.push(androidautoSettingsScreen, { stack: stack })
                     } else if (setting.pageComponent === "WiFiSettingsPage") {
-                        if (stack) {
-                            stack.push(wifiSettingsPage, { stack: stack })
-                        }
+                        stack.push(wifiSettingsPage, { stack: stack })
                     } else if (setting.pageComponent === "BluetoothSettingsPage") {
-                        if (stack) {
-                            stack.push(bluetoothSettingsPage, { stack: stack })
-                        }
+                        stack.push(bluetoothSettingsPage, { stack: stack })
                     }
                 }
             }
@@ -594,6 +594,11 @@ Page {
     }
     
     // Page components for navigation
+    Component {
+        id: androidautoSettingsScreen
+        AndroidAutoSettingsPage {}
+    }
+    
     Component {
         id: wifiSettingsPage
         WiFiSettingsPage {}
