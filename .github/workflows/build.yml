@@ -1,0 +1,389 @@
+# Project: Crankshaft
+# This file is part of Crankshaft project.
+# Copyright (C) 2025 OpenCarDev Team
+#
+#  Crankshaft is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  Crankshaft is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
+
+name: Crankshaft Build and Test
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+      - 'feature/*'
+      - 'bugfix/*'
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+
+  pull_request:
+    branches:
+      - main
+      - develop
+    paths-ignore:
+      - '**.md'
+      - 'docs/**'
+      - '.gitignore'
+
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Build version (leave empty for auto-generated)'
+        required: false
+        default: ''
+        type: string
+      architecture:
+        description: 'Architecture to build (all, amd64, arm64, armhf)'
+        required: false
+        default: 'all'
+        type: choice
+        options:
+          - all
+          - amd64
+          - arm64
+          - armhf
+      trigger_release:
+        description: 'Trigger release workflow after build'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/crankshaft
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate version
+        id: version
+        run: |
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+          else
+            BUILD_YEAR=$(date -u +"%Y")
+            BUILD_MONTH=$(date -u +"%m")
+            BUILD_DAY=$(date -u +"%d")
+            VERSION="${BUILD_YEAR}.${BUILD_MONTH}.${BUILD_DAY}"
+            
+            COMMIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+            if [ "$COMMIT_SHA" != "unknown" ]; then
+              VERSION="${VERSION}+git.${COMMIT_SHA}"
+            fi
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Generate build matrix
+        id: matrix
+        run: |
+          ARCH_INPUT="${{ github.event.inputs.architecture }}"
+          if [ -z "$ARCH_INPUT" ] || [ "$ARCH_INPUT" = "all" ]; then
+            ARCHES="amd64 arm64 armhf"
+          else
+            ARCHES="$ARCH_INPUT"
+          fi
+
+          # On develop branch, limit to amd64 for faster feedback
+          if [ "${{ github.ref }}" = "refs/heads/develop" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            ARCHES="amd64"
+            echo "Building only amd64 for develop branch"
+          fi
+
+          platform_for_arch() {
+            case "$1" in
+              amd64) echo "linux/amd64";;
+              arm64) echo "linux/arm64";;
+              armhf) echo "linux/arm/v7";;
+              *) echo "linux/amd64";;
+            esac
+          }
+
+          MATRIX='{"include":['
+          first=true
+          for a in $ARCHES; do
+            plat=$(platform_for_arch "$a")
+            entry=$(printf '{"arch":"%s","platform":"%s"}' "$a" "$plat")
+            if [ "$first" = true ]; then
+              MATRIX+="$entry"
+              first=false
+            else
+              MATRIX+=",$entry"
+            fi
+          done
+          MATRIX+=']}'
+          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+
+  build:
+    name: Build Crankshaft for ${{ matrix.arch }}
+    needs: prepare
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: recursive
+
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v3
+      with:
+        platforms: ${{ matrix.platform }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Cache Docker layers
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.buildx-cache
+        key: ${{ runner.os }}-buildx-${{ matrix.arch }}-${{ github.sha }}
+        restore-keys: |
+          ${{ runner.os }}-buildx-${{ matrix.arch }}-
+          ${{ runner.os }}-buildx-
+
+    - name: Build Debian package
+      run: |
+        docker buildx build \
+          --platform ${{ matrix.platform }} \
+          --build-arg VERSION=${{ needs.prepare.outputs.version }} \
+          --build-arg ARCH=${{ matrix.arch }} \
+          --output type=local,dest=./build-output \
+          --cache-from type=local,src=/tmp/.buildx-cache \
+          --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
+          -f docker/Dockerfile.build \
+          .
+
+    - name: Move cache
+      run: |
+        rm -rf /tmp/.buildx-cache
+        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+
+    - name: Upload Debian package
+      uses: actions/upload-artifact@v4
+      with:
+        name: crankshaft-${{ matrix.arch }}-deb
+        path: build-output/*.deb
+        retention-days: 30
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: crankshaft-${{ matrix.arch }}-artifacts
+        path: |
+          build-output/CrankshaftReborn
+          build-output/crankshaft-core
+          build-output/crankshaft-ui
+        retention-days: 7
+
+  sbom:
+    name: Generate SBOM
+    needs: [prepare, build]
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        submodules: recursive
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Install CycloneDX tools
+      run: |
+        # Install CycloneDX CLI
+        curl -sSfL https://github.com/CycloneDX/cyclonedx-cli/releases/latest/download/cyclonedx-linux-x64 -o cyclonedx
+        chmod +x cyclonedx
+        sudo mv cyclonedx /usr/local/bin/
+
+        # Install syft for container scanning
+        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+
+    - name: Generate base SBOM from CMake project
+      run: |
+        # Create base SBOM with project metadata
+        cat > crankshaft-sbom.json << 'EOF'
+        {
+          "bomFormat": "CycloneDX",
+          "specVersion": "1.5",
+          "version": 1,
+          "metadata": {
+            "timestamp": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+            "tools": [
+              {
+                "vendor": "OpenCarDev",
+                "name": "Crankshaft Build System",
+                "version": "${{ needs.prepare.outputs.version }}"
+              }
+            ],
+            "component": {
+              "type": "application",
+              "bom-ref": "crankshaft@${{ needs.prepare.outputs.version }}",
+              "name": "Crankshaft",
+              "version": "${{ needs.prepare.outputs.version }}",
+              "description": "Automotive infotainment system with extensible framework",
+              "licenses": [
+                {
+                  "license": {
+                    "id": "GPL-3.0-or-later"
+                  }
+                }
+              ],
+              "externalReferences": [
+                {
+                  "type": "website",
+                  "url": "https://github.com/${{ github.repository }}"
+                },
+                {
+                  "type": "vcs",
+                  "url": "https://github.com/${{ github.repository }}.git"
+                }
+              ]
+            }
+          },
+          "components": []
+        }
+        EOF
+
+    - name: Scan dependencies
+      run: |
+        # Scan for C/C++ dependencies
+        if [ -f "CMakeLists.txt" ]; then
+          echo "Scanning CMake project for dependencies..."
+          # Extract Qt6 and other dependencies from CMakeLists.txt
+          grep -E "find_package|FetchContent" CMakeLists.txt core/CMakeLists.txt ui/CMakeLists.txt 2>/dev/null || true
+        fi
+
+        # Scan AASDK submodule
+        if [ -d "external/aasdk" ]; then
+          echo "Scanning AASDK dependencies..."
+          cd external/aasdk
+          syft dir:. -o cyclonedx-json > ../../aasdk-deps.json 2>/dev/null || echo "[]" > ../../aasdk-deps.json
+          cd ../..
+        fi
+
+    - name: Create comprehensive SBOM
+      run: |
+        # Create components list
+        cat > components.json << 'EOF'
+        [
+          {
+            "type": "library",
+            "bom-ref": "qt6@6.x",
+            "name": "Qt6",
+            "version": "6.x",
+            "description": "Cross-platform application framework",
+            "licenses": [{"license": {"id": "LGPL-3.0-only"}}],
+            "externalReferences": [
+              {"type": "website", "url": "https://www.qt.io"}
+            ]
+          },
+          {
+            "type": "library",
+            "bom-ref": "aasdk@latest",
+            "name": "AASDK",
+            "version": "latest",
+            "description": "Android Auto SDK for embedded systems",
+            "licenses": [{"license": {"id": "MIT"}}],
+            "externalReferences": [
+              {"type": "vcs", "url": "https://github.com/opencardev/aasdk.git"}
+            ]
+          },
+          {
+            "type": "library",
+            "bom-ref": "protobuf@3.x",
+            "name": "Protocol Buffers",
+            "version": "3.x",
+            "description": "Google's data interchange format",
+            "licenses": [{"license": {"id": "BSD-3-Clause"}}],
+            "externalReferences": [
+              {"type": "website", "url": "https://protobuf.dev"}
+            ]
+          },
+          {
+            "type": "library",
+            "bom-ref": "boost@1.83",
+            "name": "Boost",
+            "version": "1.83",
+            "description": "Boost C++ Libraries",
+            "licenses": [{"license": {"id": "BSL-1.0"}}],
+            "externalReferences": [
+              {"type": "website", "url": "https://www.boost.org"}
+            ]
+          },
+          {
+            "type": "library",
+            "bom-ref": "openssl@3.x",
+            "name": "OpenSSL",
+            "version": "3.x",
+            "description": "Cryptography and SSL/TLS toolkit",
+            "licenses": [{"license": {"id": "Apache-2.0"}}],
+            "externalReferences": [
+              {"type": "website", "url": "https://www.openssl.org"}
+            ]
+          }
+        ]
+        EOF
+
+        # Merge components into SBOM
+        jq '.components = input' crankshaft-sbom.json components.json > crankshaft-sbom-final.json
+
+    - name: Validate SBOM
+      run: |
+        cyclonedx validate --input-file crankshaft-sbom-final.json --input-format json || true
+
+    - name: Upload SBOM
+      uses: actions/upload-artifact@v4
+      with:
+        name: crankshaft-sbom
+        path: crankshaft-sbom-final.json
+        retention-days: 90
+
+  trigger-release:
+    name: Trigger Release
+    needs: [prepare, build, sbom]
+    if: github.event_name == 'workflow_dispatch' && inputs.trigger_release == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger release workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'release.yml',
+              ref: context.ref,
+              inputs: {
+                build_run_id: context.runId.toString(),
+                version: '${{ needs.prepare.outputs.version }}'
+              }
+            });

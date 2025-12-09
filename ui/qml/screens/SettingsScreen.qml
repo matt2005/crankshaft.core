@@ -196,6 +196,8 @@ Page {
                                 case "slider": return sliderSetting
                                 case "page": return pageSetting
                                 case "info": return infoSetting
+                                case "link": return linkSetting
+                                case "header": return headerSetting
                                 default: return null
                             }
                         }
@@ -589,6 +591,95 @@ Page {
                 text: setting.value || ""
                 font.pixelSize: Theme.fontSizeBody
                 color: Theme.textSecondary
+            }
+        }
+    }
+    
+    Component {
+        id: linkSetting
+        
+        Rectangle {
+            width: parent.width
+            height: linkColumn.height + Theme.spacingMd * 2
+            color: Theme.surface
+            radius: Theme.radiusSm
+            
+            MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: {
+                    if (setting.value) {
+                        Qt.openUrlExternally(setting.value)
+                    }
+                }
+            }
+            
+            ColumnLayout {
+                id: linkColumn
+                anchors.left: parent.left
+                anchors.right: linkIcon.left
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: Theme.spacingMd
+                anchors.rightMargin: Theme.spacingSm
+                spacing: 4
+                
+                Text {
+                    text: setting.label
+                    font.pixelSize: Theme.fontSizeBody
+                    color: Theme.textPrimary
+                    Layout.fillWidth: true
+                }
+                
+                Text {
+                    text: setting.description || ""
+                    font.pixelSize: Theme.fontSizeCaption
+                    color: Theme.textSecondary
+                    wrapMode: Text.WordWrap
+                    Layout.fillWidth: true
+                    visible: text !== ""
+                }
+                
+                Text {
+                    text: setting.linkText || setting.value || ""
+                    font.pixelSize: Theme.fontSizeCaption
+                    color: Theme.primary
+                    font.underline: true
+                    Layout.fillWidth: true
+                    visible: text !== ""
+                }
+            }
+            
+            Icon {
+                id: linkIcon
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.rightMargin: Theme.spacingMd
+                name: "mdi-open-in-new"
+                size: 20
+                color: Theme.textSecondary
+            }
+        }
+    }
+    
+    Component {
+        id: headerSetting
+        
+        Item {
+            width: parent.width
+            height: headerText.height + Theme.spacingLg * 2
+            
+            Text {
+                id: headerText
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                anchors.leftMargin: Theme.spacingMd
+                anchors.rightMargin: Theme.spacingMd
+                text: setting.label
+                font.pixelSize: Theme.fontSizeHeading3
+                font.bold: true
+                color: Theme.textPrimary
+                wrapMode: Text.WordWrap
             }
         }
     }
