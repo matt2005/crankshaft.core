@@ -1,0 +1,168 @@
+# Project: Crankshaft
+# This file is part of Crankshaft project.
+# Copyright (C) 2025 OpenCarDev Team
+#
+#  Crankshaft is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  Crankshaft is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
+
+name: Crankshaft Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: 'Build run ID to create release from'
+        required: true
+        type: string
+      version:
+        description: 'Release version'
+        required: true
+        type: string
+      create_draft:
+        description: 'Create as draft release'
+        required: false
+        default: false
+        type: boolean
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v4
+      with:
+        run-id: ${{ inputs.build_run_id }}
+        path: ./release-artifacts
+
+    - name: Generate release notes
+      id: release_notes
+      run: |
+        COMMIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+        BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
+        
+        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
+        
+        cat > RELEASE_NOTES.md << EOF
+        ## Crankshaft Release ${{ inputs.version }}
+        
+        **Build Information:**
+        - Version: \`${{ inputs.version }}\`
+        - Commit: \`${COMMIT_SHA}\`
+        - Build Date: \`${BUILD_DATE}\`
+        - Build Run: [\`${{ inputs.build_run_id }}\`](https://github.com/${{ github.repository }}/actions/runs/${{ inputs.build_run_id }})
+        - Architectures: \`amd64\`, \`arm64\`, \`armhf\`
+        
+        ### Features
+        
+        - Automotive infotainment system with extensible framework
+        - QT6-based modern UI with Material Design icons
+        - WebSocket-based event system
+        - Android Auto integration support
+        - Multi-language support (en-GB, de-DE)
+        - Theme system with dark/light mode
+        
+        ### Installation
+        
+        Download the appropriate \`.deb\` package for your architecture and install:
+        
+        \`\`\`bash
+        # For Raspberry Pi 4 (64-bit)
+        sudo dpkg -i crankshaft-arm64_${{ inputs.version }}_arm64.deb
+        
+        # For Raspberry Pi (32-bit)
+        sudo dpkg -i crankshaft-armhf_${{ inputs.version }}_armhf.deb
+        
+        # For x86_64 systems
+        sudo dpkg -i crankshaft-amd64_${{ inputs.version }}_amd64.deb
+        \`\`\`
+        
+        ### SBOM (Software Bill of Materials)
+        
+        A comprehensive SBOM in CycloneDX format is included with this release. This provides:
+        - Complete dependency list
+        - License information
+        - Component versions
+        - Security vulnerability tracking
+        
+        Download: \`crankshaft-sbom-${{ inputs.version }}.json\`
+        
+        EOF
+        
+        if [ -n "$LAST_TAG" ] && git rev-parse --verify "${LAST_TAG}" >/dev/null 2>&1; then
+          echo "### What's Changed Since ${LAST_TAG}" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          git log --pretty=format:"- %s (%h)" "${LAST_TAG}..HEAD" 2>/dev/null | head -30 >> RELEASE_NOTES.md || echo "- Initial release" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+        else
+          echo "### Initial Release" >> RELEASE_NOTES.md
+          echo "" >> RELEASE_NOTES.md
+          echo "This is the first release of Crankshaft." >> RELEASE_NOTES.md
+        fi
+        
+        cat >> RELEASE_NOTES.md << EOF
+        
+        ### Documentation
+        
+        - [Architecture](https://github.com/${{ github.repository }}/blob/main/docs/ARCHITECTURE.md)
+        - [Development Guide](https://github.com/${{ github.repository }}/blob/main/docs/DEVELOPMENT.md)
+        - [API Documentation](https://github.com/${{ github.repository }}/blob/main/docs/API.md)
+        
+        ### Acknowledgements
+        
+        See the [About](#) section in the application for full acknowledgements and third-party licenses.
+        EOF
+
+    - name: Prepare release assets
+      run: |
+        cd release-artifacts
+        
+        # Rename DEB files with version
+        for dir in crankshaft-*-deb; do
+          if [ -d "$dir" ]; then
+            arch=$(echo $dir | sed 's/crankshaft-\(.*\)-deb/\1/')
+            for deb in $dir/*.deb; do
+              if [ -f "$deb" ]; then
+                mv "$deb" "../crankshaft-${arch}_${{ inputs.version }}_${arch}.deb"
+              fi
+            done
+          fi
+        done
+        
+        # Rename SBOM
+        if [ -f "crankshaft-sbom/crankshaft-sbom-final.json" ]; then
+          mv "crankshaft-sbom/crankshaft-sbom-final.json" "../crankshaft-sbom-${{ inputs.version }}.json"
+        fi
+        
+        cd ..
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: v${{ inputs.version }}
+        name: Crankshaft v${{ inputs.version }}
+        body_path: RELEASE_NOTES.md
+        draft: ${{ inputs.create_draft }}
+        prerelease: false
+        files: |
+          crankshaft-*_${{ inputs.version }}*.deb
+          crankshaft-sbom-${{ inputs.version }}.json
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

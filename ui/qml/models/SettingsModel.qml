@@ -398,6 +398,98 @@ QtObject {
                     description: "Crankshaft version information",
                     type: "info",
                     value: "1.0.0"
+                },
+                {
+                    key: "about.commit",
+                    label: "Build Commit",
+                    description: "Git commit SHA",
+                    type: "info",
+                    value: "development"
+                },
+                {
+                    key: "about.license",
+                    label: "License",
+                    description: "GNU General Public License v3.0 or later",
+                    type: "info",
+                    value: "GPL-3.0-or-later"
+                },
+                {
+                    key: "about.website",
+                    label: "Website",
+                    description: "Visit project website",
+                    type: "link",
+                    value: "https://github.com/opencardev/crankshaft-mvp",
+                    linkText: "github.com/opencardev/crankshaft-mvp"
+                },
+                {
+                    key: "about.sbom",
+                    label: "Software Bill of Materials (SBOM)",
+                    description: "View complete dependency and license information",
+                    type: "link",
+                    value: "https://github.com/opencardev/crankshaft-mvp/releases/latest/download/crankshaft-sbom.json",
+                    linkText: "Download SBOM (CycloneDX JSON)"
+                },
+                {
+                    key: "about.acknowledgements.header",
+                    label: "Acknowledgements",
+                    description: "Third-party software and libraries",
+                    type: "header"
+                },
+                {
+                    key: "about.acknowledgements.qt",
+                    label: "Qt Framework",
+                    description: "Cross-platform application framework - LGPL-3.0",
+                    type: "link",
+                    value: "https://www.qt.io",
+                    linkText: "www.qt.io"
+                },
+                {
+                    key: "about.acknowledgements.aasdk",
+                    label: "AASDK",
+                    description: "Android Auto SDK for embedded systems - MIT License",
+                    type: "link",
+                    value: "https://github.com/opencardev/aasdk",
+                    linkText: "github.com/opencardev/aasdk"
+                },
+                {
+                    key: "about.acknowledgements.protobuf",
+                    label: "Protocol Buffers",
+                    description: "Google's data interchange format - BSD-3-Clause",
+                    type: "link",
+                    value: "https://protobuf.dev",
+                    linkText: "protobuf.dev"
+                },
+                {
+                    key: "about.acknowledgements.boost",
+                    label: "Boost C++ Libraries",
+                    description: "Peer-reviewed portable C++ libraries - BSL-1.0",
+                    type: "link",
+                    value: "https://www.boost.org",
+                    linkText: "www.boost.org"
+                },
+                {
+                    key: "about.acknowledgements.openssl",
+                    label: "OpenSSL",
+                    description: "Cryptography and SSL/TLS toolkit - Apache-2.0",
+                    type: "link",
+                    value: "https://www.openssl.org",
+                    linkText: "www.openssl.org"
+                },
+                {
+                    key: "about.acknowledgements.mdi",
+                    label: "Material Design Icons",
+                    description: "Icon library - Apache-2.0",
+                    type: "link",
+                    value: "https://materialdesignicons.com",
+                    linkText: "materialdesignicons.com"
+                },
+                {
+                    key: "about.acknowledgements.contributors",
+                    label: "Contributors",
+                    description: "Thank you to all project contributors",
+                    type: "link",
+                    value: "https://github.com/opencardev/crankshaft-mvp/graphs/contributors",
+                    linkText: "View all contributors"
                 }
             ]
         },
