@@ -1,4 +1,4 @@
-# Project: Crankshaft
+﻿# Project: Crankshaft
 # This file is part of Crankshaft project.
 # Copyright (C) 2025 OpenCarDev Team
 #
@@ -44,7 +44,25 @@ on:
       - 'tests/**'
 
 jobs:
+  check-skip:
+    runs-on: ubuntu-latest
+    outputs:
+      skip: ${{ steps.check-skip.outputs.skip }}
+    steps:
+      - name: Check if CI should be skipped
+        id: check-skip
+        run: |
+          SKIP='false'
+          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+          if [[ "$COMMIT_MESSAGE" =~ \[skip\ ci\]|\[ci\ skip\] ]]; then
+            SKIP='true'
+            echo "Skipping CI due to commit message: $COMMIT_MESSAGE"
+          fi
+          echo "skip=$SKIP" >> $GITHUB_OUTPUT
+
   code-quality:
+    needs: check-skip
+    if: needs.check-skip.outputs.skip != 'true'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
@@ -62,6 +80,7 @@ jobs:
 
   build-packages:
     needs: code-quality
+    if: needs.check-skip.outputs.skip != 'true'
     uses: ./.github/workflows/build.yml
     with:
       architectures: ${{ (github.ref_name == 'main' || github.ref_name == 'develop' || github.base_ref == 'main' || github.base_ref == 'develop') && 'amd64 arm64 armhf' || 'amd64' }}
