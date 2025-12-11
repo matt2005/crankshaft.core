@@ -27,6 +27,7 @@ set(QT_QML_GENERATE_QMLLS_INI ON CACHE BOOL "Generate .qmllint.ini for QML langu
 
 # Add custom CMake modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(DebPackageFilename)
 
 # Download Material Design Icons font and generate mappings
 # - Automatically downloads MDI font v7.4.47 (1.3 MB)
@@ -46,6 +47,23 @@ add_subdirectory(core)
 add_subdirectory(ui)
 add_subdirectory(tests)
 
+# Detect architecture for packaging (similar to aasdk)
+if(NOT TARGET_ARCH)
+	if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+		set(TARGET_ARCH "amd64")
+	elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+		set(TARGET_ARCH "arm64")
+	elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "armv7l")
+		set(TARGET_ARCH "armhf")
+	elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "i386|i686")
+		set(TARGET_ARCH "i386")
+	else()
+		set(TARGET_ARCH "unknown")
+	endif()
+	message(STATUS "Detected architecture: ${TARGET_ARCH}")
+endif()
+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${TARGET_ARCH}")
+
 # CPack configuration for DEB packages
 set(CPACK_GENERATOR "DEB")
 set(CPACK_PACKAGE_VERSION "${PROJECT_VERSION}")
@@ -54,7 +72,23 @@ set(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenCarDev Team <opencardevuk@gmail.com>")
 set(CPACK_DEBIAN_PACKAGE_SECTION "misc")
 set(CPACK_DEBIAN_PACKAGE_PRIORITY "optional")
 set(CPACK_DEBIAN_PACKAGE_HOMEPAGE "https://github.com/opencardev/crankshaft")
-set(CPACK_DEBIAN_FILE_NAME "DEB-DEFAULT")
+
+# Configure DEB package filenames using DebPackageFilename module
+configure_deb_filename(
+	PACKAGE_NAME "crankshaft"
+	VERSION "${PROJECT_VERSION}"
+	ARCHITECTURE "${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}"
+    CORE_PACKAGE_NAME "crankshaft-core"
+    UI_PACKAGE_NAME "crankshaft-ui"
+)
+
+# Map generated filenames to component-specific variables
+if(DEFINED CPACK_DEBIAN_CORE_FILE_NAME)
+	set(CPACK_DEBIAN_CORE_FILE_NAME "${CPACK_DEBIAN_CORE_FILE_NAME}")
+endif()
+if(DEFINED CPACK_DEBIAN_UI_FILE_NAME)
+	set(CPACK_DEBIAN_UI_FILE_NAME "${CPACK_DEBIAN_UI_FILE_NAME}")
+endif()
 
 # Enable component-based packaging
 set(CPACK_DEB_COMPONENT_INSTALL ON)
