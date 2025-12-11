@@ -21,17 +21,27 @@ on:
   push:
     branches:
       - '**'
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.gitignore'
+    paths:
+      - 'src/core/**'
+      - 'src/ui/**'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/build.yml'
+      - 'CMakeLists.txt'
+      - 'docker/**'
+      - 'scripts/**'
+      - 'tests/**'
   pull_request:
     branches:
       - '**'
-    paths-ignore:
-      - '**.md'
-      - 'docs/**'
-      - '.gitignore'
+    paths:
+      - 'src/core/**'
+      - 'src/ui/**'
+      - '.github/workflows/ci.yml'
+      - '.github/workflows/build.yml'
+      - 'CMakeLists.txt'
+      - 'docker/**'
+      - 'scripts/**'
+      - 'tests/**'
 
 jobs:
   code-quality:
