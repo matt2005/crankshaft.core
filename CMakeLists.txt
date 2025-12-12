@@ -22,7 +22,12 @@ if(NOT DEFINED CMAKE_PROJECT_VERSION)
     set(CMAKE_PROJECT_VERSION "0.1.0")
 endif()
 
-project(crankshaft-mvp VERSION ${CMAKE_PROJECT_VERSION} LANGUAGES CXX)
+# Extract numeric version for project() (CMake VERSION only supports major.minor.patch.tweak)
+# Keep full version for package naming
+set(FULL_VERSION "${CMAKE_PROJECT_VERSION}")
+string(REGEX REPLACE "^([0-9]+\\.[0-9]+\\.[0-9]+).*" "\\1" NUMERIC_VERSION "${CMAKE_PROJECT_VERSION}")
+
+project(crankshaft-mvp VERSION ${NUMERIC_VERSION} LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -105,6 +110,10 @@ if(NOT DEFINED CPACK_DEBIAN_PACKAGE_RELEASE OR CPACK_DEBIAN_PACKAGE_RELEASE STRE
 	endif()
 	message(STATUS "Detected Debian release: ${CPACK_DEBIAN_PACKAGE_RELEASE}")
 endif()
+
+# Use full version string for package naming (includes git suffix if present)
+set(CPACK_PACKAGE_VERSION "${FULL_VERSION}")
+
 set(CPACK_PACKAGE_CONTACT "OpenCarDev Team <opencardevuk@gmail.com>")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "OpenCarDev Team <opencardevuk@gmail.com>")
 set(CPACK_DEBIAN_COMPRESSION_TYPE "xz")
