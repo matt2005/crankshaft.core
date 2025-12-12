@@ -78,4 +78,5 @@ RUN mkdir -p /output && cd build && \
 # Final stage - export artifacts
 FROM scratch AS exporter
 COPY --from=builder /output/*.deb /
+COPY --from=builder /output/*.tar.gz /
 COPY --from=builder /build/logs/*.log /logs/
