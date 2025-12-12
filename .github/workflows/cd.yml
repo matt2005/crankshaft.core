@@ -24,8 +24,7 @@ on:
       - main
     types:
       - completed
-    conclusion:
-      - success
+
   workflow_dispatch:
     inputs:
       build_run_id:
@@ -49,6 +48,7 @@ permissions:
 jobs:
   publish-apt:
     runs-on: ubuntu-latest
+    if: ${{ (github.event.workflow_run.conclusion == 'success' && github.event_name == 'workflow_run' ) || github.event_name == 'workflow_dispatch' }}
     steps:
       - name: Trigger APT Repository Update
         uses: actions/github-script@v7
@@ -87,6 +87,7 @@ jobs:
   build-pi-images:
     needs: publish-apt
     runs-on: ubuntu-latest
+    if: needs.publish-apt.result == 'success'
     steps:
       - name: Trigger Pi-Gen Build
         uses: actions/github-script@v7
