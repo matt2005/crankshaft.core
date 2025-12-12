@@ -24,6 +24,8 @@ on:
       - main
     types:
       - completed
+    conclusion:
+      - success
   workflow_dispatch:
     inputs:
       build_run_id:
