@@ -32,15 +32,59 @@ message(STATUS "VERSION: ${DEB_CONFIG_VERSION}")
 message(STATUS "ARCHITECTURE: ${DEB_CONFIG_ARCHITECTURE}")
 message(STATUS "-------End DebPackageFilename------")
 
+function(get_linux_lsb_release_information_from_os_release)
+    # Fallback function to read distribution information from /etc/os-release
+    if(NOT EXISTS /etc/os-release)
+        message(STATUS "Could not find /etc/os-release")
+        return()
+    endif()
+
+    file(READ /etc/os-release OS_RELEASE_CONTENT)
+    
+    # Parse ID from os-release (e.g., ubuntu, debian, raspbian)
+    if(OS_RELEASE_CONTENT MATCHES "ID=([^\n]+)")
+        string(STRIP "${CMAKE_MATCH_1}" ID_VALUE)
+        string(REPLACE "\"" "" ID_VALUE "${ID_VALUE}")
+        set(LSB_RELEASE_ID_SHORT "${ID_VALUE}" PARENT_SCOPE)
+        message(STATUS "os-release ID: ${ID_VALUE}")
+    endif()
+
+    # Parse VERSION_CODENAME from os-release (e.g., jammy, bookworm, bullseye)
+    if(OS_RELEASE_CONTENT MATCHES "VERSION_CODENAME=([^\n]+)")
+        string(STRIP "${CMAKE_MATCH_1}" CODENAME_VALUE)
+        string(REPLACE "\"" "" CODENAME_VALUE "${CODENAME_VALUE}")
+        set(LSB_RELEASE_CODENAME_SHORT "${CODENAME_VALUE}" PARENT_SCOPE)
+        message(STATUS "os-release CODENAME: ${CODENAME_VALUE}")
+    endif()
+
+    # Parse VERSION_ID from os-release (e.g., 22.04, 13, 12)
+    if(OS_RELEASE_CONTENT MATCHES "VERSION_ID=([^\n]+)")
+        string(STRIP "${CMAKE_MATCH_1}" VERSION_VALUE)
+        string(REPLACE "\"" "" VERSION_VALUE "${VERSION_VALUE}")
+        set(LSB_RELEASE_VERSION_SHORT "${VERSION_VALUE}" PARENT_SCOPE)
+        message(STATUS "os-release VERSION: ${VERSION_VALUE}")
+    endif()
+endfunction()
+
 function(get_linux_lsb_release_information)
     find_program(LSB_RELEASE_EXEC lsb_release)
+    
     if(NOT LSB_RELEASE_EXEC)
-        message(FATAL_ERROR "Could not detect lsb_release executable, can not gather required information")
+        message(STATUS "lsb_release executable not found, attempting /etc/os-release fallback")
+        get_linux_lsb_release_information_from_os_release()
+        return()
     endif()
 
     execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --id OUTPUT_VARIABLE LSB_RELEASE_ID_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
     execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --release OUTPUT_VARIABLE LSB_RELEASE_VERSION_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
     execute_process(COMMAND "${LSB_RELEASE_EXEC}" --short --codename OUTPUT_VARIABLE LSB_RELEASE_CODENAME_SHORT OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+    # Fallback to /etc/os-release if lsb_release returned empty or unknown
+    if(NOT DEFINED LSB_RELEASE_ID_SHORT OR LSB_RELEASE_ID_SHORT STREQUAL "" OR LSB_RELEASE_ID_SHORT MATCHES "unknown|Unknown")
+        message(STATUS "lsb_release returned unknown or empty, attempting /etc/os-release fallback")
+        get_linux_lsb_release_information_from_os_release()
+        return()
+    endif()
 
     set(LSB_RELEASE_ID_SHORT "${LSB_RELEASE_ID_SHORT}" PARENT_SCOPE)
     set(LSB_RELEASE_VERSION_SHORT "${LSB_RELEASE_VERSION_SHORT}" PARENT_SCOPE)
