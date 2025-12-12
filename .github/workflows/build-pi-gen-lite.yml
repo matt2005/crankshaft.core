@@ -26,6 +26,7 @@ on:
         type: string
       release:
         description: 'Debian Release'
+        type: string
         required: false
         default: 'trixie'
       auto_release:
@@ -63,14 +64,6 @@ on:
         required: false
         default: false
         type: boolean
-  push:
-    branches:
-      - main
-    paths:
-      - 'image_builder/**'
-  pull_request:
-    paths:
-      - 'image_builder/**'
 
 env:
   DEBIAN_FRONTEND: noninteractive
