@@ -59,6 +59,7 @@ Options:
   --build-type TYPE      Build configuration (Debug|Release) [default: Debug]
   --component COMP       Component to build (all|core|ui|tests) [default: all]
   --package              Create DEB packages after building [default: false]
+  --debian-suite SUITE   Target Debian suite (trixie|bookworm) [default: host VERSION_CODENAME, fallback trixie]
   --help                 Display help message
 ```
 
@@ -73,6 +74,11 @@ Options:
 ```bash
 # Configure
 cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+
+# Target a specific Debian suite for packaging (trixie uses t64 Qt6, bookworm does not)
+# Defaults: uses host VERSION_CODENAME when available, otherwise trixie
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDEBIAN_SUITE=trixie
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DDEBIAN_SUITE=bookworm
 
 # Build
 cmake --build build --config Debug -j$(nproc)
