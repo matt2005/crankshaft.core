@@ -120,12 +120,31 @@ set(CPACK_DEBIAN_COMPRESSION_TYPE "xz")
 
 # Enable component-based packaging for separate core and ui DEBs
 set(CPACK_DEB_COMPONENT_INSTALL ON)
-set(CPACK_COMPONENTS_ALL core ui)
+set(CPACK_COMPONENTS_ALL runtime development core ui)
+
+# AASDK Runtime package metadata
+set(CPACK_COMPONENT_RUNTIME_DISPLAY_NAME "AASDK Runtime Libraries")
+set(CPACK_COMPONENT_RUNTIME_DESCRIPTION "Android Auto SDK runtime libraries and SSL certificates")
+set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "libaasdk0")
+set(CPACK_DEBIAN_RUNTIME_PACKAGE_SECTION "libs")
+set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "libssl3 (>= 3.0), libprotobuf32 (>= 3.21), libusb-1.0-0 (>= 1.0.24)")
+set(CPACK_DEBIAN_RUNTIME_FILE_NAME DEB-DEFAULT)
+
+# AASDK Development package metadata
+set(CPACK_COMPONENT_DEVELOPMENT_DISPLAY_NAME "AASDK Development Files")
+set(CPACK_COMPONENT_DEVELOPMENT_DESCRIPTION "Android Auto SDK headers and development files")
+set(CPACK_COMPONENT_DEVELOPMENT_DEPENDS runtime)
+set(CPACK_DEBIAN_DEVELOPMENT_PACKAGE_NAME "libaasdk-dev")
+set(CPACK_DEBIAN_DEVELOPMENT_PACKAGE_SECTION "libdevel")
+set(CPACK_DEBIAN_DEVELOPMENT_PACKAGE_DEPENDS "libaasdk0 (>= ${PROJECT_VERSION}), libssl-dev (>= 3.0), libprotobuf-dev (>= 3.21), libusb-1.0-0-dev (>= 1.0.24)")
+set(CPACK_DEBIAN_DEVELOPMENT_FILE_NAME DEB-DEFAULT)
 
 # Core package metadata
 set(CPACK_COMPONENT_CORE_DISPLAY_NAME "Crankshaft Core")
 set(CPACK_COMPONENT_CORE_DESCRIPTION "Crankshaft core backend service with event bus and WebSocket server")
+set(CPACK_COMPONENT_CORE_DEPENDS runtime)
 set(CPACK_DEBIAN_CORE_PACKAGE_NAME "crankshaft-core")
+set(CPACK_DEBIAN_CORE_PACKAGE_DEPENDS "libaasdk0 (>= ${PROJECT_VERSION}), libqt6core6 (>= 6.2), libqt6network6 (>= 6.2), libqt6websockets6 (>= 6.2), libqt6dbus6 (>= 6.2), libgstreamer1.0-0 (>= 1.20), libgstreamer-plugins-base1.0-0 (>= 1.20)")
 set(CPACK_DEBIAN_CORE_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/packaging/core/postinst;${CMAKE_SOURCE_DIR}/packaging/core/prerm")
 set(CPACK_DEBIAN_CORE_FILE_NAME DEB-DEFAULT)
 
@@ -143,17 +162,24 @@ set(CPACK_SOURCE_GENERATOR "TGZ")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "crankshaft-mvp-${FULL_VERSION}")
 set(CPACK_SOURCE_IGNORE_FILES
     "/build/"
-	"/\\\\.git/"
-	"/\\\\.vscode/"
-	"/\\\\.github/"
     "CMakeCache.txt"
     "CMakeFiles/"
     "_CPack_Packages/"
-	"\\\\.deb$"
-	"\\\\.swp$"
-	"\\\\.swo$"
     "~$"
-	"\\\\.DS_Store$"
+    "/[.]git/"
+    "/[.]vscode/"
+    "/[.]github/"
+    "/[.]idea/"
+    "[.]gitignore"
+    "[.]DS_Store"
+    "/test_build/"
+    "/lib/"
+    "/bin/"
+    "[.]so$"
+    "[.]a$"
+    "[.]deb$"
+    "[.]swp$"
+    "[.]swo$"
 )
 
 include(CPack)
