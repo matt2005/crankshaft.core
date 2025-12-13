@@ -51,6 +51,7 @@ jobs:
     if: ${{ (github.event.workflow_run.conclusion == 'success' && github.event_name == 'workflow_run' ) || github.event_name == 'workflow_dispatch' }}
     steps:
       - name: Trigger APT Repository Update
+        id: trigger
         uses: actions/github-script@v7
         with:
           script: |
@@ -73,6 +74,7 @@ jobs:
             const list = await github.rest.actions.listRepoWorkflows({ owner: context.repo.owner, repo: context.repo.repo });
             const aptWf = list.data.workflows.find(w => (w.name === 'Trigger APT Repository Update') || (w.path && w.path.endsWith('/trigger-apt-publish.yml')));
             if (!aptWf) { throw new Error('trigger-apt-publish workflow not found'); }
+            const dispatchTime = Date.now();
             await github.rest.actions.createWorkflowDispatch({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -83,6 +85,55 @@ jobs:
                 distribution: (context.payload.inputs && context.payload.inputs.distribution) || 'trixie'
               }
             });
+            return { workflowId: aptWf.id, dispatchTime };
+          result-encoding: json
+
+      - name: Wait for APT publish workflow completion
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { workflowId, dispatchTime } = ${{ steps.trigger.outputs.result }};
+            console.log(`Waiting for workflow ${workflowId} triggered at ${dispatchTime}`);
+            
+            const maxWaitTime = 30 * 60 * 1000; // 30 minutes
+            const pollInterval = 10 * 1000; // 10 seconds
+            const startTime = Date.now();
+            
+            while (Date.now() - startTime < maxWaitTime) {
+              // Get recent runs for the workflow
+              const runs = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: workflowId,
+                per_page: 5
+              });
+              
+              // Find run that started after our dispatch
+              const targetRun = runs.data.workflow_runs.find(run => {
+                const runTime = new Date(run.created_at).getTime();
+                return runTime >= dispatchTime - 60000; // 1 minute buffer
+              });
+              
+              if (targetRun) {
+                console.log(`Found workflow run: ${targetRun.html_url}`);
+                console.log(`Status: ${targetRun.status}, Conclusion: ${targetRun.conclusion}`);
+                
+                if (targetRun.status === 'completed') {
+                  if (targetRun.conclusion === 'success') {
+                    console.log('✅ APT publish workflow completed successfully!');
+                    console.log(`Run URL: ${targetRun.html_url}`);
+                    return;
+                  } else {
+                    throw new Error(`APT publish workflow failed with conclusion: ${targetRun.conclusion}\nURL: ${targetRun.html_url}`);
+                  }
+                }
+              }
+              
+              console.log('Waiting for workflow to complete...');
+              await new Promise(resolve => setTimeout(resolve, pollInterval));
+            }
+            
+            throw new Error('Timeout waiting for APT publish workflow to complete');
 
   test-apt-install:
     needs: publish-apt
