@@ -13,3 +13,4 @@ CMakeCache.txt
 cmake_install.cmake
 Makefile
 _CPack_Packages
+*.backup
