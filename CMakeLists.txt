@@ -127,7 +127,12 @@ set(CPACK_COMPONENT_RUNTIME_DISPLAY_NAME "AASDK Runtime Libraries")
 set(CPACK_COMPONENT_RUNTIME_DESCRIPTION "Android Auto SDK runtime libraries and SSL certificates")
 set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "libaasdk0")
 set(CPACK_DEBIAN_RUNTIME_PACKAGE_SECTION "libs")
-set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "libssl3, libusb-1.0-0")
+# libssl3 was renamed to libssl3t64 in Debian trixie (time64 transition)
+if(DEBIAN_SUITE STREQUAL "trixie")
+	set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "libssl3t64, libusb-1.0-0")
+else()
+	set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "libssl3, libusb-1.0-0")
+endif()
 set(CPACK_DEBIAN_RUNTIME_FILE_NAME DEB-DEFAULT)
 
 # AASDK Development package metadata
