@@ -128,8 +128,9 @@ set(CPACK_COMPONENT_RUNTIME_DESCRIPTION "Android Auto SDK runtime libraries and 
 set(CPACK_DEBIAN_RUNTIME_PACKAGE_NAME "libaasdk0")
 set(CPACK_DEBIAN_RUNTIME_PACKAGE_SECTION "libs")
 # libssl3 was renamed to libssl3t64 in Debian trixie (time64 transition)
+# Prefer t64 on trixie, but allow fallback to non-t64 to ease CI
 if(DEBIAN_SUITE STREQUAL "trixie")
-	set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "libssl3t64, libusb-1.0-0")
+	set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "libssl3t64 | libssl3, libusb-1.0-0")
 else()
 	set(CPACK_DEBIAN_RUNTIME_PACKAGE_DEPENDS "libssl3, libusb-1.0-0")
 endif()
@@ -148,9 +149,10 @@ set(CPACK_DEBIAN_DEVELOPMENT_FILE_NAME DEB-DEFAULT)
 set(DEBIAN_SUITE "trixie" CACHE STRING "Target Debian suite (trixie or bookworm)")
 
 # Resolve Qt6 dependency names per suite (t64 only exists on trixie)
+# Prefer t64 core/gui on trixie, allow non-t64 as alternative for robustness
 if(DEBIAN_SUITE STREQUAL "trixie")
-	set(QT6_CORE_PKG "libqt6core6t64")
-	set(QT6_GUI_PKG  "libqt6gui6t64")
+	set(QT6_CORE_PKG "libqt6core6t64 | libqt6core6")
+	set(QT6_GUI_PKG  "libqt6gui6t64 | libqt6gui6")
 else()
 	set(QT6_CORE_PKG "libqt6core6")
 	set(QT6_GUI_PKG  "libqt6gui6")
