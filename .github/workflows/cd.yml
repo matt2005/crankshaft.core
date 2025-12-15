@@ -149,6 +149,14 @@ jobs:
         arch: ${{ github.event.inputs.amd64only == 'true' && fromJSON('["amd64"]') || fromJSON('["amd64", "arm64", "armhf"]') }}
         suite: [trixie]
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Set up QEMU for multi-arch
         if: matrix.arch != 'amd64'
         uses: docker/setup-qemu-action@v3
@@ -170,7 +178,7 @@ jobs:
             --platform $PLATFORM \
             --build-arg SUITE=${{ matrix.suite }} \
             -t crankshaft-apt-test:${{ matrix.arch }}-${{ matrix.suite }} \
-            -f docker/Dockerfile.test . \
+            -f "$GITHUB_WORKSPACE/docker/Dockerfile.test" "$GITHUB_WORKSPACE" \
             --load
 
           echo "Running verification script in the test image"
