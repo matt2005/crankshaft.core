@@ -96,3 +96,27 @@ jobs:
     uses: ./.github/workflows/build.yml
     with:
       architectures: ${{ github.event.inputs.amd64only == 'true' && 'amd64' || ((github.ref_name == 'main' || github.ref_name == 'develop' || github.base_ref == 'main' || github.base_ref == 'develop') && 'amd64 arm64 armhf' || 'amd64') }}
+
+  dispatch-cd-fastpath:
+    needs: build-packages
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.amd64only == 'true'
+    steps:
+      - name: Dispatch CD workflow with amd64only
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const list = await github.rest.actions.listRepoWorkflows({ owner: context.repo.owner, repo: context.repo.repo });
+            const cdWf = list.data.workflows.find(w => w.name === 'CD' || (w.path && w.path.endsWith('/cd.yml')));
+            if (!cdWf) { throw new Error('CD workflow not found'); }
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: cdWf.id,
+              ref: context.ref.replace('refs/heads/', ''),
+              inputs: {
+                distribution: 'trixie',
+                amd64only: 'true'
+              }
+            });
+            console.log('Dispatched CD with amd64only=true');
