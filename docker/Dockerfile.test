@@ -20,6 +20,12 @@ FROM debian:${SUITE}-slim
 
 ARG SUITE
 
+# Set up environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+# Set locale to avoid encoding issues
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+# Install prerequisites
 RUN set -e \
     && echo "=== Installing prerequisites ===" \
     && apt-get update \

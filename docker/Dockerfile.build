@@ -23,6 +23,12 @@ FROM debian:${DEBIAN_VERSION} AS builder
 ARG VERSION=0.0.0+dev
 ARG ARCH=amd64
 
+# Set up environment variables
+ENV DEBIAN_FRONTEND=noninteractive
+# Set locale to avoid encoding issues
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
+
 # Install build dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \

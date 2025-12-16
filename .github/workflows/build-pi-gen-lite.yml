@@ -544,7 +544,6 @@ jobs:
         with:
           name: pi-gen-lite-${{ matrix.arch }}-${{ steps.get_version.outputs.builddate }}-${{ steps.get_version.outputs.version }}
           path: |
-            pi-gen/deploy/
             pi-gen/extracted-container/deploy/
             pi-gen/extracted-container/work/
             pi-gen/extracted-container/opencardev/
