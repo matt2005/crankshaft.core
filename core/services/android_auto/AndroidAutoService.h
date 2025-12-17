@@ -75,7 +75,7 @@ class AndroidAutoService : public QObject {
    * @return Initialized service instance or nullptr on failure
    */
   static AndroidAutoService* create(MediaPipeline* mediaPipeline, ProfileManager* profileManager,
-                                     QObject* parent = nullptr);
+                                    QObject* parent = nullptr);
 
   /**
    * @brief Configure transport settings from device configuration

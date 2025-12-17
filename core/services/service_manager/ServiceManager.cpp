@@ -33,7 +33,6 @@ ServiceManager::ServiceManager(ProfileManager* profileManager, QObject* parent)
       m_wifiManager(nullptr),
       m_bluetoothManager(nullptr),
       m_mediaPipeline(nullptr) {
-  
   if (!m_profileManager) {
     Logger::instance().error("[ServiceManager] ProfileManager is null");
     return;
@@ -60,11 +59,10 @@ bool ServiceManager::startAllServices() {
   }
 
   HostProfile activeProfile = m_profileManager->getActiveHostProfile();
-  Logger::instance().info(
-      QString("[ServiceManager] Starting services for profile: %1 (%2)")
-          .arg(activeProfile.name, activeProfile.id));
-  Logger::instance().info(
-      QString("[ServiceManager] Profile has %1 device(s) configured").arg(activeProfile.devices.size()));
+  Logger::instance().info(QString("[ServiceManager] Starting services for profile: %1 (%2)")
+                              .arg(activeProfile.name, activeProfile.id));
+  Logger::instance().info(QString("[ServiceManager] Profile has %1 device(s) configured")
+                              .arg(activeProfile.devices.size()));
 
   bool anyStarted = false;
   int successCount = 0;
@@ -133,10 +131,10 @@ void ServiceManager::stopAllServices() {
 
 void ServiceManager::reloadServices() {
   Logger::instance().info("[ServiceManager] Reloading services from profile configuration...");
-  
+
   stopAllServices();
   startAllServices();
-  
+
   emit servicesReloaded();
   Logger::instance().info("[ServiceManager] Services reloaded successfully");
 }
@@ -150,7 +148,7 @@ bool ServiceManager::startService(const QString& deviceName) {
   }
 
   HostProfile activeProfile = m_profileManager->getActiveHostProfile();
-  
+
   for (const auto& device : activeProfile.devices) {
     if (device.name == deviceName || device.type == deviceName) {
       if (!device.enabled) {
@@ -201,7 +199,7 @@ bool ServiceManager::stopService(const QString& deviceName) {
 
 bool ServiceManager::restartService(const QString& deviceName) {
   Logger::instance().info(QString("[ServiceManager] Restarting service: %1").arg(deviceName));
-  
+
   stopService(deviceName);
   return startService(deviceName);
 }
@@ -227,7 +225,8 @@ QStringList ServiceManager::getRunningServices() const {
 
 void ServiceManager::onProfileChanged(const QString& profileId) {
   Logger::instance().info(
-      QString("[ServiceManager] Active profile changed to: %1, reloading services...").arg(profileId));
+      QString("[ServiceManager] Active profile changed to: %1, reloading services...")
+          .arg(profileId));
   reloadServices();
 }
 
@@ -236,15 +235,15 @@ void ServiceManager::onDeviceConfigChanged(const QString& profileId, const QStri
   HostProfile activeProfile = m_profileManager->getActiveHostProfile();
   if (activeProfile.id == profileId) {
     Logger::instance().info(
-        QString("[ServiceManager] Device config changed: %1, restarting service...").arg(deviceName));
+        QString("[ServiceManager] Device config changed: %1, restarting service...")
+            .arg(deviceName));
     restartService(deviceName);
   }
 }
 
 bool ServiceManager::startAndroidAutoService(const DeviceConfig& device) {
-  Logger::instance().info(
-      QString("[ServiceManager]   → Starting AndroidAuto service (%1)")
-          .arg(device.useMock ? "Mock" : "Real/AASDK"));
+  Logger::instance().info(QString("[ServiceManager]   → Starting AndroidAuto service (%1)")
+                              .arg(device.useMock ? "Mock" : "Real/AASDK"));
 
   // Stop existing instance if running
   if (m_androidAutoService) {
@@ -298,9 +297,8 @@ bool ServiceManager::startAndroidAutoService(const DeviceConfig& device) {
 }
 
 bool ServiceManager::startWiFiService(const DeviceConfig& device) {
-  Logger::instance().info(
-      QString("[ServiceManager]   → Starting WiFi service (%1)")
-          .arg(device.useMock ? "Mock" : "Real"));
+  Logger::instance().info(QString("[ServiceManager]   → Starting WiFi service (%1)")
+                              .arg(device.useMock ? "Mock" : "Real"));
 
   // Stop existing instance if running
   if (m_wifiManager) {
@@ -321,17 +319,16 @@ bool ServiceManager::startWiFiService(const DeviceConfig& device) {
   // Apply settings if available
   if (device.settings.contains("autoConnect")) {
     bool autoConnect = device.settings["autoConnect"].toBool();
-    Logger::instance().info(
-        QString("[ServiceManager]      Auto-connect: %1").arg(autoConnect ? "enabled" : "disabled"));
+    Logger::instance().info(QString("[ServiceManager]      Auto-connect: %1")
+                                .arg(autoConnect ? "enabled" : "disabled"));
   }
 
   return true;
 }
 
 bool ServiceManager::startBluetoothService(const DeviceConfig& device) {
-  Logger::instance().info(
-      QString("[ServiceManager]   → Starting Bluetooth service (%1)")
-          .arg(device.useMock ? "Mock" : "Real"));
+  Logger::instance().info(QString("[ServiceManager]   → Starting Bluetooth service (%1)")
+                              .arg(device.useMock ? "Mock" : "Real"));
 
   // Stop existing instance if running
   if (m_bluetoothManager) {
@@ -352,9 +349,8 @@ bool ServiceManager::startBluetoothService(const DeviceConfig& device) {
   // Apply settings if available
   if (device.settings.contains("autoDiscovery")) {
     bool autoDiscovery = device.settings["autoDiscovery"].toBool();
-    Logger::instance().info(
-        QString("[ServiceManager]      Auto-discovery: %1")
-            .arg(autoDiscovery ? "enabled" : "disabled"));
+    Logger::instance().info(QString("[ServiceManager]      Auto-discovery: %1")
+                                .arg(autoDiscovery ? "enabled" : "disabled"));
   }
 
   return true;

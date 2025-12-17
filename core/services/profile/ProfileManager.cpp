@@ -91,7 +91,7 @@ void ProfileManager::initializeDefaultProfiles() {
   // wireless = TCP/IP only (developer option for PC testing)
   androidAutoDevice.settings["connectionMode"] = "auto";
   androidAutoDevice.settings["wireless.enabled"] = false;
-  androidAutoDevice.settings["wireless.host"] = "";  // e.g., "192.168.1.100" or "phone.local"
+  androidAutoDevice.settings["wireless.host"] = "";    // e.g., "192.168.1.100" or "phone.local"
   androidAutoDevice.settings["wireless.port"] = 5277;  // Default Android Auto wireless port
 
   devHostProfile.devices.append(androidAutoDevice);

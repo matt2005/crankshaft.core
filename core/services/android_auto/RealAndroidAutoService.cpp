@@ -40,11 +40,11 @@
 #include <aasdk/Messenger/MessageInStream.hpp>
 #include <aasdk/Messenger/MessageOutStream.hpp>
 #include <aasdk/Messenger/Messenger.hpp>
-#include <aasdk/Transport/SSLWrapper.hpp>
-#include <aasdk/Transport/USBTransport.hpp>
-#include <aasdk/Transport/TCPTransport.hpp>
 #include <aasdk/TCP/TCPEndpoint.hpp>
 #include <aasdk/TCP/TCPWrapper.hpp>
+#include <aasdk/Transport/SSLWrapper.hpp>
+#include <aasdk/Transport/TCPTransport.hpp>
+#include <aasdk/Transport/USBTransport.hpp>
 #include <aasdk/USB/AOAPDevice.hpp>
 #include <aasdk/USB/AccessoryModeQueryChainFactory.hpp>
 #include <aasdk/USB/AccessoryModeQueryFactory.hpp>
@@ -70,7 +70,8 @@ RealAndroidAutoService::~RealAndroidAutoService() {
 
 void RealAndroidAutoService::configureTransport(const QMap<QString, QVariant>& settings) {
   QString mode = settings.value("connectionMode", "auto").toString().toLower();
-  Logger::instance().info(QString("[RealAndroidAutoService] Configuring transport mode: %1").arg(mode));
+  Logger::instance().info(
+      QString("[RealAndroidAutoService] Configuring transport mode: %1").arg(mode));
 
   if (mode == "usb") {
     m_transportMode = TransportMode::USB;
@@ -88,7 +89,8 @@ void RealAndroidAutoService::configureTransport(const QMap<QString, QVariant>& s
     m_wirelessPort = settings.value("wireless.port", 5277).toUInt();
 
     if (m_wirelessHost.isEmpty() && m_transportMode == TransportMode::Wireless) {
-      Logger::instance().warning("[RealAndroidAutoService] Wireless mode selected but no host configured.");
+      Logger::instance().warning(
+          "[RealAndroidAutoService] Wireless mode selected but no host configured.");
     } else if (!m_wirelessHost.isEmpty()) {
       Logger::instance().info(QString("[RealAndroidAutoService] Wireless AA configured: %1:%2")
                                   .arg(m_wirelessHost)
@@ -172,7 +174,8 @@ RealAndroidAutoService::TransportMode RealAndroidAutoService::getTransportMode()
 
 bool RealAndroidAutoService::setupUSBTransport() {
   if (!m_usbHub || !m_ioService) {
-    Logger::instance().error("[RealAndroidAutoService] Cannot setup USB transport: components not ready");
+    Logger::instance().error(
+        "[RealAndroidAutoService] Cannot setup USB transport: components not ready");
     return false;
   }
 
@@ -189,13 +192,13 @@ bool RealAndroidAutoService::setupTCPTransport(const QString& host, quint16 port
   }
 
   if (!m_ioService) {
-    Logger::instance().error("[RealAndroidAutoService] Cannot setup TCP transport: io_service not ready");
+    Logger::instance().error(
+        "[RealAndroidAutoService] Cannot setup TCP transport: io_service not ready");
     return false;
   }
 
-  Logger::instance().info(QString("[RealAndroidAutoService] Setting up TCP transport to %1:%2")
-                              .arg(host)
-                              .arg(port));
+  Logger::instance().info(
+      QString("[RealAndroidAutoService] Setting up TCP transport to %1:%2").arg(host).arg(port));
 
   try {
     // Create TCP wrapper
@@ -209,11 +212,10 @@ bool RealAndroidAutoService::setupTCPTransport(const QString& host, quint16 port
         tcpWrapper->connect(*socket, host.toStdString(), static_cast<uint16_t>(port));
 
     if (ec) {
-      Logger::instance().error(
-          QString("[RealAndroidAutoService] Failed to connect to %1:%2 - %3")
-              .arg(host)
-              .arg(port)
-              .arg(QString::fromStdString(ec.message())));
+      Logger::instance().error(QString("[RealAndroidAutoService] Failed to connect to %1:%2 - %3")
+                                   .arg(host)
+                                   .arg(port)
+                                   .arg(QString::fromStdString(ec.message())));
       return false;
     }
 
@@ -221,7 +223,8 @@ bool RealAndroidAutoService::setupTCPTransport(const QString& host, quint16 port
     auto tcpEndpoint = std::make_shared<aasdk::tcp::TCPEndpoint>(tcpWrapper, std::move(socket));
 
     // Create TCP transport
-    m_transport = std::make_shared<aasdk::transport::TCPTransport>(*m_ioService, std::move(tcpEndpoint));
+    m_transport =
+        std::make_shared<aasdk::transport::TCPTransport>(*m_ioService, std::move(tcpEndpoint));
 
     Logger::instance().info(
         QString("[RealAndroidAutoService] TCP transport connected to %1:%2").arg(host).arg(port));
@@ -509,10 +512,9 @@ bool RealAndroidAutoService::startSearching() {
       emit connected(m_device);
       return true;
     } else {
-      Logger::instance().error(
-          QString("[RealAndroidAutoService] Failed to connect to %1:%2")
-              .arg(m_wirelessHost)
-              .arg(m_wirelessPort));
+      Logger::instance().error(QString("[RealAndroidAutoService] Failed to connect to %1:%2")
+                                   .arg(m_wirelessHost)
+                                   .arg(m_wirelessPort));
       transitionToState(ConnectionState::DISCONNECTED);
       return false;
     }

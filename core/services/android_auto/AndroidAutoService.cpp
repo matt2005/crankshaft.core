@@ -299,7 +299,7 @@ AndroidAutoService::~AndroidAutoService() {}
 
 // Static factory function
 AndroidAutoService* AndroidAutoService::create(MediaPipeline* mediaPipeline,
-                                                ProfileManager* profileManager, QObject* parent) {
+                                               ProfileManager* profileManager, QObject* parent) {
   // Check ProfileManager for AndroidAuto device configuration
   bool useMock = true;  // Default to mock if profile not found
 
@@ -308,10 +308,9 @@ AndroidAutoService* AndroidAutoService::create(MediaPipeline* mediaPipeline,
     for (const auto& device : activeProfile.devices) {
       if (device.name == "AndroidAuto" || device.type == "AndroidAuto") {
         useMock = device.useMock;
-        Logger::instance().info(
-            QString("AndroidAuto device found in profile '%1': useMock=%2")
-                .arg(activeProfile.name)
-                .arg(useMock ? "true" : "false"));
+        Logger::instance().info(QString("AndroidAuto device found in profile '%1': useMock=%2")
+                                    .arg(activeProfile.name)
+                                    .arg(useMock ? "true" : "false"));
         break;
       }
     }

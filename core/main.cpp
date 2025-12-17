@@ -73,8 +73,9 @@ int main(int argc, char* argv[]) {
 
   // Initialise ProfileManager
   Logger::instance().info("Initialising ProfileManager...");
-  QString profileConfigDir =
-      ConfigService::instance().get("core.profile.configDir", "/etc/crankshaft/profiles").toString();
+  QString profileConfigDir = ConfigService::instance()
+                                 .get("core.profile.configDir", "/etc/crankshaft/profiles")
+                                 .toString();
   ProfileManager profileManager(profileConfigDir);
 
   if (!profileManager.loadProfiles()) {
@@ -82,7 +83,8 @@ int main(int argc, char* argv[]) {
   }
 
   HostProfile activeProfile = profileManager.getActiveHostProfile();
-  Logger::instance().info(QString("Active host profile: %1 (%2)").arg(activeProfile.name, activeProfile.id));
+  Logger::instance().info(
+      QString("Active host profile: %1 (%2)").arg(activeProfile.name, activeProfile.id));
 
   // Create WebSocket server
   WebSocketServer server(port);

@@ -119,10 +119,11 @@ void WebSocketServer::handlePublish(const QString& topic, const QVariantMap& pay
 }
 
 void WebSocketServer::handleServiceCommand(QWebSocket* client, const QString& command,
-                                            const QVariantMap& params) {
+                                           const QVariantMap& params) {
   if (!m_serviceManager) {
-    Logger::instance().warning("[WebSocketServer] ServiceManager not available for command: " + command);
-    
+    Logger::instance().warning("[WebSocketServer] ServiceManager not available for command: " +
+                               command);
+
     QJsonObject response;
     response["type"] = "service_response";
     response["command"] = command;
@@ -148,8 +149,9 @@ void WebSocketServer::handleServiceCommand(QWebSocket* client, const QString& co
     QString serviceName = params.value("service").toString();
     if (!serviceName.isEmpty()) {
       success = m_serviceManager->startService(serviceName);
-      Logger::instance().info(
-          QString("[WebSocketServer] Start service '%1': %2").arg(serviceName).arg(success ? "success" : "failed"));
+      Logger::instance().info(QString("[WebSocketServer] Start service '%1': %2")
+                                  .arg(serviceName)
+                                  .arg(success ? "success" : "failed"));
     } else {
       error = "Missing 'service' parameter";
     }
@@ -157,8 +159,9 @@ void WebSocketServer::handleServiceCommand(QWebSocket* client, const QString& co
     QString serviceName = params.value("service").toString();
     if (!serviceName.isEmpty()) {
       success = m_serviceManager->stopService(serviceName);
-      Logger::instance().info(
-          QString("[WebSocketServer] Stop service '%1': %2").arg(serviceName).arg(success ? "success" : "failed"));
+      Logger::instance().info(QString("[WebSocketServer] Stop service '%1': %2")
+                                  .arg(serviceName)
+                                  .arg(success ? "success" : "failed"));
     } else {
       error = "Missing 'service' parameter";
     }
@@ -166,8 +169,9 @@ void WebSocketServer::handleServiceCommand(QWebSocket* client, const QString& co
     QString serviceName = params.value("service").toString();
     if (!serviceName.isEmpty()) {
       success = m_serviceManager->restartService(serviceName);
-      Logger::instance().info(
-          QString("[WebSocketServer] Restart service '%1': %2").arg(serviceName).arg(success ? "success" : "failed"));
+      Logger::instance().info(QString("[WebSocketServer] Restart service '%1': %2")
+                                  .arg(serviceName)
+                                  .arg(success ? "success" : "failed"));
     } else {
       error = "Missing 'service' parameter";
     }

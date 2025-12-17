@@ -95,10 +95,18 @@ class ServiceManager : public QObject {
   QStringList getRunningServices() const;
 
   // Service instance getters (for external access if needed)
-  AndroidAutoService* getAndroidAutoService() const { return m_androidAutoService; }
-  WiFiManager* getWiFiManager() const { return m_wifiManager; }
-  BluetoothManager* getBluetoothManager() const { return m_bluetoothManager; }
-  MediaPipeline* getMediaPipeline() const { return m_mediaPipeline; }
+  AndroidAutoService* getAndroidAutoService() const {
+    return m_androidAutoService;
+  }
+  WiFiManager* getWiFiManager() const {
+    return m_wifiManager;
+  }
+  BluetoothManager* getBluetoothManager() const {
+    return m_bluetoothManager;
+  }
+  MediaPipeline* getMediaPipeline() const {
+    return m_mediaPipeline;
+  }
 
  signals:
   /**
