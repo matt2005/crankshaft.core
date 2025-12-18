@@ -45,6 +45,8 @@ jobs:
   generate:
     if: github.event_name == 'workflow_call' || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -113,3 +115,39 @@ jobs:
         run: |
           echo "Changelog generated for range: ${{ steps.range.outputs.range }}"
           head -n 20 changelog-ci.md
+
+      - name: Update CHANGELOG.md
+        if: github.event.pull_request.merged == true
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          TODAY=$(date -u +"%Y-%m-%d")
+          
+          # Extract commits from changelog-ci.md (skip header lines)
+          COMMITS=$(tail -n +6 changelog-ci.md)
+          
+          # Create new section
+          NEW_SECTION="## [$VERSION] - $TODAY"$'\n'"$COMMITS"$'\n'
+          
+          # Insert after "## Unreleased" section
+          if grep -q "## Unreleased" docs/CHANGELOG.md; then
+            # Find line after Unreleased section content and insert
+            awk -v new="$NEW_SECTION" '
+              /## Unreleased/ { print; unreleased=1; next }
+              unreleased && /^## / { print new; unreleased=0 }
+              { print }
+              END { if (unreleased) print new }
+            ' docs/CHANGELOG.md > docs/CHANGELOG.md.tmp
+            mv docs/CHANGELOG.md.tmp docs/CHANGELOG.md
+          else
+            # No Unreleased section, prepend to file
+            echo -e "$NEW_SECTION\n$(cat docs/CHANGELOG.md)" > docs/CHANGELOG.md
+          fi
+
+      - name: Commit changelog
+        if: github.event.pull_request.merged == true
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add docs/CHANGELOG.md
+          git diff --staged --quiet || git commit -m "Docs: update CHANGELOG.md for ${{ steps.version.outputs.version }}"
+          git push
