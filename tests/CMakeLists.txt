@@ -57,6 +57,7 @@ add_executable(test_websocket
   ../core/services/eventbus/EventBus.cpp
   ../core/services/logging/Logger.cpp
   ../core/services/websocket/WebSocketServer.cpp
+  ../core/services/service_manager/ServiceManager.cpp
 )
 
 set_target_properties(test_websocket PROPERTIES
