@@ -58,6 +58,9 @@ add_executable(test_websocket
   ../core/services/logging/Logger.cpp
   ../core/services/websocket/WebSocketServer.cpp
   ../core/services/service_manager/ServiceManager.cpp
+  ../core/services/profile/ProfileManager.cpp
+  ../core/hal/multimedia/MediaPipeline.cpp
+  ../core/services/android_auto/AndroidAutoService.cpp
 )
 
 set_target_properties(test_websocket PROPERTIES
