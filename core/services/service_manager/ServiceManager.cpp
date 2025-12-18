@@ -365,7 +365,7 @@ void ServiceManager::stopBluetoothService() {
 void ServiceManager::stopMediaPipeline() {
   if (m_mediaPipeline) {
     Logger::instance().info("[ServiceManager] Stopping MediaPipeline");
-    m_mediaPipeline->deinitialise();
+    m_mediaPipeline->stop();
     delete m_mediaPipeline;
     m_mediaPipeline = nullptr;
     Logger::instance().info("[ServiceManager] MediaPipeline stopped");
