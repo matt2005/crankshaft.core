@@ -219,12 +219,11 @@ bool RealAndroidAutoService::setupTCPTransport(const QString& host, quint16 port
       return false;
     }
 
-    // Create TCP endpoint
-    auto tcpEndpoint = std::make_shared<aasdk::tcp::TCPEndpoint>(tcpWrapper, std::move(socket));
+    // Create TCP endpoint using the wrapper and socket
+    auto tcpEndpoint = std::make_shared<aasdk::tcp::TCPEndpoint>(*tcpWrapper, *socket);
 
-    // Create TCP transport
-    m_transport =
-        std::make_shared<aasdk::transport::TCPTransport>(*m_ioService, std::move(tcpEndpoint));
+    // Create TCP transport from the endpoint
+    m_transport = std::make_shared<aasdk::transport::TCPTransport>(*m_ioService, tcpEndpoint);
 
     Logger::instance().info(
         QString("[RealAndroidAutoService] TCP transport connected to %1:%2").arg(host).arg(port));
