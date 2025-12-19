@@ -163,6 +163,7 @@ class RealAndroidAutoService : public AndroidAutoService {
   void setupAASDK();
   void cleanupAASDK();
   void setupChannels();
+  void setupChannelsWithTransport();
   void cleanupChannels();
   void handleDeviceDetected();
   void handleDeviceRemoved();

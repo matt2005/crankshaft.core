@@ -255,13 +255,14 @@ bool ServiceManager::startAndroidAutoService(const DeviceConfig& device) {
   if (!device.useMock && !m_mediaPipeline) {
     Logger::instance().info("[ServiceManager]      Creating MediaPipeline for Real AndroidAuto");
     m_mediaPipeline = new MediaPipeline(this);
-    if (!m_mediaPipeline->initialise()) {
-      Logger::instance().error("[ServiceManager]      Failed to initialise MediaPipeline");
+    MediaConfig config{};  // Use defaults until profiles provide detailed config
+    if (!m_mediaPipeline->start(config)) {
+      Logger::instance().error("[ServiceManager]      Failed to start MediaPipeline");
       delete m_mediaPipeline;
       m_mediaPipeline = nullptr;
       return false;
     }
-    Logger::instance().info("[ServiceManager]      MediaPipeline initialised successfully");
+    Logger::instance().info("[ServiceManager]      MediaPipeline started successfully");
   }
 
   m_androidAutoService = AndroidAutoService::create(m_mediaPipeline, m_profileManager, this);
@@ -306,24 +307,9 @@ bool ServiceManager::startWiFiService(const DeviceConfig& device) {
     stopWiFiService();
   }
 
-  m_wifiManager = new WiFiManager(this);
-  if (!m_wifiManager->initialise()) {
-    Logger::instance().error("[ServiceManager]      Failed to initialise WiFi service");
-    delete m_wifiManager;
-    m_wifiManager = nullptr;
-    return false;
-  }
-
-  Logger::instance().info("[ServiceManager]      WiFi service started successfully");
-
-  // Apply settings if available
-  if (device.settings.contains("autoConnect")) {
-    bool autoConnect = device.settings["autoConnect"].toBool();
-    Logger::instance().info(QString("[ServiceManager]      Auto-connect: %1")
-                                .arg(autoConnect ? "enabled" : "disabled"));
-  }
-
-  return true;
+  Logger::instance().warning(
+      "[ServiceManager] WiFiManager not implemented; skipping WiFi service start");
+  return false;
 }
 
 bool ServiceManager::startBluetoothService(const DeviceConfig& device) {
@@ -336,24 +322,9 @@ bool ServiceManager::startBluetoothService(const DeviceConfig& device) {
     stopBluetoothService();
   }
 
-  m_bluetoothManager = new BluetoothManager(this);
-  if (!m_bluetoothManager->initialise()) {
-    Logger::instance().error("[ServiceManager]      Failed to initialise Bluetooth service");
-    delete m_bluetoothManager;
-    m_bluetoothManager = nullptr;
-    return false;
-  }
-
-  Logger::instance().info("[ServiceManager]      Bluetooth service started successfully");
-
-  // Apply settings if available
-  if (device.settings.contains("autoDiscovery")) {
-    bool autoDiscovery = device.settings["autoDiscovery"].toBool();
-    Logger::instance().info(QString("[ServiceManager]      Auto-discovery: %1")
-                                .arg(autoDiscovery ? "enabled" : "disabled"));
-  }
-
-  return true;
+  Logger::instance().warning(
+      "[ServiceManager] BluetoothManager not implemented; skipping Bluetooth service start");
+  return false;
 }
 
 void ServiceManager::stopAndroidAutoService() {
@@ -364,12 +335,18 @@ void ServiceManager::stopAndroidAutoService() {
     m_androidAutoService = nullptr;
     Logger::instance().info("[ServiceManager] AndroidAuto service stopped");
   }
+
+  if (m_mediaPipeline) {
+    Logger::instance().info("[ServiceManager] Stopping MediaPipeline");
+    m_mediaPipeline->stop();
+    delete m_mediaPipeline;
+    m_mediaPipeline = nullptr;
+  }
 }
 
 void ServiceManager::stopWiFiService() {
   if (m_wifiManager) {
     Logger::instance().info("[ServiceManager] Stopping WiFi service");
-    m_wifiManager->deinitialise();
     delete m_wifiManager;
     m_wifiManager = nullptr;
     Logger::instance().info("[ServiceManager] WiFi service stopped");
@@ -379,7 +356,6 @@ void ServiceManager::stopWiFiService() {
 void ServiceManager::stopBluetoothService() {
   if (m_bluetoothManager) {
     Logger::instance().info("[ServiceManager] Stopping Bluetooth service");
-    m_bluetoothManager->deinitialise();
     delete m_bluetoothManager;
     m_bluetoothManager = nullptr;
     Logger::instance().info("[ServiceManager] Bluetooth service stopped");
@@ -389,7 +365,7 @@ void ServiceManager::stopBluetoothService() {
 void ServiceManager::stopMediaPipeline() {
   if (m_mediaPipeline) {
     Logger::instance().info("[ServiceManager] Stopping MediaPipeline");
-    m_mediaPipeline->deinitialise();
+    m_mediaPipeline->stop();
     delete m_mediaPipeline;
     m_mediaPipeline = nullptr;
     Logger::instance().info("[ServiceManager] MediaPipeline stopped");

@@ -23,6 +23,8 @@
 #include <QPainter>
 #include <QRandomGenerator>
 
+#include "../logging/Logger.h"
+
 MockAndroidAutoService::MockAndroidAutoService(QObject* parent) : AndroidAutoService(parent) {
   // Initialize mock device info
   m_device.serialNumber = "MOCK_AA_DEVICE_001";
@@ -55,6 +57,7 @@ void MockAndroidAutoService::configureTransport(const QMap<QString, QVariant>& s
 }
 
 bool MockAndroidAutoService::initialise() {
+  Logger::instance().info(QString("[AndroidAuto] Initialising Mock Android Auto service"));
   if (m_state != ConnectionState::DISCONNECTED) {
     return false;
   }

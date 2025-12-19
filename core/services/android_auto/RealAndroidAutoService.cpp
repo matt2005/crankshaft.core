@@ -219,12 +219,11 @@ bool RealAndroidAutoService::setupTCPTransport(const QString& host, quint16 port
       return false;
     }
 
-    // Create TCP endpoint
-    auto tcpEndpoint = std::make_shared<aasdk::tcp::TCPEndpoint>(tcpWrapper, std::move(socket));
+    // Create TCP endpoint using the wrapper and socket
+    auto tcpEndpoint = std::make_shared<aasdk::tcp::TCPEndpoint>(*tcpWrapper, socket);
 
-    // Create TCP transport
-    m_transport =
-        std::make_shared<aasdk::transport::TCPTransport>(*m_ioService, std::move(tcpEndpoint));
+    // Create TCP transport from the endpoint
+    m_transport = std::make_shared<aasdk::transport::TCPTransport>(*m_ioService, tcpEndpoint);
 
     Logger::instance().info(
         QString("[RealAndroidAutoService] TCP transport connected to %1:%2").arg(host).arg(port));
@@ -411,6 +410,177 @@ void RealAndroidAutoService::setupChannels() {
   } catch (const std::exception& e) {
     Logger::instance().error(QString("Failed to setup channels: %1").arg(e.what()));
     emit errorOccurred(QString("Channel setup failed: %1").arg(e.what()));
+  }
+}
+
+void RealAndroidAutoService::setupChannelsWithTransport() {
+  if (!m_transport || !m_ioService) {
+    Logger::instance().error("Cannot setup channels: transport or io_service not ready");
+    return;
+  }
+
+  try {
+    // Create SSL/encryption layer
+    auto sslWrapper = std::make_shared<aasdk::transport::SSLWrapper>();
+    m_cryptor = std::make_shared<aasdk::messenger::Cryptor>(std::move(sslWrapper));
+    m_cryptor->init();
+
+    // Create messenger
+    auto messageInStream =
+        std::make_shared<aasdk::messenger::MessageInStream>(*m_ioService, m_transport, m_cryptor);
+    auto messageOutStream =
+        std::make_shared<aasdk::messenger::MessageOutStream>(*m_ioService, m_transport, m_cryptor);
+    m_messenger = std::make_shared<aasdk::messenger::Messenger>(
+        *m_ioService, std::move(messageInStream), std::move(messageOutStream));
+
+    // Create control channel (required)
+    m_controlChannel =
+        std::make_shared<aasdk::channel::control::ControlServiceChannel>(*m_strand, m_messenger);
+
+    // Create video channel
+    if (m_channelConfig.videoEnabled) {
+      m_videoChannel = std::make_shared<aasdk::channel::mediasink::video::channel::VideoChannel>(
+          *m_strand, m_messenger);
+      Logger::instance().info("Video channel enabled (TCP)");
+    }
+
+    // Create media audio channel
+    if (m_channelConfig.mediaAudioEnabled) {
+      m_mediaAudioChannel =
+          std::make_shared<aasdk::channel::mediasink::audio::channel::MediaAudioChannel>(
+              *m_strand, m_messenger);
+      Logger::instance().info("Media audio channel enabled (TCP)");
+    }
+
+    // Create system audio channel
+    if (m_channelConfig.systemAudioEnabled) {
+      m_systemAudioChannel =
+          std::make_shared<aasdk::channel::mediasink::audio::channel::SystemAudioChannel>(
+              *m_strand, m_messenger);
+      Logger::instance().info("System audio channel enabled (TCP)");
+    }
+
+    // Create speech audio channel (using GuidanceAudioChannel)
+    if (m_channelConfig.speechAudioEnabled) {
+      m_speechAudioChannel =
+          std::make_shared<aasdk::channel::mediasink::audio::channel::GuidanceAudioChannel>(
+              *m_strand, m_messenger);
+      Logger::instance().info("Speech audio channel enabled (TCP)");
+    }
+
+    // Create input channel
+    if (m_channelConfig.inputEnabled) {
+      m_inputChannel =
+          std::make_shared<aasdk::channel::inputsource::InputSourceService>(*m_strand, m_messenger);
+      Logger::instance().info("Input channel enabled (TCP)");
+    }
+
+    // Create sensor channel
+    if (m_channelConfig.sensorEnabled) {
+      m_sensorChannel = std::make_shared<aasdk::channel::sensorsource::SensorSourceService>(
+          *m_strand, m_messenger);
+      Logger::instance().info("Sensor channel enabled (TCP)");
+    }
+
+    // Create bluetooth channel
+    if (m_channelConfig.bluetoothEnabled) {
+      m_bluetoothChannel =
+          std::make_shared<aasdk::channel::bluetooth::BluetoothService>(*m_strand, m_messenger);
+      Logger::instance().info("Bluetooth channel enabled (TCP)");
+    }
+
+    // Initialize video decoder
+    if (m_channelConfig.videoEnabled) {
+      m_videoDecoder = new GStreamerVideoDecoder(this);
+
+      IVideoDecoder::DecoderConfig decoderConfig;
+      decoderConfig.codec = IVideoDecoder::CodecType::H264;
+      decoderConfig.width = m_resolution.width();
+      decoderConfig.height = m_resolution.height();
+      decoderConfig.fps = m_fps;
+      decoderConfig.outputFormat = IVideoDecoder::PixelFormat::RGBA;
+      decoderConfig.hardwareAcceleration = true;
+
+      if (m_videoDecoder->initialize(decoderConfig)) {
+        connect(m_videoDecoder, &IVideoDecoder::frameDecoded, this,
+                [this](int width, int height, const uint8_t* data, int size) {
+                  emit videoFrameReady(width, height, data, size);
+                });
+
+        connect(m_videoDecoder, &IVideoDecoder::errorOccurred, this, [](const QString& error) {
+          Logger::instance().error("Video decoder error: " + error);
+        });
+
+        Logger::instance().info(
+            QString("Video decoder initialized: %1").arg(m_videoDecoder->getDecoderName()));
+      } else {
+        Logger::instance().error("Failed to initialize video decoder");
+        delete m_videoDecoder;
+        m_videoDecoder = nullptr;
+      }
+    }
+
+    // Initialize audio mixer
+    if (m_channelConfig.mediaAudioEnabled || m_channelConfig.systemAudioEnabled ||
+        m_channelConfig.speechAudioEnabled) {
+      m_audioMixer = new AudioMixer(this);
+
+      IAudioMixer::AudioFormat masterFormat;
+      masterFormat.sampleRate = 48000;
+      masterFormat.channels = 2;
+      masterFormat.bitsPerSample = 16;
+
+      if (m_audioMixer->initialize(masterFormat)) {
+        // Add media audio channel (48kHz stereo)
+        if (m_channelConfig.mediaAudioEnabled) {
+          IAudioMixer::ChannelConfig mediaConfig;
+          mediaConfig.id = IAudioMixer::ChannelId::MEDIA;
+          mediaConfig.volume = 0.8f;
+          mediaConfig.priority = 1;
+          mediaConfig.format = masterFormat;
+          m_audioMixer->addChannel(mediaConfig);
+        }
+
+        // Add system audio channel (16kHz mono)
+        if (m_channelConfig.systemAudioEnabled) {
+          IAudioMixer::ChannelConfig systemConfig;
+          systemConfig.id = IAudioMixer::ChannelId::SYSTEM;
+          systemConfig.volume = 1.0f;
+          systemConfig.priority = 2;
+          systemConfig.format = {16000, 1, 16};
+          m_audioMixer->addChannel(systemConfig);
+        }
+
+        // Add speech audio channel (16kHz mono)
+        if (m_channelConfig.speechAudioEnabled) {
+          IAudioMixer::ChannelConfig speechConfig;
+          speechConfig.id = IAudioMixer::ChannelId::SPEECH;
+          speechConfig.volume = 1.0f;
+          speechConfig.priority = 3;
+          speechConfig.format = {16000, 1, 16};
+          m_audioMixer->addChannel(speechConfig);
+        }
+
+        // Connect mixed audio output
+        connect(m_audioMixer, &IAudioMixer::audioMixed, this,
+                [this](const QByteArray& mixedData) { emit audioDataReady(mixedData); });
+
+        connect(m_audioMixer, &IAudioMixer::errorOccurred, this, [](const QString& error) {
+          Logger::instance().error("Audio mixer error: " + error);
+        });
+
+        Logger::instance().info("Audio mixer initialized with multiple channels");
+      } else {
+        Logger::instance().error("Failed to initialize audio mixer");
+        delete m_audioMixer;
+        m_audioMixer = nullptr;
+      }
+    }
+
+    Logger::instance().info("All enabled channels created successfully (TCP)");
+  } catch (const std::exception& e) {
+    Logger::instance().error(QString("Failed to setup channels (TCP): %1").arg(e.what()));
+    emit errorOccurred(QString("Channel setup failed (TCP): %1").arg(e.what()));
   }
 }
 
