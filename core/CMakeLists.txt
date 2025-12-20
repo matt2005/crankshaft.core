@@ -119,6 +119,13 @@ target_include_directories(crankshaft-core PRIVATE
   ${CMAKE_SOURCE_DIR}/external/aasdk/include
 )
 
+# If FetchContent populated the json-schema-validator sources, add its include dir
+if(DEFINED nlohmann_json_schema_validator_SOURCE_DIR)
+  target_include_directories(crankshaft-core PRIVATE
+    ${nlohmann_json_schema_validator_SOURCE_DIR}/include
+  )
+endif()
+
 # Expose repo source dir to C++ so runtime can locate the schema files during development.
 target_compile_definitions(crankshaft-core PRIVATE CRANKSHAFT_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
