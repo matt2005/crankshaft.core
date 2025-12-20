@@ -24,13 +24,13 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
-#include <QUuid>
 #include <QStandardPaths>
+#include <QUuid>
 #include <fstream>
 
 // JSON Schema validation (nlohmann + pboettch json-schema-validator)
-#include <nlohmann/json.hpp>
 #include <nlohmann/json-schema.hpp>
+#include <nlohmann/json.hpp>
 
 using nlohmann::json;
 namespace json_schema = nlohmann::json_schema;
@@ -269,11 +269,13 @@ QString VehicleProfile::toJson() const {
   obj["wheelCount"] = static_cast<qint64>(wheelCount);
 
   QVariantMap props;
-  for (auto it = properties.constBegin(); it != properties.constEnd(); ++it) props.insert(it.key(), it.value());
+  for (auto it = properties.constBegin(); it != properties.constEnd(); ++it)
+    props.insert(it.key(), it.value());
   obj["properties"] = QJsonObject::fromVariantMap(props);
 
   QVariantMap mocks;
-  for (auto it = mockDefaults.constBegin(); it != mockDefaults.constEnd(); ++it) mocks.insert(it.key(), it.value());
+  for (auto it = mockDefaults.constBegin(); it != mockDefaults.constEnd(); ++it)
+    mocks.insert(it.key(), it.value());
   obj["mockDefaults"] = QJsonObject::fromVariantMap(mocks);
 
   return QString::fromUtf8(QJsonDocument(obj).toJson(QJsonDocument::Compact));
@@ -300,18 +302,21 @@ VehicleProfile VehicleProfile::fromJson(const QString& json) {
   vp.vehicleType = obj.value("vehicleType").toString();
 
   QJsonArray modes = obj.value("supportedModes").toArray();
-  for (const auto& m : modes) if (m.isString()) vp.supportedModes.append(m.toString());
+  for (const auto& m : modes)
+    if (m.isString()) vp.supportedModes.append(m.toString());
 
   vp.hasAWD = obj.value("hasAWD").toBool(false);
   vp.wheelCount = static_cast<quint32>(obj.value("wheelCount").toInt(0));
 
   QJsonObject propObj = obj.value("properties").toObject();
   QVariantMap pmap = propObj.toVariantMap();
-  for (auto it = pmap.constBegin(); it != pmap.constEnd(); ++it) vp.properties.insert(it.key(), it.value());
+  for (auto it = pmap.constBegin(); it != pmap.constEnd(); ++it)
+    vp.properties.insert(it.key(), it.value());
 
   QJsonObject mockObj = obj.value("mockDefaults").toObject();
   QVariantMap mmap = mockObj.toVariantMap();
-  for (auto it = mmap.constBegin(); it != mmap.constEnd(); ++it) vp.mockDefaults.insert(it.key(), it.value());
+  for (auto it = mmap.constBegin(); it != mmap.constEnd(); ++it)
+    vp.mockDefaults.insert(it.key(), it.value());
 
   if (vp.id.isEmpty()) vp.id = QUuid::createUuid().toString();
   return vp;
@@ -597,27 +602,34 @@ bool ProfileManager::loadProfiles() {
     if (doc.isArray()) {
       try {
         // locate schema file relative to source dir
-        QString schemaPath = QString(CRANKSHAFT_SOURCE_DIR) + "/docs/schemas/host_profiles.schema.json";
+        QString schemaPath =
+            QString(CRANKSHAFT_SOURCE_DIR) + "/docs/schemas/host_profiles.schema.json";
         std::ifstream f(schemaPath.toStdString());
         if (f.good()) {
-          json schemaJson; f >> schemaJson;
+          json schemaJson;
+          f >> schemaJson;
           json instance = json::parse(doc.toJson(QJsonDocument::Compact).toStdString());
           json_schema::json_validator validator;
           validator.set_root_schema(schemaJson);
           validator.validate(instance);
           wholeDocValid = true;
         } else {
-          Logger::instance().debug(QString("ProfileManager: Schema file not found: %1").arg(schemaPath));
+          Logger::instance().debug(
+              QString("ProfileManager: Schema file not found: %1").arg(schemaPath));
         }
       } catch (const std::exception& ex) {
-        Logger::instance().warning(QString("ProfileManager: Whole-host_profiles.json schema validation failed: %1").arg(QString::fromLatin1(ex.what())));
+        Logger::instance().warning(
+            QString("ProfileManager: Whole-host_profiles.json schema validation failed: %1")
+                .arg(QString::fromLatin1(ex.what())));
       }
 
-      // If whole doc valid, accept items directly; otherwise validate each item individually (fallback)
+      // If whole doc valid, accept items directly; otherwise validate each item individually
+      // (fallback)
       if (wholeDocValid) {
         for (const auto& value : doc.array()) {
           if (value.isObject()) {
-            QString itemJson = QString::fromUtf8(QJsonDocument(value.toObject()).toJson(QJsonDocument::Compact));
+            QString itemJson =
+                QString::fromUtf8(QJsonDocument(value.toObject()).toJson(QJsonDocument::Compact));
             HostProfile p = HostProfile::fromJson(itemJson);
             m_hostProfiles[p.id] = p;
             if (p.isActive) m_activeHostProfileId = p.id;
@@ -628,15 +640,20 @@ bool ProfileManager::loadProfiles() {
           if (!value.isObject()) continue;
           QJsonObject obj = value.toObject();
 
-          // per-item validation by wrapping into a single-element array and validating against schema
+          // per-item validation by wrapping into a single-element array and validating against
+          // schema
           bool itemValid = false;
           try {
-            QString schemaPath = QString(CRANKSHAFT_SOURCE_DIR) + "/docs/schemas/host_profiles.schema.json";
+            QString schemaPath =
+                QString(CRANKSHAFT_SOURCE_DIR) + "/docs/schemas/host_profiles.schema.json";
             std::ifstream f(schemaPath.toStdString());
             if (f.good()) {
-              json schemaJson; f >> schemaJson;
-              QJsonArray arr; arr.append(obj);
-              json instance = json::parse(QJsonDocument(arr).toJson(QJsonDocument::Compact).toStdString());
+              json schemaJson;
+              f >> schemaJson;
+              QJsonArray arr;
+              arr.append(obj);
+              json instance =
+                  json::parse(QJsonDocument(arr).toJson(QJsonDocument::Compact).toStdString());
               json_schema::json_validator validator;
               validator.set_root_schema(schemaJson);
               validator.validate(instance);
@@ -648,8 +665,11 @@ bool ProfileManager::loadProfiles() {
 
           if (!itemValid) {
             // fallback lightweight checks
-            if (!obj.contains("name") || !obj.value("name").isString() || !obj.contains("devices") || !obj.value("devices").isArray()) {
-              Logger::instance().warning(QString("ProfileManager: Skipping invalid host profile entry in %1").arg(hostProfilesPath));
+            if (!obj.contains("name") || !obj.value("name").isString() ||
+                !obj.contains("devices") || !obj.value("devices").isArray()) {
+              Logger::instance().warning(
+                  QString("ProfileManager: Skipping invalid host profile entry in %1")
+                      .arg(hostProfilesPath));
               continue;
             }
           }
@@ -671,26 +691,32 @@ bool ProfileManager::loadProfiles() {
     bool wholeDocValid = false;
     if (doc.isArray()) {
       try {
-        QString schemaPath = QString(CRANKSHAFT_SOURCE_DIR) + "/docs/schemas/vehicle_profiles.schema.json";
+        QString schemaPath =
+            QString(CRANKSHAFT_SOURCE_DIR) + "/docs/schemas/vehicle_profiles.schema.json";
         std::ifstream f(schemaPath.toStdString());
         if (f.good()) {
-          json schemaJson; f >> schemaJson;
+          json schemaJson;
+          f >> schemaJson;
           json instance = json::parse(doc.toJson(QJsonDocument::Compact).toStdString());
           json_schema::json_validator validator;
           validator.set_root_schema(schemaJson);
           validator.validate(instance);
           wholeDocValid = true;
         } else {
-          Logger::instance().debug(QString("ProfileManager: Schema file not found: %1").arg(schemaPath));
+          Logger::instance().debug(
+              QString("ProfileManager: Schema file not found: %1").arg(schemaPath));
         }
       } catch (const std::exception& ex) {
-        Logger::instance().warning(QString("ProfileManager: Whole-vehicle_profiles.json schema validation failed: %1").arg(QString::fromLatin1(ex.what())));
+        Logger::instance().warning(
+            QString("ProfileManager: Whole-vehicle_profiles.json schema validation failed: %1")
+                .arg(QString::fromLatin1(ex.what())));
       }
 
       if (wholeDocValid) {
         for (const auto& value : doc.array()) {
           if (value.isObject()) {
-            QString itemJson = QString::fromUtf8(QJsonDocument(value.toObject()).toJson(QJsonDocument::Compact));
+            QString itemJson =
+                QString::fromUtf8(QJsonDocument(value.toObject()).toJson(QJsonDocument::Compact));
             VehicleProfile v = VehicleProfile::fromJson(itemJson);
             m_vehicleProfiles[v.id] = v;
             if (v.isActive) m_activeVehicleProfileId = v.id;
@@ -703,12 +729,16 @@ bool ProfileManager::loadProfiles() {
 
           bool itemValid = false;
           try {
-            QString schemaPath = QString(CRANKSHAFT_SOURCE_DIR) + "/docs/schemas/vehicle_profiles.schema.json";
+            QString schemaPath =
+                QString(CRANKSHAFT_SOURCE_DIR) + "/docs/schemas/vehicle_profiles.schema.json";
             std::ifstream f(schemaPath.toStdString());
             if (f.good()) {
-              json schemaJson; f >> schemaJson;
-              QJsonArray arr; arr.append(obj);
-              json instance = json::parse(QJsonDocument(arr).toJson(QJsonDocument::Compact).toStdString());
+              json schemaJson;
+              f >> schemaJson;
+              QJsonArray arr;
+              arr.append(obj);
+              json instance =
+                  json::parse(QJsonDocument(arr).toJson(QJsonDocument::Compact).toStdString());
               json_schema::json_validator validator;
               validator.set_root_schema(schemaJson);
               validator.validate(instance);
@@ -720,7 +750,9 @@ bool ProfileManager::loadProfiles() {
 
           if (!itemValid) {
             if (!obj.contains("name") || !obj.value("name").isString()) {
-              Logger::instance().warning(QString("ProfileManager: Skipping invalid vehicle profile entry in %1").arg(vehicleProfilesPath));
+              Logger::instance().warning(
+                  QString("ProfileManager: Skipping invalid vehicle profile entry in %1")
+                      .arg(vehicleProfilesPath));
               continue;
             }
           }
