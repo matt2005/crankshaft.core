@@ -626,7 +626,8 @@ bool ProfileManager::loadProfiles() {
 #else
         Q_UNUSED(f);
         Logger::instance().debug(
-            QString("ProfileManager: json-schema-validator not available; skipping whole-host_profiles.json validation"));
+            QString("ProfileManager: json-schema-validator not available; skipping "
+                    "whole-host_profiles.json validation"));
 #endif
       } catch (const std::exception& ex) {
         Logger::instance().warning(
@@ -725,7 +726,8 @@ bool ProfileManager::loadProfiles() {
 #else
         Q_UNUSED(f);
         Logger::instance().debug(
-            QString("ProfileManager: json-schema-validator not available; skipping whole-vehicle_profiles.json validation"));
+            QString("ProfileManager: json-schema-validator not available; skipping "
+                    "whole-vehicle_profiles.json validation"));
 #endif
       } catch (const std::exception& ex) {
         Logger::instance().warning(
