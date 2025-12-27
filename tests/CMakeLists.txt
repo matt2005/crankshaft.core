@@ -91,6 +91,8 @@ target_include_directories(test_websocket PRIVATE
   ${GSTREAMER_VIDEO_INCLUDE_DIRS}
   ${GSTREAMER_AUDIO_INCLUDE_DIRS}
   ${LIBUSB_INCLUDE_DIRS}
+  # Fallback include path for aap_protobuf generated headers when aasdk is built
+  ${CMAKE_BINARY_DIR}/aasdk/protobuf
 )
 
 target_link_libraries(test_websocket PRIVATE
@@ -107,6 +109,7 @@ target_link_libraries(test_websocket PRIVATE
   ${GSTREAMER_AUDIO_LIBRARIES}
   ${DBUS_LIBRARIES}
   ${LIBUSB_LIBRARIES}
+  aasdk
 )
 
 add_test(NAME WebSocketTest COMMAND test_websocket)
