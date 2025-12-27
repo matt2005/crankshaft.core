@@ -1093,25 +1093,41 @@ void RealAndroidAutoService::checkForConnectedDevices() {
             return;  // Let USBHub promise handle this
           }
 
+          // Skip if AOAP negotiation already in progress
+          if (m_aoapInProgress) {
+            Logger::instance().debug("[RealAndroidAutoService] AOAP already in progress, skipping");
+            return;
+          }
+
           // Try to open device and initiate AOAP negotiation
           aasdk::usb::DeviceHandle handle;
           if (m_usbWrapper->open(dev, handle) == 0 && handle) {
             Logger::instance().info("[RealAndroidAutoService] Opened device for AOAP negotiation");
             
             if (m_queryChainFactory && m_strand) {
+              m_aoapInProgress = true;
               Logger::instance().info("[RealAndroidAutoService] Creating AccessoryModeQueryChain...");
               auto chain = m_queryChainFactory->create();
               auto aoapPromise = aasdk::usb::IAccessoryModeQueryChain::Promise::defer(*m_strand);
               
               aoapPromise->then(
                   [this](aasdk::usb::DeviceHandle devHandle) {
+                    m_aoapInProgress = false;
                     Logger::instance().info("[RealAndroidAutoService] AOAP negotiation completed, device should re-enumerate in AOAP mode");
-                    // Device will disconnect and re-enumerate, USBHub will detect it
+                    // Restart detection timer; device will re-enumerate in AOAP mode
+                    if (m_deviceDetectionTimer && m_state == ConnectionState::SEARCHING) {
+                      m_deviceDetectionTimer->start();
+                    }
                   },
                   [this](const aasdk::error::Error& error) {
+                    m_aoapInProgress = false;
                     Logger::instance().warning(
                         QString("[RealAndroidAutoService] AOAP negotiation failed: %1")
                             .arg(QString::fromStdString(error.what())));
+                    // Restart detection timer to retry
+                    if (m_deviceDetectionTimer && m_state == ConnectionState::SEARCHING) {
+                      m_deviceDetectionTimer->start();
+                    }
                   });
               
               Logger::instance().info("[RealAndroidAutoService] Starting AOAP query chain...");

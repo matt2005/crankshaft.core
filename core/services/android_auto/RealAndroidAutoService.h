@@ -221,6 +221,9 @@ class RealAndroidAutoService : public AndroidAutoService {
   // Strands for channel operations
   std::unique_ptr<boost::asio::io_service::strand> m_strand;
 
+  // AOAP negotiation state
+  bool m_aoapInProgress{false};
+
   // Pointers to AASDK objects (owned by io_service)
   std::shared_ptr<aasdk::usb::IUSBWrapper> m_usbWrapper;
   std::shared_ptr<aasdk::usb::IAccessoryModeQueryFactory> m_queryFactory;
