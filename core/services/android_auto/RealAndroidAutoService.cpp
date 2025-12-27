@@ -50,6 +50,7 @@
 #include <aasdk/USB/AccessoryModeQueryChainFactory.hpp>
 #include <aasdk/USB/AccessoryModeQueryFactory.hpp>
 #include <aasdk/USB/USBHub.hpp>
+#include <aasdk/USB/IAccessoryModeQueryChain.hpp>
 #include <aasdk/USB/USBWrapper.hpp>
 #include <boost/asio.hpp>
 
@@ -1134,6 +1135,33 @@ void RealAndroidAutoService::enumerateUSBDevices() {
                                   .arg(QString::asprintf("0x%04x", desc.idVendor))
                                   .arg(QString::asprintf("0x%04x", desc.idProduct))
                                   .arg(desc.bDeviceClass));
+
+      // If we see a Google device not yet in AOAP, try to kick AOAP manually
+      if (desc.idVendor == 0x18D1 && desc.idProduct != 0x2D00 && desc.idProduct != 0x2D01 &&
+          !m_aoapKickInProgress && m_queryChainFactory) {
+        m_aoapKickInProgress = true;
+        Logger::instance().info("[RealAndroidAutoService] Attempting manual AOAP switch...");
+
+        aasdk::usb::DeviceHandle handle;
+        if (m_usbWrapper->open(dev, handle) == 0 && handle) {
+          auto chain = m_queryChainFactory->create();
+          auto promise = aasdk::usb::IAccessoryModeQueryChain::Promise::defer(*m_strand);
+          promise->then(
+              [this](aasdk::usb::DeviceHandle) {
+                Logger::instance().info("[RealAndroidAutoService] AOAP switch request sent");
+                QTimer::singleShot(3000, this, [this]() { m_aoapKickInProgress = false; });
+              },
+              [this](const aasdk::error::Error& e) {
+                Logger::instance().warning(QString("[RealAndroidAutoService] AOAP switch failed: %1")
+                                               .arg(QString::fromStdString(e.what())));
+                QTimer::singleShot(3000, this, [this]() { m_aoapKickInProgress = false; });
+              });
+          chain->start(std::move(handle), std::move(promise));
+        } else {
+          Logger::instance().warning("[RealAndroidAutoService] Failed to open device for AOAP");
+          QTimer::singleShot(3000, this, [this]() { m_aoapKickInProgress = false; });
+        }
+      }
     }
   }
 }

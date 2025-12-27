@@ -211,6 +211,7 @@ class RealAndroidAutoService : public AndroidAutoService {
   std::unique_ptr<QThread> m_aasdkThread;
   QTimer* m_ioServiceTimer{nullptr};
   QTimer* m_debugEnumTimer{nullptr};
+  bool m_aoapKickInProgress{false};
 
   // Transport configuration
   TransportMode m_transportMode{TransportMode::Auto};
