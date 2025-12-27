@@ -40,15 +40,37 @@ add_compile_definitions(CRANKSHAFT_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
 
 # Generate build info header (timestamp + git commit) and make available to targets
 execute_process(COMMAND date +"%Y-%m-%d %H:%M:%S" OUTPUT_VARIABLE BUILD_TIMESTAMP OUTPUT_STRIP_TRAILING_WHITESPACE)
-execute_process(COMMAND git rev-parse --short HEAD
+
+# Git commit short (8), long (full) and branch name
+execute_process(COMMAND git rev-parse --short=8 HEAD
 				WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-				RESULT_VARIABLE GIT_RESULT
-				OUTPUT_VARIABLE GIT_COMMIT
+				RESULT_VARIABLE GIT_SHORT_RESULT
+				OUTPUT_VARIABLE GIT_COMMIT_SHORT
 				OUTPUT_STRIP_TRAILING_WHITESPACE
 				ERROR_QUIET)
-if(NOT GIT_COMMIT)
-	set(GIT_COMMIT "unknown")
+execute_process(COMMAND git rev-parse HEAD
+				WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+				RESULT_VARIABLE GIT_LONG_RESULT
+				OUTPUT_VARIABLE GIT_COMMIT_LONG
+				OUTPUT_STRIP_TRAILING_WHITESPACE
+				ERROR_QUIET)
+execute_process(COMMAND git rev-parse --abbrev-ref HEAD
+				WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+				RESULT_VARIABLE GIT_BRANCH_RESULT
+				OUTPUT_VARIABLE GIT_BRANCH
+				OUTPUT_STRIP_TRAILING_WHITESPACE
+				ERROR_QUIET)
+
+if(NOT GIT_COMMIT_SHORT)
+	set(GIT_COMMIT_SHORT "unknown")
 endif()
+if(NOT GIT_COMMIT_LONG)
+	set(GIT_COMMIT_LONG "unknown")
+endif()
+if(NOT GIT_BRANCH)
+	set(GIT_BRANCH "unknown")
+endif()
+
 configure_file(${CMAKE_SOURCE_DIR}/cmake/build_info.h.in ${CMAKE_BINARY_DIR}/build_info.h @ONLY)
 include_directories(${CMAKE_BINARY_DIR})
 
