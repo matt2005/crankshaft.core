@@ -749,38 +749,6 @@ bool RealAndroidAutoService::startSearching() {
   m_usbHub->start(std::move(promise));
 
   Logger::instance().info("Started searching for Android Auto devices");
-
-  // Periodic USB visibility + AOAP kick attempts while searching
-  if (m_debugEnumTimer == nullptr) {
-    m_debugEnumTimer = new QTimer(this);
-    m_debugEnumTimer->setSingleShot(false);
-    connect(m_debugEnumTimer, &QTimer::timeout, this, [this]() {
-      enumerateUSBDevices();
-      // Also attempt AOAP via known Google MTP VID/PID if present
-      if (!m_aoapKickInProgress && m_usbWrapper && m_queryChainFactory) {
-        // Try common Google MTP PID 0x4EE1
-        auto handle = m_usbWrapper->openDeviceWithVidPid(0x18D1, 0x4EE1);
-        if (handle) {
-          m_aoapKickInProgress = true;
-          Logger::instance().info("[RealAndroidAutoService] AOAP kick: found 18d1:4ee1; starting query chain");
-          auto chain = m_queryChainFactory->create();
-          auto promise = aasdk::usb::IAccessoryModeQueryChain::Promise::defer(*m_strand);
-          promise->then(
-              [this](aasdk::usb::DeviceHandle) {
-                Logger::instance().info("[RealAndroidAutoService] AOAP kick: query chain completed");
-                QTimer::singleShot(2000, this, [this]() { m_aoapKickInProgress = false; });
-              },
-              [this](const aasdk::error::Error& e) {
-                Logger::instance().warning(QString("[RealAndroidAutoService] AOAP kick failed: %1")
-                                               .arg(QString::fromStdString(e.what())));
-                QTimer::singleShot(2000, this, [this]() { m_aoapKickInProgress = false; });
-              });
-          chain->start(std::move(handle), std::move(promise));
-        }
-      }
-    });
-  }
-  m_debugEnumTimer->start(1500);
   return true;
 }
 
@@ -1136,58 +1104,6 @@ void RealAndroidAutoService::onVideoChannelUpdate(const QByteArray& data, int wi
   }
 
   updateStats();
-}
-
-void RealAndroidAutoService::enumerateUSBDevices() {
-  if (!m_usbWrapper) {
-    return;
-  }
-
-  aasdk::usb::DeviceListHandle listHandle;
-  auto count = m_usbWrapper->getDeviceList(listHandle);
-  if (count < 0 || !listHandle) {
-    Logger::instance().warning("[RealAndroidAutoService] USB enumerate: no device list");
-    return;
-  }
-
-  int idx = 0;
-  for (auto* dev : *listHandle) {
-    libusb_device_descriptor desc{};
-    if (m_usbWrapper->getDeviceDescriptor(dev, desc) == 0) {
-      Logger::instance().info(QString("[USB] dev#%1 vid=%2 pid=%3 class=%4")
-                                  .arg(idx++)
-                                  .arg(QString::asprintf("0x%04x", desc.idVendor))
-                                  .arg(QString::asprintf("0x%04x", desc.idProduct))
-                                  .arg(desc.bDeviceClass));
-
-      // If we see a Google device not yet in AOAP, try to kick AOAP manually
-      if (desc.idVendor == 0x18D1 && desc.idProduct != 0x2D00 && desc.idProduct != 0x2D01 &&
-          !m_aoapKickInProgress && m_queryChainFactory) {
-        m_aoapKickInProgress = true;
-        Logger::instance().info("[RealAndroidAutoService] Attempting manual AOAP switch...");
-
-        aasdk::usb::DeviceHandle handle;
-        if (m_usbWrapper->open(dev, handle) == 0 && handle) {
-          auto chain = m_queryChainFactory->create();
-          auto promise = aasdk::usb::IAccessoryModeQueryChain::Promise::defer(*m_strand);
-          promise->then(
-              [this](aasdk::usb::DeviceHandle) {
-                Logger::instance().info("[RealAndroidAutoService] AOAP switch request sent");
-                QTimer::singleShot(3000, this, [this]() { m_aoapKickInProgress = false; });
-              },
-              [this](const aasdk::error::Error& e) {
-                Logger::instance().warning(QString("[RealAndroidAutoService] AOAP switch failed: %1")
-                                               .arg(QString::fromStdString(e.what())));
-                QTimer::singleShot(3000, this, [this]() { m_aoapKickInProgress = false; });
-              });
-          chain->start(std::move(handle), std::move(promise));
-        } else {
-          Logger::instance().warning("[RealAndroidAutoService] Failed to open device for AOAP");
-          QTimer::singleShot(3000, this, [this]() { m_aoapKickInProgress = false; });
-        }
-      }
-    }
-  }
 }
 
 void RealAndroidAutoService::onMediaAudioChannelUpdate(const QByteArray& data) {
