@@ -33,6 +33,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# Expose the repository source directory as a compile-time macro for all targets
+# so code that needs to locate development-only resources (schemas, docs)
+# can reference `CRANKSHAFT_SOURCE_DIR` regardless of the target's scope.
+add_compile_definitions(CRANKSHAFT_SOURCE_DIR="${CMAKE_SOURCE_DIR}")
+
 # Read CPACK_DEBIAN_PACKAGE_RELEASE from environment variable if set
 if(DEFINED ENV{CPACK_DEBIAN_RELEASE})
     set(CPACK_DEBIAN_PACKAGE_RELEASE "$ENV{CPACK_DEBIAN_RELEASE}")
