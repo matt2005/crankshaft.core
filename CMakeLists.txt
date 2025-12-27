@@ -71,6 +71,13 @@ if(NOT GIT_BRANCH)
 	set(GIT_BRANCH "unknown")
 endif()
 
+# Ensure variables do not contain surrounding quotes which would lead to
+# double-quoted string literals in the generated header.
+string(REGEX REPLACE "^\"(.*)\"$" "\\1" BUILD_TIMESTAMP "${BUILD_TIMESTAMP}")
+string(REGEX REPLACE "^\"(.*)\"$" "\\1" GIT_COMMIT_SHORT "${GIT_COMMIT_SHORT}")
+string(REGEX REPLACE "^\"(.*)\"$" "\\1" GIT_COMMIT_LONG "${GIT_COMMIT_LONG}")
+string(REGEX REPLACE "^\"(.*)\"$" "\\1" GIT_BRANCH "${GIT_BRANCH}")
+
 configure_file(${CMAKE_SOURCE_DIR}/cmake/build_info.h.in ${CMAKE_BINARY_DIR}/build_info.h @ONLY)
 include_directories(${CMAKE_BINARY_DIR})
 

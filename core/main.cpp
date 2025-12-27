@@ -28,7 +28,20 @@
 #include "services/profile/ProfileManager.h"
 #include "services/service_manager/ServiceManager.h"
 #include "services/websocket/WebSocketServer.h"
-#include "build_info.h"
+#if defined(__has_include)
+#  if __has_include("build_info.h")
+#    include "build_info.h"
+#  elif __has_include("../cmake/build_info.h")
+#    include "../cmake/build_info.h"
+#  else
+#    define CRANKSHAFT_BUILD_TIMESTAMP ""
+#    define CRANKSHAFT_GIT_COMMIT_SHORT "unknown"
+#    define CRANKSHAFT_GIT_COMMIT_LONG "unknown"
+#    define CRANKSHAFT_GIT_BRANCH "unknown"
+#  endif
+#else
+#  include "build_info.h"
+#endif
 
 int main(int argc, char* argv[]) {
   QCoreApplication app(argc, argv);
