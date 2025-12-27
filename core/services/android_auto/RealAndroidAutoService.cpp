@@ -1118,7 +1118,7 @@ void RealAndroidAutoService::enumerateUSBDevices() {
     return;
   }
 
-  aasdk::usb::IUSBWrapper::DeviceListHandle listHandle;
+  aasdk::usb::DeviceListHandle listHandle;
   auto count = m_usbWrapper->getDeviceList(listHandle);
   if (count < 0 || !listHandle) {
     Logger::instance().warning("[RealAndroidAutoService] USB enumerate: no device list");
