@@ -186,6 +186,7 @@ class RealAndroidAutoService : public AndroidAutoService {
   void onVideoFrame(const uint8_t* data, int size, int width, int height);
   void onAudioData(const QByteArray& data);
   void onUSBHotplug(bool connected);
+  void checkForConnectedDevices();  // Fallback device detection
 
   // Transport mode configuration
   enum class TransportMode { Auto, USB, Wireless };
@@ -209,6 +210,7 @@ class RealAndroidAutoService : public AndroidAutoService {
   std::shared_ptr<boost::asio::io_service> m_ioService;
   std::unique_ptr<QThread> m_aasdkThread;
   QTimer* m_ioServiceTimer{nullptr};
+  QTimer* m_deviceDetectionTimer{nullptr};  // Fallback device detection timer
 
   // Transport configuration
   TransportMode m_transportMode{TransportMode::Auto};

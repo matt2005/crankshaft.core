@@ -748,6 +748,15 @@ bool RealAndroidAutoService::startSearching() {
       });
   m_usbHub->start(std::move(promise));
 
+  // Start a periodic check for connected devices (fallback if hotplug doesn't work)
+  if (m_deviceDetectionTimer == nullptr) {
+    m_deviceDetectionTimer = new QTimer(this);
+    m_deviceDetectionTimer->setObjectName("AADeviceDetectionTimer");
+    connect(m_deviceDetectionTimer, &QTimer::timeout, this, &RealAndroidAutoService::checkForConnectedDevices);
+    m_deviceDetectionTimer->start(1000);  // Check every second
+    Logger::instance().info("Started periodic device detection timer (fallback for hotplug)");
+  }
+
   Logger::instance().info("Started searching for Android Auto devices");
   return true;
 }
@@ -755,6 +764,11 @@ bool RealAndroidAutoService::startSearching() {
 void RealAndroidAutoService::stopSearching() {
   if (m_state == ConnectionState::SEARCHING) {
     m_usbHub->cancel();
+    
+    if (m_deviceDetectionTimer) {
+      m_deviceDetectionTimer->stop();
+    }
+    
     transitionToState(ConnectionState::DISCONNECTED);
     Logger::instance().info("Stopped searching for devices");
   }
@@ -1046,6 +1060,68 @@ void RealAndroidAutoService::handleConnectionEstablished() {
 void RealAndroidAutoService::handleConnectionLost() {
   if (isConnected()) {
     disconnect();
+  }
+}
+
+void RealAndroidAutoService::checkForConnectedDevices() {
+  if (!m_usbWrapper || m_state != ConnectionState::SEARCHING) {
+    return;
+  }
+
+  try {
+    aasdk::usb::DeviceListHandle listHandle;
+    auto count = m_usbWrapper->getDeviceList(listHandle);
+    
+    if (count < 0 || !listHandle) {
+      Logger::instance().debug("[RealAndroidAutoService] USB device list error");
+      return;
+    }
+
+    for (auto* dev : *listHandle) {
+      libusb_device_descriptor desc{};
+      if (m_usbWrapper->getDeviceDescriptor(dev, desc) == 0) {
+        // Look for Google devices (vendor ID 0x18D1)
+        if (desc.idVendor == 0x18D1) {
+          Logger::instance().info(
+              QString("[RealAndroidAutoService] Found Google device: vid=0x%1 pid=0x%2")
+                  .arg(QString::asprintf("%04x", desc.idVendor))
+                  .arg(QString::asprintf("%04x", desc.idProduct)));
+
+          // If it's already in AOAP mode, let USBHub handle it
+          if (desc.idProduct == 0x2D00 || desc.idProduct == 0x2D01) {
+            Logger::instance().info("[RealAndroidAutoService] Device already in AOAP mode");
+            return;  // Let USBHub promise handle this
+          }
+
+          // Try to open device and initiate AOAP negotiation
+          aasdk::usb::DeviceHandle handle;
+          if (m_usbWrapper->open(dev, handle) == 0 && handle) {
+            Logger::instance().info("[RealAndroidAutoService] Opened device for AOAP negotiation");
+            
+            if (m_queryChainFactory) {
+              auto chain = m_queryChainFactory->create();
+              auto aoapPromise = aasdk::usb::IAccessoryModeQueryChain::Promise::defer(*m_ioService);
+              
+              aoapPromise->then(
+                  [this](aasdk::usb::DeviceHandle) {
+                    Logger::instance().info("[RealAndroidAutoService] AOAP negotiation completed");
+                  },
+                  [this](const aasdk::error::Error& error) {
+                    Logger::instance().warning(
+                        QString("[RealAndroidAutoService] AOAP negotiation failed: %1")
+                            .arg(QString::fromStdString(error.what())));
+                  });
+              
+              chain->start(std::move(handle), std::move(aoapPromise));
+            } else {
+              Logger::instance().warning("[RealAndroidAutoService] Query chain factory not available");
+            }
+          }
+        }
+      }
+    }
+  } catch (const std::exception& e) {
+    Logger::instance().debug(QString("[RealAndroidAutoService] Device check error: %1").arg(e.what()));
   }
 }
 
