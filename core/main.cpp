@@ -52,6 +52,16 @@ int main(int argc, char* argv[]) {
   QCoreApplication::setApplicationName("Crankshaft Core");
   QCoreApplication::setApplicationVersion("0.1.0");
 
+  // Quick argv scan for legacy/early CLI parsing: allow --verbose-usb or -v
+  bool verboseUsbArgPresent = false;
+  for (int i = 1; i < argc; ++i) {
+    const QByteArray arg = QByteArray::fromRawData(argv[i], static_cast<int>(strlen(argv[i])));
+    if (arg == "--verbose-usb" || arg == "-v") {
+      verboseUsbArgPresent = true;
+      break;
+    }
+  }
+
   // Parse command line arguments
   QCommandLineParser parser;
   parser.setApplicationDescription("Crankshaft Automotive Infotainment Core");
@@ -66,20 +76,21 @@ int main(int argc, char* argv[]) {
                                   "config", "../config/crankshaft.json");
   parser.addOption(configOption);
 
-  QCommandLineOption verboseUsbOption(QStringList() << "v" << "verbose-usb",
+  // Long-only option to avoid short-name conflicts with existing options
+  QCommandLineOption verboseUsbOption(QStringList() << "verbose-usb",
                                       "Enable verbose AASDK USB logging (or use env AASDK_VERBOSE_USB=1)");
   parser.addOption(verboseUsbOption);
 
   parser.process(app);
 
-  // Enable AASDK verbose USB logging if requested via env var or CLI option
+  // Enable AASDK verbose USB logging if requested via env var, CLI option or raw argv
   bool verboseUsb = false;
   const QByteArray ev = qgetenv("AASDK_VERBOSE_USB");
   if (!ev.isEmpty()) {
     QByteArray lower = ev.toLower();
     verboseUsb = (lower == "1" || lower == "true" || lower == "yes");
   }
-  if (!verboseUsb && parser.isSet(verboseUsbOption)) {
+  if (!verboseUsb && (parser.isSet(verboseUsbOption) || verboseUsbArgPresent)) {
     verboseUsb = true;
   }
 
