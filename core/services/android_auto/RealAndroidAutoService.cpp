@@ -1098,13 +1098,15 @@ void RealAndroidAutoService::checkForConnectedDevices() {
           if (m_usbWrapper->open(dev, handle) == 0 && handle) {
             Logger::instance().info("[RealAndroidAutoService] Opened device for AOAP negotiation");
             
-            if (m_queryChainFactory) {
+            if (m_queryChainFactory && m_strand) {
+              Logger::instance().info("[RealAndroidAutoService] Creating AccessoryModeQueryChain...");
               auto chain = m_queryChainFactory->create();
-              auto aoapPromise = aasdk::usb::IAccessoryModeQueryChain::Promise::defer(*m_ioService);
+              auto aoapPromise = aasdk::usb::IAccessoryModeQueryChain::Promise::defer(*m_strand);
               
               aoapPromise->then(
-                  [this](aasdk::usb::DeviceHandle) {
-                    Logger::instance().info("[RealAndroidAutoService] AOAP negotiation completed");
+                  [this](aasdk::usb::DeviceHandle devHandle) {
+                    Logger::instance().info("[RealAndroidAutoService] AOAP negotiation completed, device should re-enumerate in AOAP mode");
+                    // Device will disconnect and re-enumerate, USBHub will detect it
                   },
                   [this](const aasdk::error::Error& error) {
                     Logger::instance().warning(
@@ -1112,10 +1114,18 @@ void RealAndroidAutoService::checkForConnectedDevices() {
                             .arg(QString::fromStdString(error.what())));
                   });
               
+              Logger::instance().info("[RealAndroidAutoService] Starting AOAP query chain...");
               chain->start(std::move(handle), std::move(aoapPromise));
+              
+              // Stop the detection timer since we're attempting AOAP
+              if (m_deviceDetectionTimer) {
+                m_deviceDetectionTimer->stop();
+              }
             } else {
-              Logger::instance().warning("[RealAndroidAutoService] Query chain factory not available");
+              Logger::instance().warning("[RealAndroidAutoService] Query chain factory or strand not available");
             }
+          } else {
+            Logger::instance().warning("[RealAndroidAutoService] Failed to open device for AOAP");
           }
         }
       }
