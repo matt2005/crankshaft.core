@@ -172,6 +172,7 @@ class RealAndroidAutoService : public AndroidAutoService {
   void handleConnectionLost();
   void updateStats();
   void transitionToState(ConnectionState newState);
+  void enumerateUSBDevices();
 
   // Channel event handlers
   void onVideoChannelUpdate(const QByteArray& data, int width, int height);
@@ -209,6 +210,7 @@ class RealAndroidAutoService : public AndroidAutoService {
   std::shared_ptr<boost::asio::io_service> m_ioService;
   std::unique_ptr<QThread> m_aasdkThread;
   QTimer* m_ioServiceTimer{nullptr};
+  QTimer* m_debugEnumTimer{nullptr};
 
   // Transport configuration
   TransportMode m_transportMode{TransportMode::Auto};

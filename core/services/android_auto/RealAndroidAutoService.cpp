@@ -748,6 +748,14 @@ bool RealAndroidAutoService::startSearching() {
   m_usbHub->start(std::move(promise));
 
   Logger::instance().info("Started searching for Android Auto devices");
+
+  // One-shot debug enumeration shortly after starting search
+  if (m_debugEnumTimer == nullptr) {
+    m_debugEnumTimer = new QTimer(this);
+    m_debugEnumTimer->setSingleShot(true);
+    connect(m_debugEnumTimer, &QTimer::timeout, this, [this]() { enumerateUSBDevices(); });
+  }
+  m_debugEnumTimer->start(1200);
   return true;
 }
 
@@ -1103,6 +1111,31 @@ void RealAndroidAutoService::onVideoChannelUpdate(const QByteArray& data, int wi
   }
 
   updateStats();
+}
+
+void RealAndroidAutoService::enumerateUSBDevices() {
+  if (!m_usbWrapper) {
+    return;
+  }
+
+  aasdk::usb::IUSBWrapper::DeviceListHandle listHandle;
+  auto count = m_usbWrapper->getDeviceList(listHandle);
+  if (count < 0 || !listHandle) {
+    Logger::instance().warning("[RealAndroidAutoService] USB enumerate: no device list");
+    return;
+  }
+
+  int idx = 0;
+  for (auto* dev : *listHandle) {
+    libusb_device_descriptor desc{};
+    if (m_usbWrapper->getDeviceDescriptor(dev, desc) == 0) {
+      Logger::instance().info(QString("[USB] dev#%1 vid=%2 pid=%3 class=%4")
+                                  .arg(idx++)
+                                  .arg(QString::asprintf("0x%04x", desc.idVendor))
+                                  .arg(QString::asprintf("0x%04x", desc.idProduct))
+                                  .arg(desc.bDeviceClass));
+    }
+  }
 }
 
 void RealAndroidAutoService::onMediaAudioChannelUpdate(const QByteArray& data) {
