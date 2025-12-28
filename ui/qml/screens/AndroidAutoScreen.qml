@@ -30,6 +30,49 @@ Rectangle {
     property alias videoSurface: videoSurface
     property alias connectionStatus: connectionStatus
     property var stack: null
+    
+    property string statusText: qsTr('Android Auto - Disconnected')
+    property color statusColor: '#F44336'
+    property bool isConnected: false
+    
+    Component.onCompleted: {
+        wsClient.subscribe("android-auto/status/#")
+    }
+    
+    Connections {
+        target: wsClient
+        
+        function onEventReceived(topic, payload) {
+            if (topic === "android-auto/status/state-changed") {
+                let stateName = payload.stateName || "UNKNOWN"
+                connectionStatus.text = "Android Auto - " + stateName
+                
+                if (stateName === "CONNECTED") {
+                    statusIndicator.color = '#4CAF50'  // Green
+                    androidAutoScreen.isConnected = true
+                } else if (stateName === "DISCONNECTED") {
+                    statusIndicator.color = '#F44336'  // Red
+                    androidAutoScreen.isConnected = false
+                } else {
+                    statusIndicator.color = '#FF9800'  // Orange for other states
+                    androidAutoScreen.isConnected = false
+                }
+            } else if (topic === "android-auto/status/connected") {
+                let device = payload.device
+                connectionStatus.text = "Android Auto - CONNECTED (" + device.model + ")"
+                statusIndicator.color = '#4CAF50'  // Green
+                androidAutoScreen.isConnected = true
+            } else if (topic === "android-auto/status/disconnected") {
+                connectionStatus.text = "Android Auto - Disconnected"
+                statusIndicator.color = '#F44336'  // Red
+                androidAutoScreen.isConnected = false
+            } else if (topic === "android-auto/status/error") {
+                connectionStatus.text = "Android Auto - Error: " + payload.error
+                statusIndicator.color = '#F44336'  // Red
+                androidAutoScreen.isConnected = false
+            }
+        }
+    }
 
     ColumnLayout {
         anchors.fill: parent
@@ -61,7 +104,7 @@ Rectangle {
                     color: '#FFFFFF'
                     font.pixelSize: 14
                     font.family: 'Roboto'
-                    text: qsTr('Android Auto - Disconnected')
+                    text: androidAutoScreen.statusText
                 }
 
                 Item { Layout.fillWidth: true }

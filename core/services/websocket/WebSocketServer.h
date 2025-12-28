@@ -44,12 +44,19 @@ class WebSocketServer : public QObject {
   void onNewConnection();
   void onTextMessageReceived(const QString& message);
   void onClientDisconnected();
+  
+  // Android Auto service events
+  void onAndroidAutoStateChanged(int state);
+  void onAndroidAutoConnected(const QVariantMap& device);
+  void onAndroidAutoDisconnected();
+  void onAndroidAutoError(const QString& error);
 
  private:
   void handleSubscribe(QWebSocket* client, const QString& topic);
   void handlePublish(const QString& topic, const QVariantMap& payload);
   void handleServiceCommand(QWebSocket* client, const QString& command, const QVariantMap& params);
   [[nodiscard]] bool topicMatches(const QString& topic, const QString& pattern) const;
+  void setupAndroidAutoConnections();
 
   QWebSocketServer* m_server;
   QList<QWebSocket*> m_clients;
