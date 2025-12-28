@@ -24,10 +24,10 @@
 #include <cstring>
 #include <cstdlib>
 
+#include <libusb.h>
 #include <boost/asio.hpp>
 #include <aasdk/USB/USBHub.hpp>
 #include <aasdk/USB/USBWrapper.hpp>
-#include <aasdk/USB/ConnectedAccessoriesEnumerator.hpp>
 #include <aasdk/USB/AccessoryModeQueryFactory.hpp>
 #include <aasdk/USB/AccessoryModeQueryChainFactory.hpp>
 #include <aasdk/Common/ModernLogger.hpp>
@@ -39,11 +39,29 @@ public:
     AATest()
         : ioService_()
         , work_(asio::make_work_guard(ioService_))
-        , usbWrapper_(std::make_shared<aasdk::usb::USBWrapper>())
-        , usbHub_(std::make_shared<aasdk::usb::USBHub>(usbWrapper_, ioService_))
-        , queryFactory_(std::make_shared<aasdk::usb::AccessoryModeQueryFactory>(usbWrapper_, ioService_))
-        , queryChainFactory_(std::make_shared<aasdk::usb::AccessoryModeQueryChainFactory>(usbWrapper_, ioService_, queryFactory_))
+        , usbContext_(nullptr)
+        , usbWrapper_(nullptr)
+        , queryFactory_(nullptr)
+        , queryChainFactory_(nullptr)
     {
+        // Initialize libusb context
+        int result = libusb_init(&usbContext_);
+        if (result != 0) {
+            throw std::runtime_error(std::string("Failed to initialize libusb: ") + libusb_error_name(result));
+        }
+
+        // Create USB wrapper with the context
+        usbWrapper_ = std::make_unique<aasdk::usb::USBWrapper>(usbContext_);
+
+        // Create factories
+        queryFactory_ = std::make_unique<aasdk::usb::AccessoryModeQueryFactory>(*usbWrapper_, ioService_);
+        queryChainFactory_ = std::make_unique<aasdk::usb::AccessoryModeQueryChainFactory>(*usbWrapper_, ioService_, *queryFactory_);
+    }
+
+    ~AATest() {
+        if (usbContext_) {
+            libusb_exit(usbContext_);
+        }
     }
 
     void run() {
@@ -54,13 +72,17 @@ public:
             ioService_.run();
         });
 
-        // Enumerate and attempt AOAP on Google devices
-        enumerateAndConnect();
-
         // Keep running and handle libusb events
+        int pollCount = 0;
         while (true) {
             try {
                 usbWrapper_->handleEvents();
+                
+                // Enumerate devices periodically (every 10 poll cycles)
+                if (++pollCount >= 10) {
+                    enumerateAndConnect();
+                    pollCount = 0;
+                }
             } catch (const std::exception& e) {
                 std::cerr << "[AATest] USB event error: " << e.what() << std::endl;
             }
@@ -81,7 +103,7 @@ private:
         std::cout << "[AATest] Enumerating USB devices..." << std::endl;
         
         libusb_device** devices;
-        auto count = libusb_get_device_list(usbWrapper_->getContext(), &devices);
+        ssize_t count = libusb_get_device_list(usbContext_, &devices);
         
         if (count < 0) {
             std::cerr << "[AATest] Failed to get device list" << std::endl;
@@ -99,15 +121,16 @@ private:
                     
                     // Skip if already in accessory mode
                     if (desc.idProduct == 0x2d00 || desc.idProduct == 0x2d01) {
-                        std::cout << "[AATest] Device already in accessory mode, skipping AOAP negotiation" << std::endl;
+                        std::cout << "[AATest] Device already in accessory mode" << std::endl;
                         found = true;
                         continue;
                     }
                     
-                    // Attempt AOAP negotiation
-                    attemptAOAP(devices[i]);
-                    found = true;
-                    break;
+                    // Attempt AOAP negotiation on this device
+                    if (!found) {
+                        attemptAOAP(devices[i]);
+                        found = true;
+                    }
                 }
             }
         }
@@ -122,7 +145,7 @@ private:
     void attemptAOAP(libusb_device* device) {
         std::cout << "[AATest] Attempting AOAP negotiation..." << std::endl;
 
-        libusb_device_handle* handle;
+        libusb_device_handle* handle = nullptr;
         int result = libusb_open(device, &handle);
         if (result != 0) {
             std::cerr << "[AATest] Failed to open device: " << libusb_error_name(result) << std::endl;
@@ -131,39 +154,41 @@ private:
 
         std::cout << "[AATest] Device opened successfully" << std::endl;
 
-        // Create AOAP query chain
-        auto queryChain = queryChainFactory_->create();
-        
-        std::cout << "[AATest] Starting AOAP query chain..." << std::endl;
+        try {
+            // Create AOAP query chain
+            auto queryChain = queryChainFactory_->create();
+            
+            std::cout << "[AATest] Starting AOAP query chain..." << std::endl;
 
-        // Start the chain - this will execute GET_PROTOCOL, SEND_STRING (x6), START
-        queryChain->start(
-            std::move(handle),
-            [this](std::error_code errorCode) {
-                if (errorCode) {
-                    std::cerr << "[AATest] AOAP chain failed: " << errorCode.message() << std::endl;
-                } else {
-                    std::cout << "[AATest] AOAP chain completed successfully!" << std::endl;
-                    std::cout << "[AATest] Device should now re-enumerate as accessory (18d1:2d00 or 18d1:2d01)" << std::endl;
-                    std::cout << "[AATest] Check with: lsusb | grep 18d1" << std::endl;
+            // Start the chain - this will execute GET_PROTOCOL, SEND_STRING (x6), START
+            queryChain->start(
+                handle,
+                [](std::error_code errorCode) {
+                    if (errorCode) {
+                        std::cerr << "[AATest] AOAP chain failed: " << errorCode.message() << std::endl;
+                    } else {
+                        std::cout << "[AATest] AOAP chain completed successfully!" << std::endl;
+                        std::cout << "[AATest] Device should now re-enumerate as accessory (18d1:2d00 or 18d1:2d01)" << std::endl;
+                    }
                 }
-                
-                // Wait a bit then re-enumerate to confirm
-                std::this_thread::sleep_for(std::chrono::seconds(3));
-                enumerateAndConnect();
-            }
-        );
+            );
 
-        std::cout << "[AATest] AOAP chain started, waiting for completion..." << std::endl;
+            std::cout << "[AATest] AOAP chain started, waiting for completion..." << std::endl;
+        } catch (const std::exception& e) {
+            std::cerr << "[AATest] Exception during AOAP: " << e.what() << std::endl;
+            if (handle) {
+                libusb_close(handle);
+            }
+        }
     }
 
     asio::io_service ioService_;
     asio::executor_work_guard<asio::io_service::executor_type> work_;
     std::thread ioThread_;
-    std::shared_ptr<aasdk::usb::USBWrapper> usbWrapper_;
-    std::shared_ptr<aasdk::usb::USBHub> usbHub_;
-    std::shared_ptr<aasdk::usb::IAccessoryModeQueryFactory> queryFactory_;
-    std::shared_ptr<aasdk::usb::IAccessoryModeQueryChainFactory> queryChainFactory_;
+    libusb_context* usbContext_;
+    std::unique_ptr<aasdk::usb::USBWrapper> usbWrapper_;
+    std::unique_ptr<aasdk::usb::AccessoryModeQueryFactory> queryFactory_;
+    std::unique_ptr<aasdk::usb::AccessoryModeQueryChainFactory> queryChainFactory_;
 };
 
 void printUsage(const char* progName) {
