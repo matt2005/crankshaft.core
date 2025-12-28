@@ -185,7 +185,7 @@ private:
                     std::cout << "[AATest] Device should now re-enumerate as accessory (18d1:2d00 or 18d1:2d01)" << std::endl;
                 },
                 [](const aasdk::error::Error& error) {
-                    std::cerr << "[AATest] AOAP chain failed with error code: " << static_cast<int>(error) << std::endl;
+                    std::cerr << "[AATest] AOAP chain failed" << std::endl;
                 }
             );
 
