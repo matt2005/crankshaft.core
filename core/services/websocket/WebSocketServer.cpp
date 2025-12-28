@@ -73,7 +73,9 @@ void WebSocketServer::onNewConnection() {
   QWebSocket* client = m_server->nextPendingConnection();
 
   Logger::instance().info(
-      QString("New WebSocket connection from %1").arg(client->peerAddress().toString()));
+      QString("[WebSocketServer] New WebSocket connection from %1, Total clients: %2")
+          .arg(client->peerAddress().toString())
+          .arg(m_clients.size() + 1));
 
   connect(client, &QWebSocket::textMessageReceived, this, &WebSocketServer::onTextMessageReceived);
   connect(client, &QWebSocket::disconnected, this, &WebSocketServer::onClientDisconnected);
@@ -122,7 +124,13 @@ void WebSocketServer::onClientDisconnected() {
 void WebSocketServer::handleSubscribe(QWebSocket* client, const QString& topic) {
   if (!m_subscriptions[client].contains(topic)) {
     m_subscriptions[client].append(topic);
-    Logger::instance().info(QString("Client subscribed to topic: %1").arg(topic));
+    Logger::instance().info(QString("[WebSocketServer] Client subscribed to topic: %1").arg(topic));
+    Logger::instance().info(QString("[WebSocketServer] Client now has %1 subscriptions").arg(m_subscriptions[client].size()));
+    for (const auto& sub : std::as_const(m_subscriptions[client])) {
+      Logger::instance().debug(QString("[WebSocketServer]   - %1").arg(sub));
+    }
+  } else {
+    Logger::instance().debug(QString("[WebSocketServer] Client already subscribed to: %1").arg(topic));
   }
 }
 
@@ -208,6 +216,9 @@ void WebSocketServer::handleServiceCommand(QWebSocket* client, const QString& co
 }
 
 void WebSocketServer::broadcastEvent(const QString& topic, const QVariantMap& payload) {
+  Logger::instance().info(QString("[WebSocketServer] broadcastEvent called - Topic: %1").arg(topic));
+  Logger::instance().info(QString("[WebSocketServer] Payload keys: %1").arg(payload.keys().join(", ")));
+  
   QJsonObject obj;
   obj["type"] = "event";
   obj["topic"] = topic;
@@ -216,17 +227,30 @@ void WebSocketServer::broadcastEvent(const QString& topic, const QVariantMap& pa
 
   QJsonDocument doc(obj);
   QString message = doc.toJson(QJsonDocument::Compact);
+  
+  Logger::instance().info(QString("[WebSocketServer] Message JSON: %1").arg(message));
+  Logger::instance().info(QString("[WebSocketServer] Number of connected clients: %1").arg(m_clients.size()));
 
   for (auto* client : std::as_const(m_clients)) {
     bool shouldSend = false;
+    Logger::instance().debug(QString("[WebSocketServer] Checking subscriptions for client %1").arg(m_clients.indexOf(client)));
+    
     for (const QString& subscription : std::as_const(m_subscriptions[client])) {
+      Logger::instance().debug(QString("[WebSocketServer]   Subscription pattern: %1, Topic: %2, Match: %3")
+                                   .arg(subscription)
+                                   .arg(topic)
+                                   .arg(topicMatches(topic, subscription) ? "YES" : "NO"));
       if (topicMatches(topic, subscription)) {
         shouldSend = true;
         break;
       }
     }
+    
     if (shouldSend) {
+      Logger::instance().info(QString("[WebSocketServer] Sending event to client (matched subscription)"));
       client->sendTextMessage(message);
+    } else {
+      Logger::instance().debug(QString("[WebSocketServer] Client has no matching subscription"));
     }
   }
 }
