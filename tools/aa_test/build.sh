@@ -28,8 +28,8 @@ echo "Build dir: ${BUILD_DIR}"
 echo "Repo root: ${REPO_ROOT}"
 
 # Ensure AASDK is built first
-if [ ! -f "${REPO_ROOT}/build/lib/libaasdk.so" ]; then
-    echo "ERROR: AASDK library not found at ${REPO_ROOT}/build/lib/libaasdk.so"
+if [ ! -f "${REPO_ROOT}/build/core/aasdk/lib/libaasdk.so" ]; then
+    echo "ERROR: AASDK library not found at ${REPO_ROOT}/build/core/aasdk/lib/libaasdk.so"
     echo "Please build the main project first:"
     echo "  cd ${REPO_ROOT}"
     echo "  cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug"
@@ -42,7 +42,7 @@ echo "Configuring..."
 cmake -S "${SCRIPT_DIR}" -B "${BUILD_DIR}" \
     -DCMAKE_BUILD_TYPE=Debug \
     -DAASDK_INCLUDE_DIR="${REPO_ROOT}/external/aasdk/include" \
-    -DAASDK_LIB_DIR="${REPO_ROOT}/build/lib"
+    -DAASDK_LIB_DIR="${REPO_ROOT}/build/core/aasdk/lib"
 
 # Build
 echo "Building..."

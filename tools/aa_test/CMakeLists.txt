@@ -27,7 +27,7 @@ find_package(Threads REQUIRED)
 
 # Find or build aasdk
 set(AASDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/external/aasdk/include" CACHE PATH "AASDK include directory")
-set(AASDK_LIB_DIR "${CMAKE_SOURCE_DIR}/build/lib" CACHE PATH "AASDK library directory")
+set(AASDK_LIB_DIR "${CMAKE_SOURCE_DIR}/build/core/aasdk/lib" CACHE PATH "AASDK library directory")
 
 # Executable
 add_executable(aa_test
