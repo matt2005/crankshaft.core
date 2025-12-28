@@ -129,6 +129,28 @@ void WebSocketServer::handleSubscribe(QWebSocket* client, const QString& topic) 
     for (const auto& sub : std::as_const(m_subscriptions[client])) {
       Logger::instance().debug(QString("[WebSocketServer]   - %1").arg(sub));
     }
+    
+    // Send current Android Auto state when subscribing to android-auto topics
+    if (topic.startsWith("android-auto") && m_serviceManager) {
+      AndroidAutoService* aaService = m_serviceManager->getAndroidAutoService();
+      if (aaService) {
+        Logger::instance().info("[WebSocketServer] Sending current Android Auto state to new subscriber");
+        int currentState = static_cast<int>(aaService->getConnectionState());
+        onAndroidAutoStateChanged(currentState);
+        
+        // If connected, also send device info
+        if (aaService->isConnected()) {
+          AndroidAutoService::AndroidDevice device = aaService->getConnectedDevice();
+          QVariantMap deviceMap;
+          deviceMap["serialNumber"] = device.serialNumber;
+          deviceMap["manufacturer"] = device.manufacturer;
+          deviceMap["model"] = device.model;
+          deviceMap["androidVersion"] = device.androidVersion;
+          deviceMap["connected"] = device.connected;
+          onAndroidAutoConnected(deviceMap);
+        }
+      }
+    }
   } else {
     Logger::instance().debug(QString("[WebSocketServer] Client already subscribed to: %1").arg(topic));
   }
