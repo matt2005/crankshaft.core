@@ -257,9 +257,9 @@ void WebSocketServer::setupAndroidAutoConnections() {
   }
 
   // Connect Android Auto service signals to WebSocket broadcast methods
-  connect(aaService, QOverload<int>::of(&AndroidAutoService::connectionStateChanged),
+  connect(aaService, QOverload<AndroidAutoService::ConnectionState>::of(&AndroidAutoService::connectionStateChanged),
           this, &WebSocketServer::onAndroidAutoStateChanged);
-  connect(aaService, QOverload<const AndroidAutoService::AndroidDevice&>::of(&AndroidAutoService::connected),
+  connect(aaService, &AndroidAutoService::connected,
           this, [this](const AndroidAutoService::AndroidDevice& device) {
             QVariantMap deviceMap;
             deviceMap["serialNumber"] = device.serialNumber;
@@ -271,15 +271,15 @@ void WebSocketServer::setupAndroidAutoConnections() {
           });
   connect(aaService, &AndroidAutoService::disconnected,
           this, &WebSocketServer::onAndroidAutoDisconnected);
-  connect(aaService, QOverload<const QString&>::of(&AndroidAutoService::errorOccurred),
+  connect(aaService, &AndroidAutoService::errorOccurred,
           this, &WebSocketServer::onAndroidAutoError);
 
   Logger::instance().info("[WebSocketServer] Android Auto service connections setup");
 }
 
-void WebSocketServer::onAndroidAutoStateChanged(int state) {
+void WebSocketServer::onAndroidAutoStateChanged(AndroidAutoService::ConnectionState state) {
   QVariantMap payload;
-  payload["state"] = state;
+  payload["state"] = static_cast<int>(state);
   
   // Convert state enum to string
   static const QStringList stateNames = {
@@ -287,7 +287,8 @@ void WebSocketServer::onAndroidAutoStateChanged(int state) {
     "SECURING", "CONNECTED", "DISCONNECTING", "ERROR"
   };
   
-  if (state >= 0 && state < stateNames.size()) {
+  int stateIndex = static_cast<int>(state);
+  if (stateIndex >= 0 && stateIndex < stateNames.size()) {
     payload["stateName"] = stateNames[state];
   }
   
