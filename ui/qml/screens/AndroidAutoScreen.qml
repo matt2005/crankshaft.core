@@ -36,6 +36,7 @@ Rectangle {
     property bool isConnected: false
     
     Component.onCompleted: {
+        console.log("[AndroidAutoScreen] Subscribing to android-auto/status/#")
         wsClient.subscribe("android-auto/status/#")
     }
     
@@ -43,32 +44,37 @@ Rectangle {
         target: wsClient
         
         function onEventReceived(topic, payload) {
+            console.log("[AndroidAutoScreen] Received event on topic:", topic, "payload:", payload)
             if (topic === "android-auto/status/state-changed") {
                 let stateName = payload.stateName || "UNKNOWN"
-                connectionStatus.text = "Android Auto - " + stateName
+                console.log("[AndroidAutoScreen] State changed to:", stateName)
+                androidAutoScreen.statusText = "Android Auto - " + stateName
                 
                 if (stateName === "CONNECTED") {
-                    statusIndicator.color = '#4CAF50'  // Green
+                    androidAutoScreen.statusColor = '#4CAF50'  // Green
                     androidAutoScreen.isConnected = true
                 } else if (stateName === "DISCONNECTED") {
-                    statusIndicator.color = '#F44336'  // Red
+                    androidAutoScreen.statusColor = '#F44336'  // Red
                     androidAutoScreen.isConnected = false
                 } else {
-                    statusIndicator.color = '#FF9800'  // Orange for other states
+                    androidAutoScreen.statusColor = '#FF9800'  // Orange for other states
                     androidAutoScreen.isConnected = false
                 }
             } else if (topic === "android-auto/status/connected") {
                 let device = payload.device
-                connectionStatus.text = "Android Auto - CONNECTED (" + device.model + ")"
-                statusIndicator.color = '#4CAF50'  // Green
+                console.log("[AndroidAutoScreen] Connected, device:", device)
+                androidAutoScreen.statusText = "Android Auto - CONNECTED (" + device.model + ")"
+                androidAutoScreen.statusColor = '#4CAF50'  // Green
                 androidAutoScreen.isConnected = true
             } else if (topic === "android-auto/status/disconnected") {
-                connectionStatus.text = "Android Auto - Disconnected"
-                statusIndicator.color = '#F44336'  // Red
+                console.log("[AndroidAutoScreen] Disconnected")
+                androidAutoScreen.statusText = "Android Auto - Disconnected"
+                androidAutoScreen.statusColor = '#F44336'  // Red
                 androidAutoScreen.isConnected = false
             } else if (topic === "android-auto/status/error") {
-                connectionStatus.text = "Android Auto - Error: " + payload.error
-                statusIndicator.color = '#F44336'  // Red
+                console.log("[AndroidAutoScreen] Error:", payload.error)
+                androidAutoScreen.statusText = "Android Auto - Error: " + payload.error
+                androidAutoScreen.statusColor = '#F44336'  // Red
                 androidAutoScreen.isConnected = false
             }
         }
@@ -96,7 +102,11 @@ Rectangle {
                     Layout.preferredWidth: 12
                     Layout.preferredHeight: 12
                     radius: 6
-                    color: '#F44336'
+                    color: androidAutoScreen.statusColor
+                    
+                    Behavior on color {
+                        ColorAnimation { duration: 300 }
+                    }
                 }
 
                 Text {

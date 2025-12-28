@@ -248,6 +248,12 @@ bool WebSocketServer::topicMatches(const QString& topic, const QString& pattern)
     return topic.startsWith(prefix + "/");
   }
 
+  // Handle MQTT-style '#' wildcard - matches everything including nested levels
+  if (pattern.endsWith("/#")) {
+    QString prefix = pattern.left(pattern.length() - 2);
+    return topic.startsWith(prefix + "/");
+  }
+
   return false;
 }
 
