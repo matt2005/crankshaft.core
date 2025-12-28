@@ -41,6 +41,7 @@ class WebSocketServer : public QObject {
 
   // ServiceManager integration
   void setServiceManager(ServiceManager* serviceManager);
+  void initializeServiceConnections();  // Call after services are started
 
  private slots:
   void onNewConnection();

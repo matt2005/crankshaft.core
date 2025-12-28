@@ -57,8 +57,15 @@ bool WebSocketServer::isListening() const {
 void WebSocketServer::setServiceManager(ServiceManager* serviceManager) {
   m_serviceManager = serviceManager;
   Logger::instance().info("[WebSocketServer] ServiceManager registered");
+}
+
+void WebSocketServer::initializeServiceConnections() {
+  if (!m_serviceManager) {
+    Logger::instance().debug("[WebSocketServer] ServiceManager not available");
+    return;
+  }
   
-  // Setup connections to Android Auto service
+  Logger::instance().info("[WebSocketServer] Initializing service connections...");
   setupAndroidAutoConnections();
 }
 
@@ -252,9 +259,11 @@ void WebSocketServer::setupAndroidAutoConnections() {
 
   AndroidAutoService* aaService = m_serviceManager->getAndroidAutoService();
   if (!aaService) {
-    Logger::instance().debug("[WebSocketServer] Android Auto service not available");
+    Logger::instance().warning("[WebSocketServer] Android Auto service not available - will not broadcast Android Auto events");
     return;
   }
+
+  Logger::instance().info("[WebSocketServer] Setting up Android Auto service signal connections...");
 
   // Connect Android Auto service signals to WebSocket broadcast methods
   connect(aaService, &AndroidAutoService::connectionStateChanged,
@@ -280,6 +289,7 @@ void WebSocketServer::setupAndroidAutoConnections() {
 }
 
 void WebSocketServer::onAndroidAutoStateChanged(int state) {
+  Logger::instance().info(QString("[WebSocketServer] Android Auto state changed: %1").arg(state));
   QVariantMap payload;
   payload["state"] = state;
   
@@ -291,6 +301,7 @@ void WebSocketServer::onAndroidAutoStateChanged(int state) {
   
   if (state >= 0 && state < stateNames.size()) {
     payload["stateName"] = stateNames[state];
+    Logger::instance().info(QString("[WebSocketServer] Broadcasting state: %1").arg(stateNames[state]));
   }
   
   broadcastEvent("android-auto/status/state-changed", payload);

@@ -170,6 +170,9 @@ int main(int argc, char* argv[]) {
   }
   Logger::instance().info("=== Service Initialisation Complete ===");
 
+  // Initialize WebSocket connections to services (after services are started)
+  server.initializeServiceConnections();
+
   Logger::instance().info("Crankshaft Core started successfully");
   Logger::instance().info("Core services ready");
 
