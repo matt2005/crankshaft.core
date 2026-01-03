@@ -1,0 +1,117 @@
+name: Quality Scan (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        description: 'Runner to execute on'
+        required: false
+        type: string
+        default: 'ubuntu-latest'
+      build-type:
+        description: 'CMake build type (Debug/Release)'
+        required: false
+        type: string
+        default: 'Debug'
+      json-output:
+        description: 'Output quality checks as JSON'
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      quality-report:
+        description: 'JSON report of quality checks'
+        value: ${{ jobs.quality-scan.outputs.report }}
+
+jobs:
+  quality-scan:
+    name: Quality Checks
+    runs-on: ${{ inputs.runner }}
+    outputs:
+      report: ${{ steps.compile.outputs.report }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang-format \
+            clang-tidy \
+            cppcheck
+
+      - name: Build project
+        id: build
+        run: |
+          ./scripts/build.sh --build-type ${{ inputs.build-type }}
+
+      - name: Check formatting (clang-format)
+        id: format
+        run: |
+          ./.github/scripts/quality/check-format.sh \
+            ${{ inputs.json-output && '--json' || '' }}
+        continue-on-error: true
+
+      - name: Check static analysis (clang-tidy)
+        id: tidy
+        run: |
+          ./.github/scripts/quality/check-tidy.sh \
+            ${{ inputs.json-output && '--json' || '' }}
+        continue-on-error: true
+
+      - name: Check code analysis (cppcheck)
+        id: cppcheck
+        run: |
+          ./.github/scripts/quality/check-cppcheck.sh \
+            ${{ inputs.json-output && '--json' || '' }}
+        continue-on-error: true
+
+      - name: Check license headers
+        id: license
+        run: |
+          ./scripts/check_license_headers.sh \
+            ${{ inputs.json-output && '--json' || '' }}
+        continue-on-error: true
+
+      - name: Compile quality report
+        id: compile
+        if: inputs.json-output
+        run: |
+          {
+            echo "report<<EOF"
+            echo "{"
+            echo '  "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",'
+            echo '  "checks": {'
+            echo '    "format": ${{ steps.format.outcome }}'
+            echo '    "tidy": "${{ steps.tidy.outcome }}'
+            echo '    "cppcheck": "${{ steps.cppcheck.outcome }}'
+            echo '    "license": "${{ steps.license.outcome }}'
+            echo "  }"
+            echo "}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Report results
+        if: always()
+        run: |
+          echo "## Quality Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Formatting | ${{ steps.format.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Static Analysis (clang-tidy) | ${{ steps.tidy.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Analysis (cppcheck) | ${{ steps.cppcheck.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| License Headers | ${{ steps.license.outcome }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if quality checks failed
+        if: |
+          steps.format.outcome == 'failure' ||
+          steps.tidy.outcome == 'failure' ||
+          steps.cppcheck.outcome == 'failure' ||
+          steps.license.outcome == 'failure'
+        run: |
+          echo "❌ Quality checks failed. Please fix the issues above."
+          exit 1
