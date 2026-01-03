@@ -177,3 +177,15 @@ jobs:
               }
             });
             console.log('Dispatched CD with amd64only=true');
+
+  publish-nightly:
+    name: Publish Nightly Packages
+    needs: build-packages
+    if: (github.ref_name == 'main' || github.ref_name == 'develop') && github.event_name == 'push'
+    uses: ./.github/workflows/apt-publish.yml
+    with:
+      build-run-id: ${{ github.run_id }}
+      channel: nightly
+      architectures: 'amd64 arm64 armhf'
+      create-release: false
+    secrets: inherit
