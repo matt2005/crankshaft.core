@@ -160,8 +160,8 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T061 [P] Add secure WebSocket (wss) support with certificate provisioning in core/services/websocket/WebSocketServer.cpp
-- [ ] T062 [P] Add comprehensive structured logging (JSON format) across all services in core/services/logging/Logger.cpp
+- [x] T061 [P] Add secure WebSocket (wss) support with certificate provisioning in core/services/websocket/WebSocketServer.cpp
+- [x] T062 [P] Add comprehensive structured logging (JSON format) across all services in core/services/logging/Logger.cpp
 - [ ] T063 [P] Document contract versioning and migration policy in docs/contract-versioning.md
 - [ ] T064 [P] Add Design for Driving compliance checks (tap target sizes, contrast) in ui/qml/styles/
 - [ ] T065 [P] Add localization strings for additional locales (expand beyond en-GB) in ui/translations/
