@@ -20,6 +20,8 @@
 - [ ] T001 Create workflow directory structure: `.github/workflows/` (already exists), `.github/scripts/{quality,package,release}/`
 - [ ] T002 Create documentation structure: `docs/ci-cd/` with placeholder files
 - [ ] T003 [P] Create contracts directory: `specs/003-github-actions-cicd/contracts/` with template files
+- [ ] T003a [P] Document dependency versioning strategy: Create `.github/DEPENDENCY_STRATEGY.md` specifying how AASDK/OpenAuto versions are selected (pinned tags, latest compatible, or main branch)
+- [ ] T003b [P] Verify build.sh flag compatibility: Check existing `scripts/build.sh` for `--architecture` and `--skip-tests` flags; document if they need alignment with Phase 4 additions
 
 ---
 
@@ -104,8 +106,10 @@
 - [ ] T037 [US3] Implement metadata generation: Generate Packages.gz and Release files in staging
 - [ ] T038 [US3] Implement GPG signing: Sign Release file with GPG key from GitHub Secrets (APT_SIGNING_KEY)
 - [ ] T039 [US3] Implement atomic promotion: Atomically move staging → production (symlink swap or rsync --delete)
+- [ ] T039a [US3] REFINEMENT: Document atomic promotion implementation: Use symlink swap for true atomicity - create staging as `/staging/apt.new`, then `ln -sfn` and `mv -T` for atomic cutover in apt-publish.sh
 - [ ] T040 [US3] Add rollback capability: Keep last-good as backup in apt-publish.yml
 - [ ] T041 [US3] Add concurrency control: Ensure only one APT publish at a time (queue others) in apt-publish.yml
+- [ ] T041a [US3] REFINEMENT: Document concurrency mechanism: Use GitHub Actions native `concurrency` key in apt-publish.yml (not custom mutex) - simpler, no state management needed
 - [ ] T042 [US3] Update ci.yml: Add apt-publish job that dispatches apt-publish.yml on successful main/develop builds
 - [ ] T043 [US3] Create documentation: `docs/ci-cd/apt-publishing.md` (repository structure, package flow, GPG management, rollback)
 
@@ -123,6 +127,7 @@
 
 - [ ] T044 [P] [US4] Create changelog generation script: `.github/scripts/release/generate-notes.sh` (parse git log, categorize commits)
 - [ ] T045 [P] [US4] Create SBOM generation script: `.github/scripts/release/generate-sbom.sh` (extract dependencies, format as SPDX/CycloneDX)
+- [ ] T045a [P] [US4] REFINEMENT: Document SBOM format selection: Use SPDX format for release notes (more widely adopted than CycloneDX) - implement in generate-sbom.sh with standard SPDX output
 - [ ] T046 [US4] Create reusable release notes workflow: `.github/workflows/release-notes.yml` with workflow_call interface
 - [ ] T047 [US4] Define release-notes.yml contract: `specs/003-github-actions-cicd/contracts/release-notes.md`
 - [ ] T048 [US4] Implement release-notes.yml: Generate markdown with version, commit SHA, build info, categorized changelog, install instructions, checksums
@@ -152,6 +157,7 @@
 ### Implementation for User Story 5
 
 - [ ] T061 [US5] Update build-pi-gen-lite.yml: Add workflow_call interface in `.github/workflows/build-pi-gen-lite.yml`
+- [ ] T061a [US5] REFINEMENT: Verify pi-gen branch compatibility: Document which pi-gen branches are used (master for armhf, arm64 for arm64) and confirm they're maintained/stable
 - [ ] T062 [US5] Add release-tag input to build-pi-gen-lite.yml: Support version-specific image builds
 - [ ] T063 [US5] Add attach-to-release input to build-pi-gen-lite.yml: Enable auto-attach to GitHub releases
 - [ ] T064 [US5] Create Crankshaft pi-gen stage: `image_builder/pi-gen-stages/stage-crankshaft/` with stage scripts
@@ -196,6 +202,7 @@
 - [ ] T081 [P] Create developer handbook: `docs/ci-cd/developer-handbook.md` (how developers interact with CI)
 - [ ] T082 [P] Create maintainer handbook: `docs/ci-cd/maintainer-handbook.md` (advanced workflows, debugging, rollbacks)
 - [ ] T083 [P] Create architecture decisions doc: `docs/ci-cd/architecture-decisions.md` (why extend vs rewrite, tool choices)
+- [ ] T083a [P] REFINEMENT: Create success criteria checklist template: `.github/templates/success-criteria-checklist.md` - reusable template for SC-001 through SC-019 validation with measurement columns
 - [ ] T084 Test US1 end-to-end: Push code with violations, verify quality feedback in < 2 min
 - [ ] T085 Test US2 end-to-end: Push to feature branch, verify amd64-only build in < 5 min
 - [ ] T086 Test US3 end-to-end: Merge to main, verify APT publish completes, test apt install on Pi
@@ -348,3 +355,23 @@ T043: Write apt-publishing.md (parallel with T040-T042)
 7. **Validate success criteria** in Phase 9 before marking feature complete
 
 **Estimated Total Effort**: 21 days (sequential) or 18 days (with parallelization in foundational + polish phases)
+
+---
+
+## Refinement Tasks Summary
+
+This task list includes **6 REFINEMENT tasks** (T003a, T003b, T039a, T041a, T045a, T061a, T083a) that address clarifications identified in the ANALYSIS_REPORT.md:
+
+| Refinement Task | Purpose | Phase | Effort | Critical Path Impact |
+|-----------------|---------|-------|--------|----------------------|
+| **T003a** | Document dependency versioning (AASDK/OpenAuto) | 1 | 1-2 hrs | None (parallel) |
+| **T003b** | Verify build.sh flag compatibility | 1 | 15 min | None (parallel) |
+| **T039a** | Document symlink swap implementation for atomic promotion | 5 | 30 min | None (parallel) |
+| **T041a** | Document GitHub concurrency key for queue logic | 5 | 5 min | None (parallel) |
+| **T045a** | Specify SPDX format for SBOM generation | 6 | 15 min | None (parallel) |
+| **T061a** | Verify pi-gen branch stability | 7 | 30 min | None (parallel) |
+| **T083a** | Create success criteria validation checklist template | 9 | 30 min | None (parallel) |
+
+**Total refinement effort**: ~3.5 hours  
+**Total task count**: 102 tasks (95 original + 7 refinement)  
+**Impact on critical path**: ZERO - all refinements marked [P] or run parallel to phase work
