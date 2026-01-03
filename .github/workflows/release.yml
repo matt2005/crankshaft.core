@@ -15,154 +15,383 @@
 #  You should have received a copy of the GNU General Public License
 #  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
 
-name: Crankshaft Release
+name: Release
 
 on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+*'
   workflow_dispatch:
     inputs:
-      build_run_id:
-        description: 'Build run ID to create release from'
-        required: true
-        type: string
       version:
-        description: 'Release version'
+        description: 'Release version (e.g., v1.2.0)'
         required: true
         type: string
-      create_draft:
-        description: 'Create as draft release'
+      build-run-id:
+        description: 'Build run ID to use (leave empty to trigger new build)'
+        required: false
+        type: string
+      create-draft:
+        description: 'Create as draft release for review'
         required: false
         default: false
         type: boolean
 
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}/crankshaft
+
 jobs:
-  release:
+  validate:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.validate.outputs.version }}
+      is-prerelease: ${{ steps.validate.outputs.is-prerelease }}
+    steps:
+      - name: Determine version
+        id: validate
+        run: |
+          if [ "${{ github.event_name }}" = "push" ]; then
+            # Extract version from tag (remove leading 'v')
+            VERSION="${{ github.ref_name }}"
+            VERSION="${VERSION#v}"
+          else
+            # Use provided version
+            VERSION="${{ github.event.inputs.version }}"
+            VERSION="${VERSION#v}"
+          fi
+          
+          # Validate semver format
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.]+)?$ ]]; then
+            echo "::error::Invalid version format: $VERSION (must be X.Y.Z)"
+            exit 1
+          fi
+          
+          # Check if prerelease (contains dash)
+          if [[ "$VERSION" =~ - ]]; then
+            IS_PRERELEASE="true"
+          else
+            IS_PRERELEASE="false"
+          fi
+          
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "is-prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION (prerelease: $IS_PRERELEASE)"
+
+  build:
+    name: Build Release Packages
+    needs: validate
+    runs-on: ubuntu-latest
+    if: github.event.inputs.build-run-id == '' && github.event_name == 'workflow_dispatch'
+    outputs:
+      build-run-id: ${{ steps.wait-build.outputs.build-run-id }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Trigger build workflow
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ needs.validate.outputs.version }}';
+            
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'ci.yml',
+              ref: context.ref,
+              inputs: {
+                version: version
+              }
+            });
+            
+            console.log('Triggered build workflow');
+
+      - name: Wait for build to complete
+        id: wait-build
+        uses: actions/github-script@v7
+        timeout-minutes: 45
+        with:
+          script: |
+            const version = '${{ needs.validate.outputs.version }}';
+            let buildRunId = null;
+            let maxAttempts = 30;
+            let attempt = 0;
+            
+            // Poll for the new build workflow run
+            while (attempt < maxAttempts) {
+              const runs = await github.rest.actions.listWorkflowRuns({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                workflow_id: 'ci.yml',
+                per_page: 5
+              });
+              
+              // Find the run that was just created
+              const newRun = runs.data.runs.find(r => 
+                r.name.includes('CI') && 
+                new Date(r.created_at) > new Date(Date.now() - 5 * 60000)
+              );
+              
+              if (newRun) {
+                buildRunId = newRun.id;
+                console.log(`Found build run: ${buildRunId}`);
+                break;
+              }
+              
+              attempt++;
+              await new Promise(r => setTimeout(r, 5000));
+            }
+            
+            if (!buildRunId) {
+              throw new Error('Build workflow not found after triggering');
+            }
+            
+            // Wait for build to complete
+            let buildStatus = 'in_progress';
+            let checkAttempts = 0;
+            const maxChecks = 180; // 15 minutes max
+            
+            while (buildStatus === 'in_progress' && checkAttempts < maxChecks) {
+              const run = await github.rest.actions.getWorkflowRun({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: buildRunId
+              });
+              
+              buildStatus = run.data.status;
+              
+              if (buildStatus === 'completed') {
+                const conclusion = run.data.conclusion;
+                if (conclusion !== 'success') {
+                  throw new Error(`Build failed with conclusion: ${conclusion}`);
+                }
+                console.log('Build completed successfully');
+                break;
+              }
+              
+              checkAttempts++;
+              await new Promise(r => setTimeout(r, 5000));
+            }
+            
+            if (checkAttempts >= maxChecks) {
+              throw new Error('Build timed out after 15 minutes');
+            }
+            
+            core.setOutput('build-run-id', buildRunId);
+
+  generate-release-notes:
+    name: Generate Release Notes
+    needs: [validate, build]
+    runs-on: ubuntu-latest
+    if: always() && (needs.build.result == 'success' || needs.build.result == 'skipped')
+    outputs:
+      release-notes: ${{ steps.assemble.outputs.release-notes }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: build-artifacts
+          run-id: ${{ github.event.inputs.build-run-id || (needs.build.result != 'skipped' && needs.build.outputs.build-run-id) || github.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          if [ ! -f .github/scripts/release/generate-notes.sh ]; then
+            echo "::warning::generate-notes.sh not found, using basic changelog"
+            echo "### What's New" > CHANGELOG.md
+            echo "" >> CHANGELOG.md
+            git log --pretty=format:"- %s (%h)" -n 30 >> CHANGELOG.md || echo "No commits found" >> CHANGELOG.md
+          else
+            bash .github/scripts/release/generate-notes.sh \
+              --version "${{ needs.validate.outputs.version }}" \
+              --output CHANGELOG.md
+          fi
+          
+          {
+            echo "changelog<<EOF"
+            cat CHANGELOG.md
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Generate SBOM
+        id: sbom
+        run: |
+          if [ ! -f .github/scripts/release/generate-sbom.sh ]; then
+            echo "::warning::generate-sbom.sh not found, skipping SBOM"
+            touch SBOM.spdx
+          else
+            bash .github/scripts/release/generate-sbom.sh \
+              --version "${{ needs.validate.outputs.version }}" \
+              --format spdx \
+              --output SBOM.spdx
+          fi
+
+      - name: Generate checksums
+        run: |
+          cd build-artifacts
+          find . -name "*.deb" -exec sha256sum {} \; | tee SHA256SUMS || true
+          cd ..
+
+      - name: Assemble release notes
+        id: assemble
+        run: |
+          cat > RELEASE_NOTES.md << 'EOF'
+          # Crankshaft Release ${{ needs.validate.outputs.version }}
+          
+          **Release Date:** $(date -u +%Y-%m-%d)  
+          **Git Commit:** $(git rev-parse --short HEAD)
+          
+          ## Installation
+          
+          Download the appropriate `.deb` package for your architecture:
+          
+          ```bash
+          # Raspberry Pi 4 (ARM 64-bit)
+          sudo dpkg -i crankshaft-arm64_${{ needs.validate.outputs.version }}_arm64.deb
+          
+          # Raspberry Pi (ARM 32-bit)
+          sudo dpkg -i crankshaft-armhf_${{ needs.validate.outputs.version }}_armhf.deb
+          
+          # x86_64 Systems
+          sudo dpkg -i crankshaft-amd64_${{ needs.validate.outputs.version }}_amd64.deb
+          ```
+          
+          ## Changelog
+          
+          EOF
+          
+          cat CHANGELOG.md >> RELEASE_NOTES.md || echo "No changelog available" >> RELEASE_NOTES.md
+          
+          cat >> RELEASE_NOTES.md << 'EOF'
+          
+          ## Verification
+          
+          Verify package integrity using the provided SHA256SUMS:
+          
+          ```bash
+          sha256sum -c SHA256SUMS
+          ```
+          
+          ## Software Bill of Materials (SBOM)
+          
+          A complete SBOM in SPDX format is provided: `SBOM.spdx`
+          
+          This includes:
+          - All dependencies and their versions
+          - License information for each component
+          - Known vulnerabilities (where applicable)
+          
+          EOF
+          
+          {
+            echo "release-notes<<EOF"
+            cat RELEASE_NOTES.md
+            echo "EOF"
+          } >> $GITHUB_OUTPUT
+
+      - name: Upload release notes artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes-${{ needs.validate.outputs.version }}
+          path: |
+            RELEASE_NOTES.md
+            CHANGELOG.md
+            SBOM.spdx
+            build-artifacts/SHA256SUMS
+          retention-days: 90
+
+  create-release:
+    name: Create GitHub Release
+    needs: [validate, generate-release-notes]
     runs-on: ubuntu-latest
     permissions:
       contents: write
-    
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Download build artifacts
-      uses: actions/download-artifact@v4
-      with:
-        run-id: ${{ inputs.build_run_id }}
-        path: ./release-artifacts
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: build-artifacts
+          github-token: ${{ github.token }}
 
-    - name: Generate release notes
-      id: release_notes
-      run: |
-        COMMIT_SHA=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
-        BUILD_DATE=$(date -u +"%Y-%m-%d %H:%M:%S UTC")
-        
-        LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-        
-        cat > RELEASE_NOTES.md << EOF
-        ## Crankshaft Release ${{ inputs.version }}
-        
-        **Build Information:**
-        - Version: \`${{ inputs.version }}\`
-        - Commit: \`${COMMIT_SHA}\`
-        - Build Date: \`${BUILD_DATE}\`
-        - Build Run: [\`${{ inputs.build_run_id }}\`](https://github.com/${{ github.repository }}/actions/runs/${{ inputs.build_run_id }})
-        - Architectures: \`amd64\`, \`arm64\`, \`armhf\`
-        
-        ### Features
-        
-        - Automotive infotainment system with extensible framework
-        - QT6-based modern UI with Material Design icons
-        - WebSocket-based event system
-        - Android Auto integration support
-        - Multi-language support (en-GB, de-DE)
-        - Theme system with dark/light mode
-        
-        ### Installation
-        
-        Download the appropriate \`.deb\` package for your architecture and install:
-        
-        \`\`\`bash
-        # For Raspberry Pi 4 (64-bit)
-        sudo dpkg -i crankshaft-arm64_${{ inputs.version }}_arm64.deb
-        
-        # For Raspberry Pi (32-bit)
-        sudo dpkg -i crankshaft-armhf_${{ inputs.version }}_armhf.deb
-        
-        # For x86_64 systems
-        sudo dpkg -i crankshaft-amd64_${{ inputs.version }}_amd64.deb
-        \`\`\`
-        
-        ### SBOM (Software Bill of Materials)
-        
-        A comprehensive SBOM in CycloneDX format is included with this release. This provides:
-        - Complete dependency list
-        - License information
-        - Component versions
-        - Security vulnerability tracking
-        
-        Download: \`crankshaft-sbom-${{ inputs.version }}.json\`
-        
-        EOF
-        
-        if [ -n "$LAST_TAG" ] && git rev-parse --verify "${LAST_TAG}" >/dev/null 2>&1; then
-          echo "### What's Changed Since ${LAST_TAG}" >> RELEASE_NOTES.md
-          echo "" >> RELEASE_NOTES.md
-          git log --pretty=format:"- %s (%h)" "${LAST_TAG}..HEAD" 2>/dev/null | head -30 >> RELEASE_NOTES.md || echo "- Initial release" >> RELEASE_NOTES.md
-          echo "" >> RELEASE_NOTES.md
-        else
-          echo "### Initial Release" >> RELEASE_NOTES.md
-          echo "" >> RELEASE_NOTES.md
-          echo "This is the first release of Crankshaft." >> RELEASE_NOTES.md
-        fi
-        
-        cat >> RELEASE_NOTES.md << EOF
-        
-        ### Documentation
-        
-        - [Architecture](https://github.com/${{ github.repository }}/blob/main/docs/ARCHITECTURE.md)
-        - [Development Guide](https://github.com/${{ github.repository }}/blob/main/docs/DEVELOPMENT.md)
-        - [API Documentation](https://github.com/${{ github.repository }}/blob/main/docs/API.md)
-        
-        ### Acknowledgements
-        
-        See the [About](#) section in the application for full acknowledgements and third-party licenses.
-        EOF
+      - name: Prepare release assets
+        run: |
+          mkdir -p release-assets
+          
+          # Copy DEB packages
+          find build-artifacts -name "*.deb" -exec cp {} release-assets/ \;
+          
+          # Copy checksum files
+          find build-artifacts -name "SHA256SUMS" -exec cp {} release-assets/ \;
+          
+          # Create asset list
+          ls -lh release-assets/
 
-    - name: Prepare release assets
-      run: |
-        cd release-artifacts
-        
-        # Rename DEB files with version
-        for dir in crankshaft-*-deb; do
-          if [ -d "$dir" ]; then
-            arch=$(echo $dir | sed 's/crankshaft-\(.*\)-deb/\1/')
-            for deb in $dir/*.deb; do
-              if [ -f "$deb" ]; then
-                mv "$deb" "../crankshaft-${arch}_${{ inputs.version }}_${arch}.deb"
-              fi
-            done
-          fi
-        done
-        
-        # Rename SBOM
-        if [ -f "crankshaft-sbom/crankshaft-sbom-final.json" ]; then
-          mv "crankshaft-sbom/crankshaft-sbom-final.json" "../crankshaft-sbom-${{ inputs.version }}.json"
-        fi
-        
-        cd ..
+      - name: Create GitHub release
+        uses: softprops/action-gh-release@v1
+        with:
+          token: ${{ github.token }}
+          tag_name: v${{ needs.validate.outputs.version }}
+          name: Crankshaft ${{ needs.validate.outputs.version }}
+          body: ${{ needs.generate-release-notes.outputs.release-notes }}
+          draft: ${{ github.event.inputs.create-draft == 'true' }}
+          prerelease: ${{ needs.validate.outputs.is-prerelease == 'true' }}
+          files: |
+            release-assets/*.deb
+            release-assets/SHA256SUMS
+          fail_on_unmatched_files: false
 
-    - name: Create Release
-      uses: softprops/action-gh-release@v1
-      with:
-        tag_name: v${{ inputs.version }}
-        name: Crankshaft v${{ inputs.version }}
-        body_path: RELEASE_NOTES.md
-        draft: ${{ inputs.create_draft }}
-        prerelease: false
-        files: |
-          crankshaft-*_${{ inputs.version }}*.deb
-          crankshaft-sbom-${{ inputs.version }}.json
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  publish-stable:
+    name: Publish to Stable APT Channel
+    needs: [validate, create-release, build]
+    if: needs.validate.outputs.is-prerelease == 'false'
+    uses: ./.github/workflows/apt-publish.yml
+    with:
+      build-run-id: ${{ github.event.inputs.build-run-id || needs.build.outputs.build-run-id || github.run_id }}
+      channel: stable
+      architectures: 'amd64 arm64 armhf'
+      create-release: false
+    secrets: inherit
+
+  publish-success:
+    name: Release Published Successfully
+    needs: [validate, create-release]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Report success
+        if: success()
+        run: |
+          cat << EOF
+          ✅ Release v${{ needs.validate.outputs.version }} created successfully!
+          
+          Release Details:
+          - Version: v${{ needs.validate.outputs.version }}
+          - GitHub Release: https://github.com/${{ github.repository }}/releases/tag/v${{ needs.validate.outputs.version }}
+          - Pre-release: ${{ needs.validate.outputs.is-prerelease }}
+          - Created at: $(date -u +%Y-%m-%dT%H:%M:%SZ)
+          
+          Next Steps:
+          1. Review release on GitHub (if draft)
+          2. Verify package checksums
+          3. Update documentation
+          4. Announce release
+          EOF
+
+      - name: Report failure
+        if: failure()
+        run: |
+          echo "❌ Release creation failed"
+          echo "Version: v${{ needs.validate.outputs.version }}"
+          echo "Please check the logs for details"
+          exit 1
