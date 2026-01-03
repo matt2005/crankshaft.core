@@ -1,0 +1,111 @@
+name: Post Quality Report Comment
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    paths:
+      - '.github/workflows/ci.yml'
+      - '.github/scripts/quality/**'
+
+jobs:
+  post-quality-comment:
+    if: github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion != 'skipped'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Download quality report artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: quality-report
+          github-token: ${{ github.token }}
+          run-id: ${{ github.event.workflow_run.id }}
+        continue-on-error: true
+
+      - name: Find PR number
+        id: pr
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const allPRs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open'
+            });
+            
+            const pr = allPRs.data.find(pr =>
+              pr.head.sha === '${{ github.event.workflow_run.head_commit }}'
+            );
+            
+            if (pr) {
+              console.log(`Found PR #${pr.number}`);
+              core.setOutput('number', pr.number);
+            } else {
+              console.log('No open PR found for this commit');
+              core.setOutput('number', '');
+            }
+
+      - name: Post or update quality comment
+        if: steps.pr.outputs.number != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const pull_number = ${{ steps.pr.outputs.number }};
+            
+            let qualityReport = '## 📊 Quality Check Results\n\n';
+            
+            // Try to read quality report artifact if available
+            try {
+              if (fs.existsSync('quality-report.json')) {
+                const report = JSON.parse(fs.readFileSync('quality-report.json', 'utf8'));
+                
+                qualityReport += `**Status**: ${report.timestamp}\n\n`;
+                qualityReport += '| Check | Result |\n';
+                qualityReport += '|-------|--------|\n';
+                
+                if (report.checks) {
+                  Object.entries(report.checks).forEach(([check, status]) => {
+                    const icon = status === 'success' ? '✅' : status === 'failure' ? '❌' : '⚠️';
+                    qualityReport += `| ${check} | ${icon} ${status} |\n`;
+                  });
+                }
+              } else {
+                qualityReport += 'Quality report not available\n';
+              }
+            } catch (e) {
+              qualityReport += 'Could not parse quality report\n';
+            }
+            
+            // Find existing quality comment to update it
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pull_number
+            });
+            
+            const existingComment = comments.data.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Quality Check Results')
+            );
+            
+            if (existingComment) {
+              // Update existing comment
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: qualityReport
+              });
+              console.log('Updated existing quality comment');
+            } else {
+              // Create new comment
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: pull_number,
+                body: qualityReport
+              });
+              console.log('Created new quality comment');
+            }
