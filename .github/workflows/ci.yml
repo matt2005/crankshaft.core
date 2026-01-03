@@ -146,9 +146,10 @@ jobs:
 
   build-packages:
     needs: code-quality
-    if: needs.check-skip.outputs.skip != 'true'
+    if: needs.check-skip.outputs.skip != 'true' && (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped')
     uses: ./.github/workflows/build.yml
     with:
+      quality-scan-status: ${{ needs.code-quality.result }}
       architectures: ${{ github.event.inputs.amd64only == 'true' && 'amd64' || ((github.ref_name == 'main' || github.ref_name == 'develop' || github.base_ref == 'main' || github.base_ref == 'develop') && 'amd64 arm64 armhf' || 'amd64') }}
 
   dispatch-cd-fastpath:
