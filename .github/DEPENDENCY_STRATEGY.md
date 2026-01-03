@@ -18,20 +18,17 @@ This document specifies how versions are selected for each category.
 
 ---
 
-## Build-Time Dependencies (AASDK, OpenAuto)
+## Build-Time Dependencies (AASDK)
 
 ### Strategy: Latest Compatible via Git Tags
 
 **Default Behavior**:
 - AASDK: Use latest stable release tag (`v*.*.*` matching semver)
-- OpenAuto: Use latest stable release tag (`v*.*.*` matching semver)
 
 **Implementation**:
 ```bash
 # In scripts/build.sh or cmake configuration:
 # - Clone AASDK from github.com/opencardev/aasdk
-# - Checkout latest tag matching ^v[0-9]+\.[0-9]+\.[0-9]+$
-# - Clone OpenAuto from github.com/opencardev/openauto
 # - Checkout latest tag matching ^v[0-9]+\.[0-9]+\.[0-9]+$
 ```
 
@@ -40,7 +37,7 @@ This document specifies how versions are selected for each category.
 **Use Case**: Building release with known-good dependency versions
 
 **Method**:
-- Add `AASDK_VERSION` and `OPENAUTO_VERSION` environment variables to workflow
+- Add `AASDK_VERSION` environment variable to workflow
 - If set, use exact version (e.g., `AASDK_VERSION=v1.2.3`)
 - If unset, default to latest stable tag
 
@@ -51,20 +48,19 @@ jobs:
     runs-on: ubuntu-latest
     env:
       AASDK_VERSION: ${{ github.event.inputs.aasdk_version || 'latest' }}
-      OPENAUTO_VERSION: ${{ github.event.inputs.openauto_version || 'latest' }}
     steps:
-      - run: ./scripts/build.sh --aasdk-version="$AASDK_VERSION" --openauto-version="$OPENAUTO_VERSION"
+      - run: ./scripts/build.sh --aasdk-version="$AASDK_VERSION"
 ```
 
 ### Breaking Change Handling
 
 **Policy**:
-- If AASDK or OpenAuto releases breaking changes, they MUST increment MAJOR version
-- Crankshaft CI/CD will detect incompatible versions and fail with clear error message
+- If AASDK releases breaking changes, it MUST increment MAJOR version
+- Crankshaft CI/CD will detect incompatible AASDK versions and fail with clear error message
 - Maintainer manually updates to compatible version and creates hotfix release
 
 **Documentation**:
-- Release notes MUST mention any AASDK/OpenAuto version upgrades
+- Release notes MUST mention any AASDK version upgrades
 - Migration notes provided if breaking changes detected
 
 ---
@@ -119,7 +115,6 @@ jobs:
 | Dependency | Type | Selection | Pinning | Validation |
 |-----------|------|-----------|---------|-----------|
 | **AASDK** | Build-time | Latest tag | `AASDK_VERSION` env var | Tag format: `^v[0-9]+\.[0-9]+\.[0-9]+$` |
-| **OpenAuto** | Build-time | Latest tag | `OPENAUTO_VERSION` env var | Tag format: `^v[0-9]+\.[0-9]+\.[0-9]+$` |
 | **Qt6** | Runtime | Latest in Trixie | Future feature | Tested via DEB package install |
 | **CMake** | Dev-time | >= 3.25 | Workflow constraint | Version check in workflow |
 | **Toolchain** | Dev-time | Ubuntu runner default | Not pinned | GCC 12+ or Clang 14+ verified |
@@ -171,7 +166,7 @@ fi
 **Q**: Should we pin Debian packages to exact versions for reproducibility?  
 **A**: Not yet - Trixie is rolling release (testing). Pin versions for stable releases in future enhancement.
 
-**Q**: How often should we update to latest AASDK/OpenAuto?  
+**Q**: How often should we update to latest AASDK?  
 **A**: On release (maintainer discretion) or when critical fixes are needed. Monthly update checks recommended.
 
 **Q**: What if a dependency releases a critical security fix?  
