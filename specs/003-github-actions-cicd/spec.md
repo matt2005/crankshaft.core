@@ -128,7 +128,7 @@ A maintainer needs to create a release from an existing build (e.g., after exten
 - **Network failures during publish**: What if APT package upload fails halfway? Implement retry logic with exponential backoff (3 attempts, 1s/2s/4s delays).
 - **Invalid version tags**: What happens if tag doesn't follow semver (e.g., `random-tag`)? Release workflow should validate tag format and fail early with clear error.
 - **Missing GPG keys**: How does APT publish handle missing or expired GPG signing keys? Workflow should check key validity before starting publish, fail fast if invalid.
-- **Cross-repository dependencies**: What if AASDK or OpenAuto dependencies change? Build should pull latest compatible versions from APT repository or specified version tags.
+- **Cross-repository dependencies**: What if AASDK dependencies change? Build should pull latest compatible versions from APT repository or specified version tags.
 
 ## Requirements *(mandatory)*
 
@@ -303,7 +303,7 @@ A maintainer needs to create a release from an existing build (e.g., after exten
 ## Assumptions *(documented defaults)*
 
 - **Infrastructure**: GitHub Actions runners provide sufficient resources for cross-compilation and QEMU emulation (32GB RAM, 8 vCPUs available)
-- **Dependencies**: All build dependencies (Qt6, AASDK, OpenAuto) are available via APT or buildable from source
+- **Dependencies**: All build dependencies (Qt6, AASDK) are available via APT or buildable from source
 - **GPG Keys**: Project GPG signing key is securely stored in GitHub Secrets and valid for at least 2 years
 - **APT Repository**: Existing APT repository infrastructure (aptly or custom) is functional and accessible via SSH/SFTP from GitHub Actions
 - **Pi-gen**: Pi-gen repository is stable and compatible with Debian Trixie; custom stages follow pi-gen conventions

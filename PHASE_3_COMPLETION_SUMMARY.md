@@ -42,7 +42,7 @@
 **Commit**: `93f47e9`
 
 **Artifacts**:
-- `.github/DEPENDENCY_STRATEGY.md` - Specifies AASDK/OpenAuto/Qt6 versioning
+- `.github/DEPENDENCY_STRATEGY.md` - Specifies AASDK/Qt6 versioning
 - `.github/BUILD_FLAGS_VERIFICATION.md` - Confirms zero conflicts with new flags
 - `docs/ci-cd/README.md` - Navigation hub for all documentation
 

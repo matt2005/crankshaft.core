@@ -1,6 +1,6 @@
 # Dependency Version Management Strategy
 
-**Purpose**: Define how build-time dependencies (AASDK, OpenAuto) and runtime packages are versioned and selected during CI/CD workflows.
+**Purpose**: Define how build-time dependencies (AASDK) and runtime packages are versioned and selected during CI/CD workflows.
 
 **Date**: 2025-01-03  
 **Feature**: 003-github-actions-cicd / Task T003a
@@ -10,7 +10,7 @@
 ## Overview
 
 The Crankshaft CI/CD pipeline has multiple dependency sources:
-1. **Build-time dependencies**: AASDK, OpenAuto (compile-time only)
+1. **Build-time dependencies**: AASDK (compile-time only)
 2. **Runtime dependencies**: Qt6, system libraries (delivered in DEBs)
 3. **Development dependencies**: CMake, compiler toolchain, linters
 
@@ -128,10 +128,9 @@ jobs:
 **Workflow Action**:
 ```bash
 # During build, if dependency check fails:
-if ! check_dependency_compatibility "$AASDK_VERSION" "$OPENAUTO_VERSION"; then
-  echo "ERROR: Incompatible dependency versions"
+if ! check_dependency_compatibility "$AASDK_VERSION"; then
+  echo "ERROR: Incompatible AASDK version"
   echo "AASDK: $AASDK_VERSION"
-  echo "OpenAuto: $OPENAUTO_VERSION"
   echo "See .github/DEPENDENCY_COMPATIBILITY.md for matrix"
   exit 1
 fi
@@ -175,7 +174,7 @@ fi
 ---
 
 **Next Steps**:
-1. Implement `scripts/build.sh --aasdk-version` and `--openauto-version` flags (Phase 4, Task T025)
+1. Implement `scripts/build.sh --aasdk-version` flag (Phase 4, Task T025)
 2. Add version validation to quality-scan.yml (Phase 2, Task T008)
 3. Document in ci.yml and release.yml workflow comments
 4. Create DEPENDENCY_COMPATIBILITY.md in future enhancement phase

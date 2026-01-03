@@ -265,7 +265,7 @@ Parallel opportunities: Phase 4 (T022, T023), Phase 5 (T027-T029), Phase 9 (T079
 | F4 | Estimation Detail | LOW | plan.md Phase Effort | Individual task effort estimates not broken down (only phase totals) | Clarification only - overall estimate (21 days) is sound | Accept as-is |
 | F5 | Cross-reference | LOW | spec.md User Story 5 vs tasks.md T061 | "armhf on master, arm64 on arm64 branch" - confirm pi-gen implementation | Clarify which pi-gen branches exist and are maintained | Document in T061 task description |
 | F6 | Tool Selection | LOW | plan.md Phase 6 | SBOM format (SPDX vs CycloneDX) not specified | Recommendation: Use SPDX format (more widely adopted) | Document in T045 task description |
-| F7 | Edge Case | MEDIUM | spec.md Edge Cases | "Cross-repository dependencies" mentions AASDK/OpenAuto but not how versions are selected | Recommend: Document dependency pinning strategy during Phase 0 research | Add to Phase 1 foundational tasks for requirement |
+| F7 | Edge Case | MEDIUM | spec.md Edge Cases | "Cross-repository dependencies" mentions AASDK but not how versions are selected | Recommend: Document dependency pinning strategy during Phase 0 research | Add to Phase 1 foundational tasks for requirement |
 | F8 | Configuration | LOW | tasks.md T025 | `scripts/build.sh` flag names not aligned with existing flags | Verify existing flags: `--architecture` and `--skip-tests` don't conflict | Coordinate with Phase 4 implementation |
 
 **Summary**: 
@@ -421,7 +421,7 @@ All 19 success criteria have clear traceability:
 
 3. **Clarify Dependency Pinning** (F7 - MEDIUM)
    - **When**: During Phase 1 research extension (T001)
-   - **Action**: Document how AASDK/OpenAuto versions are selected during builds
+   - **Action**: Document how AASDK versions are selected during builds
    - **Effort**: 1-2 hours (add to Phase 1 research if not already done)
 
 4. **Verify Script Flag Alignment** (F8 - LOW)
@@ -556,7 +556,7 @@ mv -T /var/www/apt.new /var/www/apt  # atomic on same filesystem
 **Timeline**: Phase 3 (T039)
 
 ### F7: Cross-Repository Dependency Versioning
-**Context**: Spec edge case mentions "cross-repository dependencies (AASDK, OpenAuto)" but doesn't specify version selection strategy
+**Context**: Spec edge case mentions "cross-repository dependencies (AASDK)" but doesn't specify version selection strategy
 **Current Assumption**: Latest compatible from APT repository
 **Recommendation**: Document explicit versioning strategy:
 - Option A: Pin to specific tags (e.g., `AASDK=v1.2.3`)

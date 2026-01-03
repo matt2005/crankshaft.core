@@ -20,7 +20,7 @@
 - [ ] T001 Create workflow directory structure: `.github/workflows/` (already exists), `.github/scripts/{quality,package,release}/`
 - [ ] T002 Create documentation structure: `docs/ci-cd/` with placeholder files
 - [ ] T003 [P] Create contracts directory: `specs/003-github-actions-cicd/contracts/` with template files
-- [ ] T003a [P] Document dependency versioning strategy: Create `.github/DEPENDENCY_STRATEGY.md` specifying how AASDK/OpenAuto versions are selected (pinned tags, latest compatible, or main branch)
+- [ ] T003a [P] Document dependency versioning strategy: Create `.github/DEPENDENCY_STRATEGY.md` specifying how AASDK versions are selected (pinned tags, latest compatible, or main branch)
 - [ ] T003b [P] Verify build.sh flag compatibility: Check existing `scripts/build.sh` for `--architecture` and `--skip-tests` flags; document if they need alignment with Phase 4 additions
 
 ---
@@ -364,7 +364,7 @@ This task list includes **6 REFINEMENT tasks** (T003a, T003b, T039a, T041a, T045
 
 | Refinement Task | Purpose | Phase | Effort | Critical Path Impact |
 |-----------------|---------|-------|--------|----------------------|
-| **T003a** | Document dependency versioning (AASDK/OpenAuto) | 1 | 1-2 hrs | None (parallel) |
+| **T003a** | Document dependency versioning (AASDK) | 1 | 1-2 hrs | None (parallel) |
 | **T003b** | Verify build.sh flag compatibility | 1 | 15 min | None (parallel) |
 | **T039a** | Document symlink swap implementation for atomic promotion | 5 | 30 min | None (parallel) |
 | **T041a** | Document GitHub concurrency key for queue logic | 5 | 5 min | None (parallel) |
