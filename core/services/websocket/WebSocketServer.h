@@ -21,6 +21,7 @@
 
 #include <QList>
 #include <QObject>
+#include <QSslConfiguration>
 #include <QWebSocket>
 #include <QWebSocketServer>
 
@@ -38,6 +39,10 @@ class WebSocketServer : public QObject {
 
   void broadcastEvent(const QString& topic, const QVariantMap& payload);
   [[nodiscard]] bool isListening() const;
+
+  // SSL/TLS support for secure wss:// connections
+  void enableSecureMode(const QString& certificatePath, const QString& keyPath);
+  [[nodiscard]] bool isSecureModeEnabled() const;
 
   // ServiceManager integration
   void setServiceManager(ServiceManager* serviceManager);
@@ -71,4 +76,7 @@ class WebSocketServer : public QObject {
   QList<QWebSocket*> m_clients;
   QMap<QWebSocket*, QStringList> m_subscriptions;
   ServiceManager* m_serviceManager;
+  bool m_secureModeEnabled;
+  QString m_certificatePath;
+  QString m_keyPath;
 };

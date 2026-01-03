@@ -23,6 +23,8 @@
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QSslCertificate>
+#include <QSslKey>
 
 #include "../android_auto/AndroidAutoService.h"
 #include "../eventbus/EventBus.h"
@@ -32,11 +34,12 @@
 WebSocketServer::WebSocketServer(quint16 port, QObject* parent)
     : QObject(parent),
       m_server(new QWebSocketServer("CrankshaftCore", QWebSocketServer::NonSecureMode, this)),
-      m_serviceManager(nullptr) {
+      m_serviceManager(nullptr),
+      m_secureModeEnabled(false) {
   Logger::instance().info(QString("Initializing WebSocket server on port %1...").arg(port));
 
   if (m_server->listen(QHostAddress::Any, port)) {
-    Logger::instance().info(QString("WebSocket server listening on port %1").arg(port));
+    Logger::instance().info(QString("WebSocket server listening on port %1 (ws://)").arg(port));
     connect(m_server, &QWebSocketServer::newConnection, this, &WebSocketServer::onNewConnection);
   } else {
     Logger::instance().error(QString("Failed to start WebSocket server on port %1: %2")
@@ -495,4 +498,79 @@ void WebSocketServer::handleUnsubscribe(QWebSocket* client, const QString& topic
 
   m_subscriptions[client].removeOne(topic);
   Logger::instance().info(QString("[WebSocketServer] Client unsubscribed from topic: %1").arg(topic));
+}
+
+void WebSocketServer::enableSecureMode(const QString& certificatePath, const QString& keyPath) {
+  // Load SSL certificate and key
+  QFile certFile(certificatePath);
+  QFile keyFile(keyPath);
+
+  if (!certFile.exists()) {
+    Logger::instance().error(QString("SSL certificate not found: %1").arg(certificatePath));
+    return;
+  }
+
+  if (!keyFile.exists()) {
+    Logger::instance().error(QString("SSL key not found: %1").arg(keyPath));
+    return;
+  }
+
+  if (!certFile.open(QIODevice::ReadOnly)) {
+    Logger::instance().error(QString("Failed to open SSL certificate: %1").arg(certificatePath));
+    return;
+  }
+
+  if (!keyFile.open(QIODevice::ReadOnly)) {
+    Logger::instance().error(QString("Failed to open SSL key: %1").arg(keyPath));
+    certFile.close();
+    return;
+  }
+
+  QSslCertificate certificate(&certFile, QSsl::Pem);
+  QSslKey sslKey(&keyFile, QSsl::Rsa, QSsl::Pem);
+
+  certFile.close();
+  keyFile.close();
+
+  if (certificate.isNull()) {
+    Logger::instance().error("SSL certificate is invalid");
+    return;
+  }
+
+  if (sslKey.isNull()) {
+    Logger::instance().error("SSL key is invalid");
+    return;
+  }
+
+  // Close the current non-secure server
+  m_server->close();
+  delete m_server;
+
+  // Create secure server
+  m_server = new QWebSocketServer("CrankshaftCore", QWebSocketServer::SecureMode, this);
+
+  // Configure SSL
+  QSslConfiguration sslConfiguration;
+  sslConfiguration.setLocalCertificate(certificate);
+  sslConfiguration.setPrivateKey(sslKey);
+  sslConfiguration.setProtocol(QSsl::TlsV1_3OrLater);
+  m_server->setSslConfiguration(sslConfiguration);
+
+  // Listen on the secure port (typically 9003 for wss)
+  quint16 securePort = 9003;
+  if (m_server->listen(QHostAddress::Any, securePort)) {
+    Logger::instance().info(QString("WebSocket secure server (wss://) listening on port %1").arg(securePort));
+    m_secureModeEnabled = true;
+    m_certificatePath = certificatePath;
+    m_keyPath = keyPath;
+    connect(m_server, &QWebSocketServer::newConnection, this, &WebSocketServer::onNewConnection);
+  } else {
+    Logger::instance().error(QString("Failed to start secure WebSocket server on port %1: %2")
+                                 .arg(securePort)
+                                 .arg(m_server->errorString()));
+  }
+}
+
+bool WebSocketServer::isSecureModeEnabled() const {
+  return m_secureModeEnabled;
 }
