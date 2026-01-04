@@ -146,7 +146,11 @@ int main(int argc, char* argv[]) {
 
   // Load the module
   qInfo() << "[STARTUP]" << startupTimer.elapsed() << "ms elapsed: Loading QML module";
+#if QT_VERSION >= QT_VERSION_CHECK(6, 5, 0)
   engine.loadFromModule("Crankshaft", "Main");
+#else
+  engine.load(QUrl(QStringLiteral("qrc:/qt/qml/Crankshaft/Main.qml")));
+#endif
   qInfo() << "[STARTUP]" << startupTimer.elapsed() << "ms elapsed: QML module loaded";
 
   qInfo() << "[STARTUP] READY - Total UI startup time:" << startupTimer.elapsed() << "ms";
