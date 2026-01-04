@@ -13,36 +13,36 @@
 - **[Story]**: User story label (US1-US6)
 - Include exact file paths in descriptions
 
-## Phase 1: Setup
+## Phase 1: Setup ✅ COMPLETE
 
 **Purpose**: Project initialization and documentation structure
 
-- [ ] T001 Create workflow directory structure: `.github/workflows/` (already exists), `.github/scripts/{quality,package,release}/`
-- [ ] T002 Create documentation structure: `docs/ci-cd/` with placeholder files
-- [ ] T003 [P] Create contracts directory: `specs/003-github-actions-cicd/contracts/` with template files
-- [ ] T003a [P] Document dependency versioning strategy: Create `.github/DEPENDENCY_STRATEGY.md` specifying how AASDK versions are selected (pinned tags, latest compatible, or main branch)
-- [ ] T003b [P] Verify build.sh flag compatibility: Check existing `scripts/build.sh` for `--architecture` and `--skip-tests` flags; document if they need alignment with Phase 4 additions
+- [x] T001 Create workflow directory structure: `.github/workflows/` (already exists), `.github/scripts/{quality,package,release}/`
+- [x] T002 Create documentation structure: `docs/ci-cd/` with placeholder files
+- [x] T003 [P] Create contracts directory: `specs/003-github-actions-cicd/contracts/` with template files
+- [x] T003a [P] Document dependency versioning strategy: Create `.github/DEPENDENCY_STRATEGY.md` specifying how AASDK versions are selected (pinned tags, latest compatible, or main branch)
+- [x] T003b [P] Verify build.sh flag compatibility: Check existing `scripts/build.sh` for `--architecture` and `--skip-tests` flags; document if they need alignment with Phase 4 additions
 
 ---
 
-## Phase 2: Foundational (Blocking Prerequisites)
+## Phase 2: Foundational (Blocking Prerequisites) ✅ COMPLETE
 
 **Purpose**: Core quality scanning infrastructure - MUST complete before any workflow enhancements
 
 **⚠️ CRITICAL**: No user story work can begin until quality scanning foundation is ready
 
-- [ ] T004 Create quality scan wrapper script: `.github/scripts/quality/check-format.sh` (clang-format in check mode)
-- [ ] T005 [P] Create quality scan wrapper script: `.github/scripts/quality/check-tidy.sh` (clang-tidy with compilation database)
-- [ ] T006 [P] Create quality scan wrapper script: `.github/scripts/quality/check-cppcheck.sh` (cppcheck with project config)
-- [ ] T007 [P] Extend license check script: `scripts/check_license_headers.sh` to output GitHub Actions JSON format
-- [ ] T008 Create reusable quality scan workflow: `.github/workflows/quality-scan.yml` with workflow_call interface
-- [ ] T009 Define quality-scan.yml contract: `specs/003-github-actions-cicd/contracts/quality-scan.md` (inputs, outputs, behavior)
+- [x] T004 Create quality scan wrapper script: `.github/scripts/quality/check-format.sh` (clang-format in check mode)
+- [x] T005 [P] Create quality scan wrapper script: `.github/scripts/quality/check-tidy.sh` (clang-tidy with compilation database)
+- [x] T006 [P] Create quality scan wrapper script: `.github/scripts/quality/check-cppcheck.sh` (cppcheck with project config)
+- [x] T007 [P] Extend license check script: `scripts/check_license_headers.sh` to output GitHub Actions JSON format
+- [x] T008 Create reusable quality scan workflow: `.github/workflows/quality-scan.yml` with workflow_call interface
+- [x] T009 Define quality-scan.yml contract: `specs/003-github-actions-cicd/contracts/quality-scan.md` (inputs, outputs, behavior)
 
 **Checkpoint**: Quality scanning infrastructure ready - user story implementation can now begin
 
 ---
 
-## Phase 3: User Story 1 - Developer Code Quality Feedback (Priority: P1) 🎯 MVP
+## Phase 3: User Story 1 - Developer Code Quality Feedback (Priority: P1) 🎯 MVP ✅ COMPLETE
 
 **Goal**: Provide fast automated code quality feedback (< 2 min) on feature branch pushes
 
@@ -50,20 +50,20 @@
 
 ### Implementation for User Story 1
 
-- [ ] T010 [US1] Update ci.yml: Add quality-scan job before build job in `.github/workflows/ci.yml`
-- [ ] T011 [US1] Configure quality-scan job: Call quality-scan.yml reusable workflow with fail-on-error=true
-- [ ] T012 [US1] Implement PR comment posting: Use github-script action to post quality report as PR comment
-- [ ] T013 [US1] Add skip check logic: Detect `[skip ci]` or `[ci skip]` in commit message and skip quality scan
-- [ ] T014 [US1] Update quality-scan.yml: Implement parallel execution of all 4 checks (format, tidy, cppcheck, licenses)
-- [ ] T015 [US1] Add quality report formatting: Generate markdown report with file paths, line numbers, suggested fixes
-- [ ] T016 [US1] Add workflow timing: Measure and output execution time to verify < 2 min target
-- [ ] T017 [US1] Create documentation: `docs/ci-cd/quality-checks.md` (what checks run, how to run locally, common fixes)
+- [x] T010 [US1] Update ci.yml: Add quality-scan job before build job in `.github/workflows/ci.yml`
+- [x] T011 [US1] Configure quality-scan job: Call quality-scan.yml reusable workflow with fail-on-error=true
+- [x] T012 [US1] Implement PR comment posting: Use github-script action to post quality report as PR comment
+- [x] T013 [US1] Add skip check logic: Detect `[skip ci]` or `[ci skip]` in commit message and skip quality scan
+- [x] T014 [US1] Update quality-scan.yml: Implement parallel execution of all 4 checks (format, tidy, cppcheck, licenses)
+- [x] T015 [US1] Add quality report formatting: Generate markdown report with file paths, line numbers, suggested fixes
+- [x] T016 [US1] Add workflow timing: Measure and output execution time to verify < 2 min target
+- [x] T017 [US1] Create documentation: `docs/ci-cd/quality-checks.md` (what checks run, how to run locally, common fixes)
 
 **Checkpoint**: User Story 1 complete - developers get fast quality feedback on PRs
 
 ---
 
-## Phase 4: User Story 2 - Fast Iteration Feedback (Priority: P1) 🎯 MVP
+## Phase 4: User Story 2 - Fast Iteration Feedback (Priority: P1) 🎯 MVP ✅ COMPLETE
 
 **Goal**: Provide quick build feedback (< 5 min) via amd64-only builds for feature branches
 
@@ -71,21 +71,21 @@
 
 ### Implementation for User Story 2
 
-- [ ] T018 [US2] Update ci.yml: Add conditional architecture logic (amd64-only for feature branches, all for main/develop) in `.github/workflows/ci.yml`
-- [ ] T019 [US2] Update build.yml: Add quality-scan-status input and pass to build workflow in `.github/workflows/build.yml`
-- [ ] T020 [US2] Implement fastpath: Skip build entirely if quality fails and branch is not main/develop
-- [ ] T021 [US2] Add build-run-id output: Export workflow run ID from ci.yml for downstream workflows
-- [ ] T022 [P] [US2] Implement CMake build caching: Cache build artifacts by os-arch-compiler-hash in build.yml
-- [ ] T023 [P] [US2] Implement QEMU setup caching: Cache QEMU for arm64/armhf builds in build.yml
-- [ ] T024 [US2] Update build.yml artifact metadata: Include build timestamp, git SHA, quality scan results in artifact JSON
-- [ ] T025 [US2] Update scripts/build.sh: Add `--architecture` and `--skip-tests` flags for explicit control
-- [ ] T026 [US2] Improve build error messages: Add file/line context to build failures in scripts/build.sh
+- [x] T018 [US2] Update ci.yml: Add conditional architecture logic (amd64-only for feature branches, all for main/develop) in `.github/workflows/ci.yml`
+- [x] T019 [US2] Update build.yml: Add quality-scan-status input and pass to build workflow in `.github/workflows/build.yml`
+- [x] T020 [US2] Implement fastpath: Skip build entirely if quality fails and branch is not main/develop
+- [x] T021 [US2] Add build-run-id output: Export workflow run ID from ci.yml for downstream workflows
+- [x] T022 [P] [US2] Implement CMake build caching: Cache build artifacts by os-arch-compiler-hash in build.yml
+- [x] T023 [P] [US2] Implement QEMU setup caching: Cache QEMU for arm64/armhf builds in build.yml
+- [x] T024 [US2] Update build.yml artifact metadata: Include build timestamp, git SHA, quality scan results in artifact JSON
+- [x] T025 [US2] Update scripts/build.sh: Add `--architecture` and `--skip-tests` flags for explicit control
+- [x] T026 [US2] Improve build error messages: Add file/line context to build failures in scripts/build.sh
 
 **Checkpoint**: User Story 2 complete - fast amd64-only builds for feature branches
 
 ---
 
-## Phase 5: User Story 3 - Automated Package Publishing (Priority: P1) 🎯 MVP
+## Phase 5: User Story 3 - Automated Package Publishing (Priority: P1) 🎯 MVP ✅ COMPLETE
 
 **Goal**: Auto-publish DEB packages to APT repository (nightly channel) when code merges to main
 
@@ -93,31 +93,31 @@
 
 ### Implementation for User Story 3
 
-- [ ] T027 [P] [US3] Create validation wrapper script: `.github/scripts/package/validate-deb.sh` (lintian checks)
-- [ ] T028 [P] [US3] Create signing wrapper script: `.github/scripts/package/sign-packages.sh` (GPG signing with key validation)
-- [ ] T029 [P] [US3] Create publish orchestration script: `.github/scripts/package/publish-apt.sh` (staging → production atomic swap)
-- [ ] T030 [US3] Create reusable validation workflow: `.github/workflows/apt-validate.yml` with workflow_call interface
-- [ ] T031 [US3] Define apt-validate.yml contract: `specs/003-github-actions-cicd/contracts/apt-validate.md`
-- [ ] T032 [US3] Rename and update APT publish workflow: Rename `trigger-apt-publish.yml` to `apt-publish.yml` in `.github/workflows/`
-- [ ] T033 [US3] Add workflow_call interface to apt-publish.yml: Enable auto-trigger from CI with inputs (build-run-id, channel, architectures)
-- [ ] T034 [US3] Implement artifact download in apt-publish.yml: Download DEBs from build-run-id using GitHub Actions API
-- [ ] T035 [US3] Implement package validation in apt-publish.yml: Call apt-validate.yml for each package before publishing
-- [ ] T036 [US3] Implement staging upload: Upload packages to staging directory on APT server via SSH/SFTP
-- [ ] T037 [US3] Implement metadata generation: Generate Packages.gz and Release files in staging
-- [ ] T038 [US3] Implement GPG signing: Sign Release file with GPG key from GitHub Secrets (APT_SIGNING_KEY)
-- [ ] T039 [US3] Implement atomic promotion: Atomically move staging → production (symlink swap or rsync --delete)
-- [ ] T039a [US3] REFINEMENT: Document atomic promotion implementation: Use symlink swap for true atomicity - create staging as `/staging/apt.new`, then `ln -sfn` and `mv -T` for atomic cutover in apt-publish.sh
-- [ ] T040 [US3] Add rollback capability: Keep last-good as backup in apt-publish.yml
-- [ ] T041 [US3] Add concurrency control: Ensure only one APT publish at a time (queue others) in apt-publish.yml
-- [ ] T041a [US3] REFINEMENT: Document concurrency mechanism: Use GitHub Actions native `concurrency` key in apt-publish.yml (not custom mutex) - simpler, no state management needed
-- [ ] T042 [US3] Update ci.yml: Add apt-publish job that dispatches apt-publish.yml on successful main/develop builds
-- [ ] T043 [US3] Create documentation: `docs/ci-cd/apt-publishing.md` (repository structure, package flow, GPG management, rollback)
+- [x] T027 [P] [US3] Create validation wrapper script: `.github/scripts/package/validate-deb.sh` (lintian checks)
+- [x] T028 [P] [US3] Create signing wrapper script: `.github/scripts/package/sign-packages.sh` (GPG signing with key validation)
+- [x] T029 [P] [US3] Create publish orchestration script: `.github/scripts/package/publish-apt.sh` (staging → production atomic swap)
+- [x] T030 [US3] Create reusable validation workflow: `.github/workflows/apt-validate.yml` with workflow_call interface
+- [x] T031 [US3] Define apt-validate.yml contract: `specs/003-github-actions-cicd/contracts/apt-validate.md`
+- [x] T032 [US3] Rename and update APT publish workflow: Rename `trigger-apt-publish.yml` to `apt-publish.yml` in `.github/workflows/`
+- [x] T033 [US3] Add workflow_call interface to apt-publish.yml: Enable auto-trigger from CI with inputs (build-run-id, channel, architectures)
+- [x] T034 [US3] Implement artifact download in apt-publish.yml: Download DEBs from build-run-id using GitHub Actions API
+- [x] T035 [US3] Implement package validation in apt-publish.yml: Call apt-validate.yml for each package before publishing
+- [x] T036 [US3] Implement staging upload: Upload packages to staging directory on APT server via SSH/SFTP
+- [x] T037 [US3] Implement metadata generation: Generate Packages.gz and Release files in staging
+- [x] T038 [US3] Implement GPG signing: Sign Release file with GPG key from GitHub Secrets (APT_SIGNING_KEY)
+- [x] T039 [US3] Implement atomic promotion: Atomically move staging → production (symlink swap or rsync --delete)
+- [x] T039a [US3] REFINEMENT: Document atomic promotion implementation: Use symlink swap for true atomicity - create staging as `/staging/apt.new`, then `ln -sfn` and `mv -T` for atomic cutover in apt-publish.sh
+- [x] T040 [US3] Add rollback capability: Keep last-good as backup in apt-publish.yml
+- [x] T041 [US3] Add concurrency control: Ensure only one APT publish at a time (queue others) in apt-publish.yml
+- [x] T041a [US3] REFINEMENT: Document concurrency mechanism: Use GitHub Actions native `concurrency` key in apt-publish.yml (not custom mutex) - simpler, no state management needed
+- [x] T042 [US3] Update ci.yml: Add apt-publish job that dispatches apt-publish.yml on successful main/develop builds
+- [x] T043 [US3] Create documentation: `docs/ci-cd/apt-publishing.md` (repository structure, package flow, GPG management, rollback)
 
 **Checkpoint**: User Story 3 complete - automated APT publishing from main branch
 
 ---
 
-## Phase 6: User Story 4 - Stable Release Creation (Priority: P2)
+## Phase 6: User Story 4 - Stable Release Creation (Priority: P2) ✅ COMPLETE
 
 **Goal**: Auto-create GitHub release with comprehensive notes, DEBs, checksums, SBOM when version tag pushed
 
@@ -125,24 +125,24 @@
 
 ### Implementation for User Story 4
 
-- [ ] T044 [P] [US4] Create changelog generation script: `.github/scripts/release/generate-notes.sh` (parse git log, categorize commits)
-- [ ] T045 [P] [US4] Create SBOM generation script: `.github/scripts/release/generate-sbom.sh` (extract dependencies, format as SPDX/CycloneDX)
-- [ ] T045a [P] [US4] REFINEMENT: Document SBOM format selection: Use SPDX format for release notes (more widely adopted than CycloneDX) - implement in generate-sbom.sh with standard SPDX output
-- [ ] T046 [US4] Create reusable release notes workflow: `.github/workflows/release-notes.yml` with workflow_call interface
-- [ ] T047 [US4] Define release-notes.yml contract: `specs/003-github-actions-cicd/contracts/release-notes.md`
-- [ ] T048 [US4] Implement release-notes.yml: Generate markdown with version, commit SHA, build info, categorized changelog, install instructions, checksums
-- [ ] T049 [US4] Update release.yml: Add auto-trigger on push of tag matching `v*.*.*` pattern in `.github/workflows/release.yml`
-- [ ] T050 [US4] Add tag validation in release.yml: Validate semver format (regex: `^v[0-9]+\.[0-9]+\.[0-9]+$`), fail fast if invalid
-- [ ] T051 [US4] Implement build trigger in release.yml: Dispatch ci.yml with all architectures via workflow_dispatch
-- [ ] T052 [US4] Implement build wait logic in release.yml: Poll workflow run API until build completes or timeout
-- [ ] T053 [US4] Implement artifact download in release.yml: Download all architecture DEBs from completed build
-- [ ] T054 [US4] Call release-notes.yml in release.yml: Generate comprehensive release notes
-- [ ] T055 [US4] Implement checksum generation in release.yml: Generate SHA256 for all artifacts
-- [ ] T056 [US4] Implement GitHub release creation in release.yml: Create release with tag, name, body, assets (DEBs, checksums, SBOM)
-- [ ] T057 [US4] Implement draft release support in release.yml: Support create_draft input for manual review before publishing
-- [ ] T058 [US4] Add stable APT publish in release.yml: Dispatch apt-publish.yml with channel=stable after release creation
-- [ ] T059 [US4] Add release validation in release.yml: Verify all expected artifacts attached and checksums valid
-- [ ] T060 [US4] Create documentation: `docs/ci-cd/release-process.md` (auto vs manual, semver, failed release handling, hotfixes)
+- [x] T044 [P] [US4] Create changelog generation script: `.github/scripts/release/generate-notes.sh` (parse git log, categorize commits)
+- [x] T045 [P] [US4] Create SBOM generation script: `.github/scripts/release/generate-sbom.sh` (extract dependencies, format as SPDX/CycloneDX)
+- [x] T045a [P] [US4] REFINEMENT: Document SBOM format selection: Use SPDX format for release notes (more widely adopted than CycloneDX) - implement in generate-sbom.sh with standard SPDX output
+- [x] T046 [US4] Create reusable release notes workflow: `.github/workflows/release-notes.yml` with workflow_call interface
+- [x] T047 [US4] Define release-notes.yml contract: `specs/003-github-actions-cicd/contracts/release-notes.md`
+- [x] T048 [US4] Implement release-notes.yml: Generate markdown with version, commit SHA, build info, categorized changelog, install instructions, checksums
+- [x] T049 [US4] Update release.yml: Add auto-trigger on push of tag matching `v*.*.*` pattern in `.github/workflows/release.yml`
+- [x] T050 [US4] Add tag validation in release.yml: Validate semver format (regex: `^v[0-9]+\.[0-9]+\.[0-9]+$`), fail fast if invalid
+- [x] T051 [US4] Implement build trigger in release.yml: Dispatch ci.yml with all architectures via workflow_dispatch
+- [x] T052 [US4] Implement build wait logic in release.yml: Poll workflow run API until build completes or timeout
+- [x] T053 [US4] Implement artifact download in release.yml: Download all architecture DEBs from completed build
+- [x] T054 [US4] Call release-notes.yml in release.yml: Generate comprehensive release notes
+- [x] T055 [US4] Implement checksum generation in release.yml: Generate SHA256 for all artifacts
+- [x] T056 [US4] Implement GitHub release creation in release.yml: Create release with tag, name, body, assets (DEBs, checksums, SBOM)
+- [x] T057 [US4] Implement draft release support in release.yml: Support create_draft input for manual review before publishing
+- [x] T058 [US4] Add stable APT publish in release.yml: Dispatch apt-publish.yml with channel=stable after release creation
+- [x] T059 [US4] Add release validation in release.yml: Verify all expected artifacts attached and checksums valid
+- [x] T060 [US4] Create documentation: `docs/ci-cd/release-process.md` (auto vs manual, semver, failed release handling, hotfixes)
 
 **Checkpoint**: User Story 4 complete - automated stable releases from version tags
 
