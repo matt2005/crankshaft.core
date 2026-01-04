@@ -363,9 +363,42 @@ jobs:
       create-release: false
     secrets: inherit
 
+  build-pi-images:
+    name: Build Pi Images with Crankshaft
+    needs: [validate, publish-stable]
+    if: needs.validate.outputs.is-prerelease == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Pi-gen image build
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const version = '${{ needs.validate.outputs.version }}';
+            
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'build-pi-gen-lite.yml',
+              ref: 'main',
+              inputs: {
+                version: version,
+                release: 'trixie',
+                attach_to_release: 'true',
+                auto_release: 'false'
+              }
+            });
+            
+            console.log(`Triggered pi-gen build for version ${version}`);
+            
+      - name: Log pi-gen trigger
+        run: |
+          echo "✓ Triggered Pi-gen image build for v${{ needs.validate.outputs.version }}"
+          echo "Images will be built with Crankshaft pre-installed"
+          echo "Check Actions tab for build-pi-gen-lite workflow"
+
   publish-success:
     name: Release Published Successfully
-    needs: [validate, create-release]
+    needs: [validate, create-release, build-pi-images]
     runs-on: ubuntu-latest
     if: always()
     steps:

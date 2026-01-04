@@ -1,0 +1,197 @@
+# Project: Crankshaft
+# This file is part of Crankshaft project.
+# Copyright (C) 2025 OpenCarDev Team
+#
+#  Crankshaft is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  Crankshaft is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
+
+name: Release Notes (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: 'Release version (e.g., 1.2.0)'
+        required: true
+        type: string
+      build-run-id:
+        description: 'GitHub Actions run ID with build artifacts'
+        required: false
+        type: string
+      from-tag:
+        description: 'Git tag to start changelog from (default: previous tag)'
+        required: false
+        type: string
+      include-sbom:
+        description: 'Include SBOM in release notes'
+        required: false
+        default: true
+        type: boolean
+    outputs:
+      release-notes:
+        description: 'Complete release notes (markdown)'
+        value: ${{ jobs.generate.outputs.release-notes }}
+      changelog:
+        description: 'Changelog only (markdown)'
+        value: ${{ jobs.generate.outputs.changelog }}
+      sbom:
+        description: 'SBOM in SPDX format'
+        value: ${{ jobs.generate.outputs.sbom }}
+
+jobs:
+  generate:
+    name: Generate Release Notes
+    runs-on: ubuntu-latest
+    outputs:
+      release-notes: ${{ steps.output.outputs.release-notes }}
+      changelog: ${{ steps.output.outputs.changelog }}
+      sbom: ${{ steps.output.outputs.sbom }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download build artifacts
+        if: inputs.build-run-id != ''
+        uses: actions/download-artifact@v4
+        with:
+          path: build-artifacts
+          github-token: ${{ github.token }}
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          .github/scripts/release/generate-notes.sh \
+            --version "${{ inputs.version }}" \
+            ${{ inputs.from-tag && format('--from-tag {0}', inputs.from-tag) || '' }} \
+            --output CHANGELOG.md
+          
+          # Export as output variable
+          CHANGELOG=$(cat CHANGELOG.md)
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Generate SBOM
+        id: sbom
+        if: inputs.include-sbom
+        run: |
+          .github/scripts/release/generate-sbom.sh \
+            --version "${{ inputs.version }}" \
+            --output SBOM.spdx
+          
+          # Export as output variable
+          SBOM=$(cat SBOM.spdx)
+          echo "sbom<<EOF" >> $GITHUB_OUTPUT
+          echo "$SBOM" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Generate checksums
+        id: checksums
+        run: |
+          mkdir -p checksums
+          
+          if [ -d build-artifacts ]; then
+            find build-artifacts -name "*.deb" -exec sha256sum {} \; > checksums/SHA256SUMS
+          fi
+          
+          if [ -f checksums/SHA256SUMS ]; then
+            CHECKSUM_COUNT=$(wc -l < checksums/SHA256SUMS)
+            echo "checksum_count=$CHECKSUM_COUNT" >> $GITHUB_OUTPUT
+          else
+            echo "checksum_count=0" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Assemble release notes
+        id: output
+        run: |
+          VERSION="${{ inputs.version }}"
+          RELEASE_DATE=$(date -u +"%B %d, %Y")
+          GIT_COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "unknown")
+          
+          # Create comprehensive release notes
+          cat > release_notes.md << 'NOTESEOF'
+          ${{ steps.changelog.outputs.changelog }}
+          
+          ## Build Information
+          
+          - **Version**: ${{ inputs.version }}
+          - **Release Date**: ${{ env.RELEASE_DATE }}
+          - **Build ID**: ${{ inputs.build-run-id || 'N/A' }}
+          - **Git Commit**: ${{ env.GIT_COMMIT }}
+          
+          NOTESEOF
+          
+          # Add SBOM if available
+          if [ "${{ inputs.include-sbom }}" = "true" ] && [ -f SBOM.spdx ]; then
+            cat >> release_notes.md << 'SBOMEOF'
+          
+          ## Software Bill of Materials (SBOM)
+          
+          This release includes the following components and their licenses:
+          
+          ```
+          ${{ steps.sbom.outputs.sbom }}
+          ```
+          
+          SBOMEOF
+          fi
+          
+          # Add checksums if available
+          if [ -f checksums/SHA256SUMS ]; then
+            cat >> release_notes.md << 'CHECKSUMEOF'
+          
+          ## Package Checksums (SHA256)
+          
+          Verify package integrity using:
+          
+          ```bash
+          sha256sum -c SHA256SUMS
+          ```
+          
+          Checksums:
+          
+          ```
+          CHECKSUMEOF
+            cat checksums/SHA256SUMS >> release_notes.md
+            echo '```' >> release_notes.md
+          fi
+          
+          # Export outputs
+          RELEASE_NOTES=$(cat release_notes.md)
+          echo "release-notes<<EOF" >> $GITHUB_OUTPUT
+          echo "$RELEASE_NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          echo "changelog<<EOF" >> $GITHUB_OUTPUT
+          cat CHANGELOG.md >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          
+          if [ -f SBOM.spdx ]; then
+            SBOM=$(cat SBOM.spdx)
+            echo "sbom<<EOF" >> $GITHUB_OUTPUT
+            echo "$SBOM" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Upload release notes artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: |
+            release_notes.md
+            CHANGELOG.md
+            SBOM.spdx
+            checksums/SHA256SUMS
+          retention-days: 90
