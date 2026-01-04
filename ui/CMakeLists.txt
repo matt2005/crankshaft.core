@@ -21,9 +21,11 @@ project(crankshaft-ui)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Qml Quick WebSockets LinguistTools)
 
-# Set Qt policies to suppress warnings
-qt_policy(SET QTP0001 NEW)  # Use :/qt/qml/ prefix
-qt_policy(SET QTP0004 NEW)  # Require qmldir files
+# Set Qt policies to suppress warnings (if available)
+if(COMMAND qt_policy)
+  qt_policy(SET QTP0001 NEW)  # Use :/qt/qml/ prefix
+  qt_policy(SET QTP0004 NEW)  # Require qmldir files
+endif()
 
 # Create executable first
 qt_add_executable(crankshaft-ui
