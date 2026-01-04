@@ -20,6 +20,7 @@
 #include "WebSocketServer.h"
 
 #include <QDateTime>
+#include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
