@@ -79,7 +79,6 @@ jobs:
             qt6-websockets-dev \
             qt6-connectivity-dev \
             qt6-multimedia-dev \
-            libqt6multimedia6-dev \
             qt6-qpa-plugins \
             qml6-module-qtquick \
             qml6-module-qtquick-controls \
