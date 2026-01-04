@@ -130,8 +130,8 @@ count_issue_type() {
     local severity="$1"
     local output="$2"
     
-    # Count lines matching the severity pattern
-    echo "${output}" | grep -c "\[${severity}\]" || echo "0"
+    # Count lines matching the severity pattern (grep -c outputs 0 on no match)
+    echo "${output}" | grep -c "\[${severity}\]" || true
 }
 
 output_json() {
