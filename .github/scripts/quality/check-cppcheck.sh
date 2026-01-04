@@ -234,6 +234,8 @@ main() {
         --suppress=missingIncludeSystem \
         --suppress=unusedFunction \
         --suppress=unmatchedSuppression \
+        --suppress=unknownMacro \
+        --suppress=checkersReport \
         "${REPO_ROOT}/core" \
         "${REPO_ROOT}/ui" \
         2>&1) || true

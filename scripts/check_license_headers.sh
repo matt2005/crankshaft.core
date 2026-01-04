@@ -27,7 +27,11 @@ NC='\033[0m' # No Colour
 # Configuration
 CI_MODE="${CI_MODE:-false}"
 JSON_MODE="${JSON_MODE:-false}"
-SEARCH_DIRS=(core ui extensions)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+SEARCH_DIRS=(core ui)
+# Only add extensions if directory exists
+[[ -d "${REPO_ROOT}/extensions" ]] && SEARCH_DIRS+=(extensions)
 TMP_FILE="/tmp/missing_license.txt"
 
 # Functions
