@@ -9,14 +9,23 @@
 
 This feature enables the creation of pre-built Raspberry Pi images that include the complete Crankshaft automotive infotainment system. These images allow users to quickly deploy Crankshaft on Raspberry Pi 4/5 hardware without needing to compile the software from source.
 
+## Clarifications
+
+### Session 2026-01-05
+
+- Q: Should VNC remote display support be included in the MVP image? → A: Use HDMI-only for MVP; defer VNC to a later phase.
+- Q: Should the MVP image include security hardening (custom credentials, disabled SSH, firewall)? → A: Keep test credentials for MVP with clear documentation; plan hardening in a later phase.
+
 ### Supported Hardware
 
+- Raspberry Pi Zero 2 (1GB)
+- Raspberry Pi 3 Model B (1GB)
 - Raspberry Pi 4 Model B (2GB, 4GB, 8GB RAM)
 - Raspberry Pi 5 (2GB, 4GB, 8GB RAM)
 
 ### Supported Distributions
 
-- Raspberry Pi OS (Bookworm, Trixie) - both armhf (32-bit) and arm64 (64-bit)
+- Raspberry Pi OS (Trixie) - both armhf (32-bit) and arm64 (64-bit)
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -99,6 +108,7 @@ The image should include offline documentation and quick-start guides accessible
 
 1. **Given** the system is running, **When** the user accesses the help menu, **Then** offline documentation is displayed
 2. **Given** the user reads the documentation, **When** they follow a troubleshooting guide, **Then** it helps them resolve common issues
+3. **Given** offline documentation is available, **When** network is unavailable, **Then** documentation remains accessible without errors
 
 ---
 
@@ -117,14 +127,14 @@ The image should include offline documentation and quick-start guides accessible
 - **FR-001**: Image build pipeline MUST produce bootable .img and .xz-compressed image files for armhf and arm64 architectures
 - **FR-002**: Image MUST include complete Crankshaft core application (C++ backend) compiled for the target architecture
 - **FR-003**: Image MUST include UI extension (QML-based) with full functionality and internationalization support
-- **FR-004**: Image MUST include media player, Bluetooth, and radio extensions
+- **FR-004**: Image MUST include media player, Bluetooth, and radio extensions (radio = internet radio only; FM/DAB hardware support deferred to future phase)
 - **FR-005**: Image MUST initialise with a default user account (pi:raspberry) with sudo privileges
 - **FR-006**: Image MUST auto-start Crankshaft application on boot without manual intervention
-- **FR-007**: Image MUST include SSH server enabled by default for remote access and debugging
-- **FR-008**: Image MUST support both HDMI and VNC display output [NEEDS CLARIFICATION: confirm VNC is required in image]
+- **FR-007**: Image MUST include SSH server enabled by default for remote access and debugging ⚠️ **WARNING**: Default pi:raspberry credentials are for TESTING ONLY and MUST be changed for production deployments. See docs/security.md for hardening guidance.
+- **FR-008**: Image MUST support HDMI display output for MVP; VNC remote display is deferred to a later phase
 - **FR-009**: Image MUST include a first-boot configuration wizard for Wi-Fi and system settings
 - **FR-010**: Image filesystem MUST be automatically resized on first boot to utilise full SD card capacity
-- **FR-011**: Image MUST include extension manager/store capabilities for installing additional extensions
+- **FR-011**: Image MUST include extension store capabilities for installing additional extensions
 - **FR-012**: Image MUST include offline documentation and help resources
 
 ### Non-Functional Requirements
@@ -132,7 +142,7 @@ The image should include offline documentation and quick-start guides accessible
 - **NFR-001**: Image file size MUST NOT exceed 2GB (compressed .xz format)
 - **NFR-002**: Image boot time (from power-on to UI display) MUST NOT exceed 90 seconds on Raspberry Pi 4
 - **NFR-003**: Image MUST be created using pi-gen (official Raspberry Pi image builder) to ensure compatibility
-- **NFR-004**: Build process MUST be repeatable and produce identical images from the same source code
+- **NFR-004**: Build process MUST be repeatable and produce functionally equivalent images from the same source code (timestamps and build metadata may differ; core functionality must be identical)
 - **NFR-005**: Build logs and artefacts MUST be preserved for debugging failed builds
 
 ## Constitution Check (mandatory)
@@ -142,7 +152,7 @@ The image should include offline documentation and quick-start guides accessible
 - **Code Quality**: Image must include only validated, tested code; build process must verify compilation without errors
 - **Testing**: Pre-built images must be tested on physical hardware to verify boot and core functionality
 - **Performance**: Boot time and application responsiveness must meet defined criteria for resource-constrained Raspberry Pi 4
-- **Security**: Default credentials should be documented as test-only; production deployments should use custom credentials [NEEDS CLARIFICATION: should image include security hardening?]
+- **Security**: Default credentials documented as test-only; production must customise. MVP does not include additional hardening; plan in later phase.
 - **Observability**: Build process should generate detailed logs; runtime should support SSH/serial debugging
 - **Documentation**: Image must include clear first-boot guidance and offline documentation
 
