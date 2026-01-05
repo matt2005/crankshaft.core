@@ -401,6 +401,21 @@ jobs:
           GIT_HASH: ${{ steps.get_version.outputs.buildhash }}
           GIT_BRANCH: ${{ steps.get_version.outputs.buildbranch }}
           
+      - name: Verify stage60 is copied to pi-gen
+        working-directory: pi-gen
+        run: |
+          echo "=== Verifying stage60 in pi-gen directory ==="
+          if [ -d stage60 ]; then
+            echo "✓ stage60 directory exists"
+            echo "Contents:"
+            ls -la stage60/
+          else
+            echo "✗ stage60 directory NOT found!"
+            echo "Available stages:"
+            ls -la stage* 2>/dev/null || echo "No stages found"
+            exit 1
+          fi
+          
       - name: Check build-docker-debug.sh contents
         working-directory: pi-gen
         run: |
