@@ -172,7 +172,7 @@ if [ "${CONTAINER_EXISTS}" != "" ]; then
 		/usr/bin/qemu-aarch64-static --version 2>/dev/null || echo 'qemu-aarch64-static failed in container'
 		
 		echo '=== Running dpkg-reconfigure qemu-user-static ==='
-		dpkg-reconfigure qemu-user-static
+		DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive qemu-user-static || echo "dpkg-reconfigure failed, continuing..."
 		
 		echo '=== Post-reconfigure binfmt test ==='
 		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo 'binfmt_misc still not accessible after reconfigure'
@@ -222,7 +222,7 @@ else
 		/usr/bin/qemu-aarch64-static --version 2>/dev/null || echo 'qemu-aarch64-static failed in container'
 		
 		echo '=== Running dpkg-reconfigure qemu-user-static ==='
-		dpkg-reconfigure qemu-user-static
+		DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive qemu-user-static || echo "dpkg-reconfigure failed, continuing..."
 		
 		echo '=== Post-reconfigure binfmt test ==='
 		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo 'binfmt_misc still not accessible after reconfigure'
