@@ -64,6 +64,103 @@ EOF
 
 echo "Metadata generated"
 
+# ====================================================================
+# SYSTEMD SERVICE CONFIGURATION
+# ====================================================================
+echo "Enabling Crankshaft systemd service..."
+
+# Copy systemd service file
+if [ -f "${STAGE_DIR}/files/crankshaft.service" ]; then
+    install -m 644 "${STAGE_DIR}/files/crankshaft.service" "${ROOTFS_DIR}/etc/systemd/system/crankshaft.service"
+    echo "Systemd service file installed"
+    
+    # Enable service for auto-start
+    run_root systemctl enable crankshaft.service || {
+        echo "Warning: Failed to enable crankshaft.service - service may need manual enabling"
+    }
+    echo "Crankshaft service enabled for auto-start"
+else
+    echo "Warning: crankshaft.service file not found at ${STAGE_DIR}/files/crankshaft.service"
+fi
+
+# Copy boot configuration
+if [ -f "${STAGE_DIR}/files/config.txt" ]; then
+    cat "${STAGE_DIR}/files/config.txt" >> "${ROOTFS_DIR}/boot/config.txt"
+    echo "Boot configuration appended to /boot/config.txt"
+else
+    echo "Warning: config.txt file not found at ${STAGE_DIR}/files/config.txt"
+fi
+
+# ====================================================================
+# FIRST-BOOT FILESYSTEM RESIZE
+# ====================================================================
+echo "Configuring first-boot filesystem resize..."
+
+# Copy resize script
+if [ -f "${STAGE_DIR}/files/resize-rootfs.sh" ]; then
+    install -m 755 "${STAGE_DIR}/files/resize-rootfs.sh" "${ROOTFS_DIR}/usr/local/bin/resize-rootfs.sh"
+    echo "Resize script installed"
+    
+    # Create systemd service for one-time resize
+    cat > "${ROOTFS_DIR}/etc/systemd/system/resize-rootfs.service" << 'EOF'
+[Unit]
+Description=Crankshaft First-Boot Filesystem Resize
+DefaultDependencies=no
+After=local-fs.target
+Before=basic.target
+ConditionPathExists=!/etc/crankshaft-resized
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/resize-rootfs.sh
+ExecStartPost=/bin/touch /etc/crankshaft-resized
+StandardOutput=journal+console
+StandardError=journal+console
+
+[Install]
+WantedBy=basic.target
+EOF
+    
+    run_root systemctl enable resize-rootfs.service || {
+        echo "Warning: Failed to enable resize-rootfs.service"
+    }
+    echo "First-boot resize service configured"
+else
+    echo "Warning: resize-rootfs.sh file not found at ${STAGE_DIR}/files/resize-rootfs.sh"
+fi
+
+# ====================================================================
+# SSH CONFIGURATION
+# ====================================================================
+echo "Verifying SSH configuration..."
+
+# SSH should be enabled by pi-gen's ENABLE_SSH=1
+# Just verify the service exists
+if run_root systemctl is-enabled ssh 2>/dev/null || run_root systemctl is-enabled sshd 2>/dev/null; then
+    echo "SSH service is enabled (as expected for MVP debugging)"
+else
+    echo "Warning: SSH service not enabled - manual configuration may be required"
+fi
+
+# ====================================================================
+# USER ACCOUNT VALIDATION
+# ====================================================================
+echo "Validating default user account..."
+
+# Check if pi user exists with correct configuration
+if run_root id -u pi >/dev/null 2>&1; then
+    echo "User 'pi' exists"
+    
+    # Verify sudo privileges
+    if run_root groups pi | grep -q sudo; then
+        echo "User 'pi' has sudo privileges"
+    else
+        echo "Warning: User 'pi' does not have sudo privileges"
+    fi
+else
+    echo "Warning: User 'pi' does not exist - this is unexpected"
+fi
+
 # Clean up logs and temporary files to reduce image size
 echo "Cleaning up temporary files..."
 run_root bash -c 'apt-get clean || true'
