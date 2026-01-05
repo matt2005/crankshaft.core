@@ -122,6 +122,19 @@ jobs:
           ref: ${{ matrix.branch }}
           path: pi-gen
           fetch-depth: 1
+      
+      - name: Verify checkout and list files
+        run: |
+          echo "=== Current working directory ==="
+          pwd
+          echo "=== Repository contents ==="
+          ls -la
+          echo "=== image_builder/scripts directory ==="
+          ls -la image_builder/scripts/ 2>/dev/null || echo "Directory not found"
+          echo "=== image_builder/stages directory ==="
+          ls -la image_builder/stages/ 2>/dev/null || echo "Directory not found"
+          echo "=== pi-gen directory ==="
+          ls -la pi-gen/ 2>/dev/null | head -20 || echo "Directory not found"
           
       - name: Copy build-docker-debug.sh to pi-gen folder
         run: |
