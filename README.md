@@ -494,6 +494,18 @@ sudo systemctl restart crankshaft-core
 - [Performance Monitoring](docs/PERFORMANCE_MONITORING.md) - Metrics, alerts, dashboards
 - [Security Guide](docs/SECURITY.md) - Input validation, sandboxing, audit logging
 
+### CI/CD Documentation
+
+Complete GitHub Actions CI/CD system for building, testing, and releasing Crankshaft:
+
+- **[CI/CD Overview](docs/ci-cd/README.md)** - Start here for all CI/CD topics
+- **[Workflow Guide](docs/ci-cd/workflow-guide.md)** - All 6 workflows (quality, build, APT, release, pi-gen, docs)
+- **[Developer Handbook](docs/ci-cd/developer-handbook.md)** - Your first PR, debugging, best practices
+- **[Maintainer Handbook](docs/ci-cd/maintainer-handbook.md)** - Releases, monitoring, incident response
+- **[Troubleshooting Guide](docs/ci-cd/troubleshooting.md)** - Top 10 issues and solutions
+- **[Architecture Decisions](docs/ci-cd/architecture-decisions.md)** - Why we made key design choices
+- **[Success Criteria Checklist](.github/templates/success-criteria-checklist.md)** - Validation template
+
 ### Testing Documentation
 
 - [Soak Test Guide](docs/SOAK_TEST_GUIDE.md) - 24-hour stability testing

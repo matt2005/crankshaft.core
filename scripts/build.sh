@@ -26,6 +26,8 @@ BUILD_DIR="build"
 CREATE_PACKAGE=false
 INSTALL_DEPS=false
 VERSION=""
+ARCHITECTURE=""
+SKIP_TESTS=false
 # Default Debian suite from host, fall back to trixie
 DEBIAN_SUITE=${VERSION_CODENAME:-trixie}
 
@@ -110,7 +112,9 @@ Named parameters:
   --component COMP       Component to build (all|core|ui|tests) [default: all]
   --package              Create DEB packages after building [default: false]
   --version VERSION      Override project version (default: from CMakeLists.txt)
-    --debian-suite SUITE   Target Debian suite (trixie|bookworm) [default: trixie]
+  --debian-suite SUITE   Target Debian suite (trixie|bookworm) [default: trixie]
+  --architecture ARCH    Target architecture (amd64|arm64|armhf) [default: auto-detect]
+  --skip-tests           Skip running tests during build [default: false]
   --install-deps         Install dependencies for the specified component
   --help                 Display this help message
 
@@ -119,11 +123,10 @@ Examples:
   $0 --build-type Release                 # Build all components in Release mode
   $0 --component ui --build-type Debug    # Build only UI in Debug mode
   $0 --build-type Release --package       # Build all in Release mode and create packages
-    $0 --build-type Release --package --debian-suite trixie  # Package for trixie
-    $0 --build-type Release --package --debian-suite bookworm  # Package for bookworm
+  $0 --build-type Release --package --debian-suite trixie  # Package for trixie
+  $0 --architecture amd64 --skip-tests    # Build for amd64 only, skip tests
   $0 --install-deps                       # Install all dependencies
   $0 --component core --install-deps      # Install only core dependencies
-  $0 --component aasdk --install-deps     # Install only AASDK dependencies
 EOF
     exit 1
 }
@@ -166,6 +169,18 @@ while [[ $# -gt 0 ]]; do
             fi
             DEBIAN_SUITE="$2"
             shift 2
+            ;;
+        --architecture)
+            if [[ $# -lt 2 ]]; then
+                echo "Error: --architecture requires a value"
+                usage
+            fi
+            ARCHITECTURE="$2"
+            shift 2
+            ;;
+        --skip-tests)
+            SKIP_TESTS=true
+            shift
             ;;
         --install-deps)
             INSTALL_DEPS=true
@@ -217,6 +232,28 @@ if [[ "$DEBIAN_SUITE" != "trixie" && "$DEBIAN_SUITE" != "bookworm" ]]; then
     usage
 fi
 
+# Validate architecture
+if [[ -n "$ARCHITECTURE" && "$ARCHITECTURE" != "amd64" && "$ARCHITECTURE" != "arm64" && "$ARCHITECTURE" != "armhf" ]]; then
+    echo "Error: Invalid architecture '$ARCHITECTURE'. Must be 'amd64', 'arm64', or 'armhf'."
+    usage
+fi
+
+# Set architecture-specific CMake flags if specified
+ARCH_CMAKE_FLAGS=""
+if [[ -n "$ARCHITECTURE" ]]; then
+    case "$ARCHITECTURE" in
+        amd64)
+            ARCH_CMAKE_FLAGS="-DCMAKE_SYSTEM_PROCESSOR=x86_64"
+            ;;
+        arm64)
+            ARCH_CMAKE_FLAGS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64"
+            ;;
+        armhf)
+            ARCH_CMAKE_FLAGS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=armv7l"
+            ;;
+    esac
+fi
+
 # Validate component
 if [[ "$COMPONENT" != "all" && "$COMPONENT" != "core" && "$COMPONENT" != "ui" && "$COMPONENT" != "tests" ]]; then
     echo "Error: Invalid component '$COMPONENT'. Must be 'all', 'core', 'ui', or 'tests'."
@@ -239,7 +276,7 @@ case "$COMPONENT" in
         ;;
 esac
 
-echo "Building Crankshaft MVP: Component=${COMPONENT}, Build Type=${BUILD_TYPE}"
+echo "Building Crankshaft MVP: Component=${COMPONENT}, Build Type=${BUILD_TYPE}, Architecture=${ARCHITECTURE:-auto}"
 
 # Create build directory
 mkdir -p "${BUILD_DIR}"
@@ -248,9 +285,9 @@ mkdir -p "${BUILD_DIR}"
 echo "Configuring CMake..."
 if [ -n "$VERSION" ]; then
     echo "Using custom version: $VERSION"
-    cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DCMAKE_PROJECT_VERSION="${VERSION}" -DDEBIAN_SUITE="${DEBIAN_SUITE}"
+    cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DCMAKE_PROJECT_VERSION="${VERSION}" -DDEBIAN_SUITE="${DEBIAN_SUITE}" $ARCH_CMAKE_FLAGS
 else
-    cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DDEBIAN_SUITE="${DEBIAN_SUITE}"
+    cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DDEBIAN_SUITE="${DEBIAN_SUITE}" $ARCH_CMAKE_FLAGS
 fi
 
 # Build
@@ -259,6 +296,19 @@ if [ -z "$BUILD_TARGET" ]; then
     cmake --build "${BUILD_DIR}" --config "${BUILD_TYPE}" -j"$(nproc)"
 else
     cmake --build "${BUILD_DIR}" --config "${BUILD_TYPE}" --target "${BUILD_TARGET}" -j"$(nproc)"
+fi
+
+# Run tests unless skipped
+if [ "$SKIP_TESTS" = false ] && [ "$COMPONENT" != "ui" ]; then
+    echo ""
+    echo "Running tests..."
+    cd "${BUILD_DIR}"
+    ctest --output-on-failure -j"$(nproc)" || true
+    cd ..
+else
+    if [ "$SKIP_TESTS" = true ]; then
+        echo "Tests skipped (--skip-tests flag used)"
+    fi
 fi
 
 echo ""
@@ -271,15 +321,19 @@ case "$COMPONENT" in
         echo "Executable: ${BUILD_DIR}/ui/crankshaft-ui"
         ;;
     tests)
-        echo "Tests: ${BUILD_DIR}/tests/test_eventbus"
-        echo "Tests: ${BUILD_DIR}/tests/test_websocket"
+        if [ "$SKIP_TESTS" = false ]; then
+            echo "Tests: ${BUILD_DIR}/tests/test_eventbus"
+            echo "Tests: ${BUILD_DIR}/tests/test_websocket"
+        fi
         ;;
     all)
         echo "Executables:"
         echo "  Core:  ${BUILD_DIR}/core/crankshaft-core"
         echo "  UI:    ${BUILD_DIR}/ui/crankshaft-ui"
-        echo "  Tests: ${BUILD_DIR}/tests/test_eventbus"
-        echo "  Tests: ${BUILD_DIR}/tests/test_websocket"
+        if [ "$SKIP_TESTS" = false ]; then
+            echo "  Tests: ${BUILD_DIR}/tests/test_eventbus"
+            echo "  Tests: ${BUILD_DIR}/tests/test_websocket"
+        fi
         ;;
 esac
 

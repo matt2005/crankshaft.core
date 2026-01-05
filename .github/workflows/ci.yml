@@ -75,26 +75,81 @@ jobs:
   code-quality:
     needs: check-skip
     if: needs.check-skip.outputs.skip != 'true'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
+    uses: ./.github/workflows/quality-scan.yml
+    with:
+      runner: ubuntu-latest
+      build-type: Debug
+      json-output: true
 
-      - name: Run lint checks
-        run: |
-          if [ -x ./scripts/lint.sh ]; then
-            ./scripts/lint.sh
-          else
-            echo "lint.sh not found; skipping lint" && exit 0
-          fi
+  post-quality-results:
+    needs: code-quality
+    if: always() && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Post quality check results comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const conclusion = '${{ needs.code-quality.result }}';
+            const buildUrl = '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}';
+            
+            let body = '## 📊 Quality Check Results\n\n';
+            
+            if (conclusion === 'success') {
+              body += '✅ **All quality checks passed!**\n\n';
+              body += '- ✓ Code formatting (clang-format)\n';
+              body += '- ✓ Static analysis (clang-tidy)\n';
+              body += '- ✓ Code analysis (cppcheck)\n';
+              body += '- ✓ License headers verified\n\n';
+            } else if (conclusion === 'failure') {
+              body += '❌ **Some quality checks failed**\n\n';
+              body += 'Please review the [detailed logs](' + buildUrl + ') and fix the issues:\n\n';
+              body += '1. **Code Formatting**: Use `./scripts/format.sh` to auto-fix\n';
+              body += '2. **License Headers**: Add GPL3 headers to new files\n';
+              body += '3. **Static Analysis**: Review clang-tidy warnings\n';
+              body += '4. **Code Analysis**: Check cppcheck findings\n\n';
+            } else {
+              body += '⏳ Quality checks are running...\n\n';
+            }
+            
+            body += `[View full logs](${buildUrl})`;
+            
+            // Find or create comment
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number
+            });
+            
+            const existingComment = comments.find(comment =>
+              comment.user.login === 'github-actions[bot]' &&
+              comment.body.includes('Quality Check Results')
+            );
+            
+            if (existingComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existingComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
 
   build-packages:
     needs: code-quality
-    if: needs.check-skip.outputs.skip != 'true'
+    if: needs.check-skip.outputs.skip != 'true' && (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped')
     uses: ./.github/workflows/build.yml
     with:
+      quality-scan-status: ${{ needs.code-quality.result }}
       architectures: ${{ github.event.inputs.amd64only == 'true' && 'amd64' || ((github.ref_name == 'main' || github.ref_name == 'develop' || github.base_ref == 'main' || github.base_ref == 'develop') && 'amd64 arm64 armhf' || 'amd64') }}
 
   dispatch-cd-fastpath:
@@ -122,3 +177,15 @@ jobs:
               }
             });
             console.log('Dispatched CD with amd64only=true');
+
+  publish-nightly:
+    name: Publish Nightly Packages
+    needs: build-packages
+    if: (github.ref_name == 'main' || github.ref_name == 'develop') && github.event_name == 'push'
+    uses: ./.github/workflows/apt-publish.yml
+    with:
+      build-run-id: ${{ github.run_id }}
+      channel: nightly
+      architectures: 'amd64 arm64 armhf'
+      create-release: false
+    secrets: inherit

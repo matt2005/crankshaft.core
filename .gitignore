@@ -1,9 +1,14 @@
 build/
+bin/
+obj/
+out/
 *.user
 *.autosave
 *.o
 *.so
 *.a
+*.exe
+*.dll
 *.qm
 compile_commands.json
 .vscode/

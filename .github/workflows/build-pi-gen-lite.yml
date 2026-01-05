@@ -39,6 +39,15 @@ on:
         required: false
         default: 'false'
         type: string
+      release-tag:
+        description: 'Git release tag to build for (e.g., v1.2.0)'
+        required: false
+        type: string
+      attach-to-release:
+        description: 'Automatically attach images to GitHub release'
+        required: false
+        default: 'false'
+        type: string
   workflow_dispatch:
     inputs:
       version:
@@ -61,6 +70,16 @@ on:
         type: boolean
       create_release_draft:
         description: 'Create the release as a draft'
+        required: false
+        default: false
+        type: boolean
+      release-tag:
+        description: 'Git release tag to build for (e.g., v1.2.0) - optional'
+        required: false
+        default: ''
+        type: string
+      attach-to-release:
+        description: 'Automatically attach images to GitHub release'
         required: false
         default: false
         type: boolean
@@ -132,22 +151,29 @@ jobs:
           
       - name: Copy stage60 to pi-gen folder
         run: |
-          echo "Copying stage60 to pi-gen folder..."
+          echo "Copying stages to pi-gen folder..."
           
-          # Check if stage60 exists in stages directory
-          if [ -d "image_builder/stages/stage60" ]; then
-            cp -r image_builder/stages/stage60 pi-gen/
-            echo "Copied stage60 from stages directory"
+          # Check if stage-crankshaft exists
+          if [ -d "image_builder/pi-gen-stages/stage-crankshaft" ]; then
+            cp -r image_builder/pi-gen-stages/stage-crankshaft pi-gen/
+            echo "Copied stage-crankshaft from pi-gen-stages directory"
           else
-            echo "Error: stage60 not found in stages directory!"
+            echo "Error: stage-crankshaft not found!"
             exit 1
           fi
           
-          # Make all scripts executable
-          find pi-gen/stage60 -type f -name "*.sh" -exec chmod +x {} \;
+          # Also check for legacy stage60 for compatibility
+          if [ -d "image_builder/stages/stage60" ]; then
+            cp -r image_builder/stages/stage60 pi-gen/
+            echo "Copied legacy stage60 for compatibility"
+          fi
           
-          echo "stage60 is ready in pi-gen folder"
-          ls -la pi-gen/stage60/
+          # Make all scripts executable
+          find pi-gen/stage-crankshaft -type f -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+          find pi-gen/stage60 -type f -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+          
+          echo "Stages are ready in pi-gen folder"
+          ls -la pi-gen/stage-crankshaft/ 2>/dev/null || echo "stage-crankshaft not found"
           
       - name: Set up QEMU for multi-architecture builds
         uses: docker/setup-qemu-action@v3
@@ -230,11 +256,12 @@ jobs:
         id: configure
         working-directory: pi-gen
         run: |
-          # Create configuration file for lite image (stage2)
+          # Create configuration file for lite image with Crankshaft
           cat > config <<EOF
           IMG_NAME=${{ steps.get_version.outputs.version_string }}
           RELEASE=${{ steps.get_version.outputs.release }}
           DEPLOY_COMPRESSION=xz
+          COMPRESSION_LEVEL=9
           LOCALE_DEFAULT=en_GB.UTF-8
           TARGET_HOSTNAME=raspberrypi
           KEYBOARD_KEYMAP=gb
@@ -246,7 +273,7 @@ jobs:
           ENABLE_SSH=1
           PUBKEY_SSH_FIRST_USER=""
           PUBKEY_ONLY_SSH=0
-          STAGE_LIST="stage0 stage1 stage2 stage60"
+          STAGE_LIST="stage0 stage1 stage2 stage-crankshaft"
           EOF
           
           # Make all shell scripts executable
@@ -482,6 +509,42 @@ jobs:
           fi
           
           ARTIFACT_NAME=$(basename "$ARTIFACT_PATHNAME")
+          ARTIFACT_SIZE=$(ls -lh "$ARTIFACT_PATHNAME" | awk '{print $5}')
+          
+          # Generate SHA256 checksums
+          echo "Generating SHA256 checksums..."
+          cd deploy
+          sha256sum * > SHA256SUMS 2>/dev/null || echo "Failed to generate checksums"
+          cd ..
+          
+          # Create metadata JSON
+          echo "Creating image metadata..."
+          cat > deploy/image-metadata.json <<METAJSON
+          {
+            "architecture": "${{ matrix.arch }}",
+            "image_name": "${ARTIFACT_NAME}",
+            "image_path": "deploy/${ARTIFACT_NAME}",
+            "image_size_bytes": $(stat -f%z "$ARTIFACT_PATHNAME" 2>/dev/null || stat -c%s "$ARTIFACT_PATHNAME" 2>/dev/null || echo "0"),
+            "image_size_human": "${ARTIFACT_SIZE}",
+            "build_date": "${{ steps.get_version.outputs.builddate }}",
+            "version": "${{ steps.get_version.outputs.version }}",
+            "debian_release": "${{ steps.get_version.outputs.release }}",
+            "pi_gen_branch": "${{ matrix.branch }}",
+            "git_commit": "${{ steps.get_version.outputs.buildhash }}",
+            "compression": "xz",
+            "stages_included": [
+              "stage0",
+              "stage1",
+              "stage2",
+              "stage-crankshaft"
+            ],
+            "packages_included": [
+              "crankshaft"
+            ],
+            "build_runner": "ubuntu-latest",
+            "build_run_id": "${{ github.run_id }}"
+          }
+          METAJSON
           
           # Find checksum files
           MD5_PATHNAME=$(find deploy -name "*.md5" | head -n 1)
@@ -509,9 +572,11 @@ jobs:
           
           echo "Found artifacts for ${{ matrix.arch }}:"
           echo "  Main: ${ARTIFACT_NAME}"
+          echo "  Size: ${ARTIFACT_SIZE}"
           echo "  MD5: $(basename "$MD5_PATHNAME" 2>/dev/null || echo 'none')"
           echo "  SHA1: $(basename "$SHA1_PATHNAME" 2>/dev/null || echo 'none')"
           echo "  SHA256: $(basename "$SHA256_PATHNAME" 2>/dev/null || echo 'none')"
+          echo "  Metadata: image-metadata.json"
           
       - name: Debug - List available log files
         if: always()

@@ -22,7 +22,7 @@
 #include <QAudioDevice>
 #include <QMediaDevices>
 #include <QProcess>
-#include <QtLogging>
+#include <QDebug>
 
 #include "../../hal/multimedia/MediaPipeline.h"
 #include "../logging/Logger.h"

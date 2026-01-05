@@ -1,0 +1,2 @@
+# This file indicates stage-crankshaft should not rebuild the root filesystem
+# from scratch. It adds packages on top of stage2.

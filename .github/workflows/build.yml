@@ -35,6 +35,16 @@ on:
         required: false
         default: false
         type: boolean
+      quality-scan-status:
+        description: 'Status of quality scan (success, failure, skipped)'
+        required: false
+        default: 'success'
+        type: string
+      skip-tests:
+        description: 'Skip running tests during build'
+        required: false
+        default: false
+        type: boolean
   workflow_dispatch:
     inputs:
       version:
@@ -52,6 +62,16 @@ on:
         required: false
         default: false
         type: boolean
+      quality-scan-status:
+        description: 'Status of quality scan (success, failure, skipped)'
+        required: false
+        default: 'success'
+        type: string
+      skip-tests:
+        description: 'Skip running tests during build'
+        required: false
+        default: false
+        type: boolean
 
 env:
   REGISTRY: ghcr.io
@@ -63,11 +83,18 @@ jobs:
     outputs:
       matrix: ${{ steps.matrix.outputs.matrix }}
       version: ${{ steps.version.outputs.version }}
+      build-run-id: ${{ github.run_id }}
+      build-start-time: ${{ steps.timing.outputs.start-time }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Record build start time
+        id: timing
+        run: |
+          echo "start-time=$(date -u +%s)" >> $GITHUB_OUTPUT
 
       - name: Generate version
         id: version
@@ -153,10 +180,19 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ matrix.arch }}-${{ github.sha }}
+        key: ${{ runner.os }}-buildx-${{ matrix.arch }}-${{ hashFiles('docker/Dockerfile.build', 'CMakeLists.txt', 'core/CMakeLists.txt', 'ui/CMakeLists.txt') }}
         restore-keys: |
           ${{ runner.os }}-buildx-${{ matrix.arch }}-
           ${{ runner.os }}-buildx-
+
+    - name: Cache QEMU images
+      if: matrix.arch != 'amd64'
+      uses: actions/cache@v4
+      with:
+        path: /tmp/.qemu-cache
+        key: qemu-${{ matrix.arch }}-${{ hashFiles('docker/Dockerfile.build') }}
+        restore-keys: |
+          qemu-${{ matrix.arch }}-
 
     - name: Build Debian package
       run: |
@@ -189,12 +225,40 @@ jobs:
         name: crankshaft-${{ matrix.arch }}-deb
         path: build-output/*.deb
         retention-days: 30
+
+    - name: Generate build metadata
+      if: always()
+      run: |
+        cat > build-output/build-metadata.json << EOF
+        {
+          "build_id": "${{ github.run_id }}",
+          "build_number": "${{ github.run_number }}",
+          "architecture": "${{ matrix.arch }}",
+          "git_sha": "${{ github.sha }}",
+          "git_ref": "${{ github.ref }}",
+          "branch": "${{ github.ref_name }}",
+          "version": "${{ needs.prepare.outputs.version }}",
+          "quality_scan_status": "${{ inputs.quality-scan-status }}",
+          "build_timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+          "skip_tests": "${{ inputs.skip-tests }}",
+          "repository": "${{ github.repository }}"
+        }
+        EOF
+        cat build-output/build-metadata.json
     - name: Upload source tarball
       uses: actions/upload-artifact@v4
       with:
         name: crankshaft-${{ matrix.arch }}-source
         path: build-output/*.tar.gz
         retention-days: 30
+
+    - name: Upload build metadata
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: crankshaft-${{ matrix.arch }}-metadata
+        path: build-output/build-metadata.json
+        retention-days: 90
     - name: Upload build logs
       if: always()
       uses: actions/upload-artifact@v4

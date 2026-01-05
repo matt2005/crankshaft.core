@@ -34,7 +34,7 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(nlohmann_json)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Network WebSockets Bluetooth Test Sql)
+find_package(Qt6 REQUIRED COMPONENTS Core Network WebSockets Bluetooth Test Sql Multimedia)
 
 # Some tests pull in core implementation files that depend on system libraries
 # (GStreamer, libusb). Ensure we can find those and link them for the test
@@ -89,6 +89,7 @@ add_executable(test_websocket
   ../core/hal/multimedia/IVideoDecoder.cpp
   ../core/hal/multimedia/IAudioMixer.cpp
   ../core/hal/multimedia/AudioMixer.cpp
+  ../core/services/audio/AudioRouter.cpp
 )
 
 set_target_properties(test_websocket PROPERTIES
@@ -119,6 +120,7 @@ target_link_libraries(test_websocket PRIVATE
   Qt6::Gui
   Qt6::Test
   Qt6::Sql
+  Qt6::Multimedia
   nlohmann_json::nlohmann_json
   ${GSTREAMER_LIBRARIES}
   ${GSTREAMER_APP_LIBRARIES}

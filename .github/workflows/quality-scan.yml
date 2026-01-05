@@ -1,0 +1,164 @@
+name: Quality Scan (Reusable)
+
+on:
+  workflow_call:
+    inputs:
+      runner:
+        description: 'Runner to execute on'
+        required: false
+        type: string
+        default: 'ubuntu-latest'
+      build-type:
+        description: 'CMake build type (Debug/Release)'
+        required: false
+        type: string
+        default: 'Debug'
+      json-output:
+        description: 'Output quality checks as JSON'
+        required: false
+        type: boolean
+        default: false
+    outputs:
+      quality-report:
+        description: 'JSON report of quality checks'
+        value: ${{ jobs.quality-scan.outputs.report }}
+
+jobs:
+  quality-scan:
+    name: Quality Checks
+    runs-on: ${{ inputs.runner }}
+    outputs:
+      report: ${{ steps.compile.outputs.report }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Install static analysis tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            clang-format \
+            cppcheck
+
+      # Fast checks - no build required
+      - name: Check formatting (clang-format)
+        id: format
+        run: |
+          ./.github/scripts/quality/check-format.sh \
+            ${{ inputs.json-output && '--json' || '' }}
+        continue-on-error: true
+
+      - name: Check code analysis (cppcheck)
+        id: cppcheck
+        run: |
+          ./.github/scripts/quality/check-cppcheck.sh \
+            ${{ inputs.json-output && '--json' || '' }}
+        continue-on-error: true
+
+      - name: Check license headers
+        id: license
+        run: |
+          ./scripts/check_license_headers.sh \
+            ${{ inputs.json-output && '--json' || '' }}
+        continue-on-error: true
+
+      # SAST - requires build for compile_commands.json
+      - name: Install build dependencies for SAST
+        run: |
+          sudo apt-get install -y \
+            clang-tidy \
+            build-essential \
+            cmake \
+            git \
+            pkg-config \
+            qt6-base-dev \
+            qt6-declarative-dev \
+            qt6-tools-dev \
+            qt6-websockets-dev \
+            qt6-connectivity-dev \
+            qt6-multimedia-dev \
+            qt6-qpa-plugins \
+            qml6-module-qtquick \
+            qml6-module-qtquick-controls \
+            qml6-module-qtquick-layouts \
+            qml6-module-qtquick-window \
+            qml6-module-qtmultimedia \
+            libdbus-1-dev \
+            libgstreamer1.0-dev \
+            libgstreamer-plugins-base1.0-dev \
+            gstreamer1.0-plugins-base \
+            gstreamer1.0-plugins-good \
+            gstreamer1.0-plugins-bad \
+            gstreamer1.0-plugins-ugly \
+            gstreamer1.0-libav \
+            gstreamer1.0-tools \
+            libasound2-dev \
+            libpulse-dev \
+            libusb-1.0-0-dev \
+            libssl-dev \
+            libprotobuf-dev \
+            protobuf-compiler \
+            libboost-system-dev \
+            libboost-log-dev \
+            libboost-thread-dev \
+            libgl1-mesa-dev \
+            libvulkan-dev \
+            python3 \
+            python3-requests \
+            file \
+            dpkg-dev
+
+      - name: Build project for SAST
+        id: build
+        run: |
+          ./scripts/build.sh --build-type ${{ inputs.build-type }}
+        continue-on-error: true
+
+      - name: Check static analysis (clang-tidy)
+        id: tidy
+        run: |
+          ./.github/scripts/quality/check-tidy.sh \
+            ${{ inputs.json-output && '--json' || '' }}
+        continue-on-error: true
+
+      - name: Compile quality report
+        id: compile
+        if: inputs.json-output
+        run: |
+          {
+            echo "report<<EOF"
+            echo "{"
+            echo '  "timestamp": "'$(date -u +%Y-%m-%dT%H:%M:%SZ)'",'
+            echo '  "checks": {'
+            echo '    "format": ${{ steps.format.outcome }}'
+            echo '    "tidy": "${{ steps.tidy.outcome }}'
+            echo '    "cppcheck": "${{ steps.cppcheck.outcome }}'
+            echo '    "license": "${{ steps.license.outcome }}'
+            echo "  }"
+            echo "}"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Report results
+        if: always()
+        run: |
+          echo "## Quality Check Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Formatting | ${{ steps.format.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Static Analysis (clang-tidy) | ${{ steps.tidy.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Code Analysis (cppcheck) | ${{ steps.cppcheck.outcome }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| License Headers | ${{ steps.license.outcome }} |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Fail if quality checks failed
+        if: |
+          steps.cppcheck.outcome == 'failure' ||
+          steps.license.outcome == 'failure'
+        run: |
+          echo "❌ Critical quality checks failed. Please fix the issues above."
+          exit 1
+
