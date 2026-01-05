@@ -30,7 +30,7 @@ ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
 # Install build dependencies
-# Cache bust: 2025-12-18 - Added qt6-connectivity-dev for Bluetooth support
+# Cache bust: 2025-12-18 - Added qt6-connectivity-dev, multimedia-dev, QML6 modules for UI support
 RUN apt-get update && apt-get install -y \
     build-essential \
     cmake \
@@ -41,10 +41,16 @@ RUN apt-get update && apt-get install -y \
     python3-requests \
     qt6-base-dev \
     qt6-declarative-dev \
-    qt6-tools-dev \ 
+    qt6-tools-dev \
     qt6-websockets-dev \
     qt6-connectivity-dev \
+    qt6-multimedia-dev \
     qt6-qpa-plugins \
+    qml6-module-qtquick \
+    qml6-module-qtquick-controls \
+    qml6-module-qtquick-layouts \
+    qml6-module-qtquick-window \
+    qml6-module-qtmultimedia \
     libboost-all-dev \
     libprotobuf-dev \
     protobuf-compiler \
@@ -54,6 +60,12 @@ RUN apt-get update && apt-get install -y \
     libpulse-dev \
     libgstreamer1.0-dev \
     libgstreamer-plugins-base1.0-dev \
+    gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly \
+    gstreamer1.0-libav \
+    gstreamer1.0-tools \
     libdbus-1-dev \
     # Packaging tools
     file \
