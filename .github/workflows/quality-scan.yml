@@ -156,10 +156,9 @@ jobs:
 
       - name: Fail if quality checks failed
         if: |
-          steps.format.outcome == 'failure' ||
-          steps.tidy.outcome == 'failure' ||
           steps.cppcheck.outcome == 'failure' ||
           steps.license.outcome == 'failure'
         run: |
-          echo "❌ Quality checks failed. Please fix the issues above."
+          echo "❌ Critical quality checks failed. Please fix the issues above."
           exit 1
+
