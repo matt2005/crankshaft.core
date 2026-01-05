@@ -401,6 +401,14 @@ jobs:
           GIT_HASH: ${{ steps.get_version.outputs.buildhash }}
           GIT_BRANCH: ${{ steps.get_version.outputs.buildbranch }}
           
+      - name: Check build-docker-debug.sh contents
+        working-directory: pi-gen
+        run: |
+          echo "=== Checking build-docker-debug.sh ==="
+          file build-docker-debug.sh
+          head -50 build-docker-debug.sh
+          echo "=== End of build-docker-debug.sh header ==="
+          
       - name: Extract logs and artifacts from Docker container
         if: always()
         working-directory: pi-gen
