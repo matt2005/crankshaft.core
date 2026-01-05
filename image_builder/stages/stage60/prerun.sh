@@ -18,3 +18,30 @@ APT::Install-Suggests "false";
 EOF
 
 echo "APT configuration added for build reliability"
+
+# ====================================================================
+# CRANKSHAFT APT REPOSITORY CONFIGURATION
+# ====================================================================
+echo "Configuring OpenCarDev APT repository..."
+
+# Set default values if not provided by config
+CRANKSHAFT_APT_REPO="${CRANKSHAFT_APT_REPO:-http://apt.opencardev.org/debian}"
+CRANKSHAFT_APT_SUITE="${CRANKSHAFT_APT_SUITE:-trixie}"
+CRANKSHAFT_APT_COMPONENT="${CRANKSHAFT_APT_COMPONENT:-nightly}"
+
+echo "APT Repository: ${CRANKSHAFT_APT_REPO}"
+echo "APT Suite: ${CRANKSHAFT_APT_SUITE}"
+echo "APT Component: ${CRANKSHAFT_APT_COMPONENT}"
+
+# Create APT sources list entry for Crankshaft packages
+mkdir -p "${ROOTFS_DIR}/etc/apt/sources.list.d"
+cat > "${ROOTFS_DIR}/etc/apt/sources.list.d/opencardev.list" << EOF
+# OpenCarDev Crankshaft Package Repository
+deb ${CRANKSHAFT_APT_REPO} ${CRANKSHAFT_APT_SUITE} ${CRANKSHAFT_APT_COMPONENT}
+EOF
+
+echo "APT sources configured for Crankshaft"
+
+# Add OpenCarDev GPG key (placeholder - will need actual key in production)
+mkdir -p "${ROOTFS_DIR}/usr/share/keyrings"
+echo "Placeholder for OpenCarDev GPG key - TODO: Add actual key" > "${ROOTFS_DIR}/usr/share/keyrings/opencardev-archive-keyring.gpg.placeholder"

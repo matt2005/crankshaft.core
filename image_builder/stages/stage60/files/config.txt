@@ -1,0 +1,72 @@
+# Project: Crankshaft
+# This file is part of Crankshaft project.
+# Copyright (C) 2025 OpenCarDev Team
+#
+#  Crankshaft is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  Crankshaft is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
+
+# Raspberry Pi Boot Configuration for Crankshaft
+# This file configures the boot process and hardware interfaces
+
+# ====================================================================
+# HDMI CONFIGURATION (FR-008)
+# ====================================================================
+# Force HDMI detection even if display not connected at boot
+hdmi_force_hotplug=1
+
+# Enable HDMI audio output (required for media playback)
+hdmi_drive=2
+
+# HDMI mode: 1080p 60Hz (auto-detect preferred resolution)
+hdmi_group=1
+hdmi_mode=16
+
+# Disable overscan to use full screen
+disable_overscan=1
+
+# ====================================================================
+# DISPLAY AND GPU
+# ====================================================================
+# GPU memory split (256MB for Qt6 GUI and video playback)
+gpu_mem=256
+
+# Enable DRM/KMS driver for better graphics performance
+dtoverlay=vc4-kms-v3d
+
+# ====================================================================
+# AUDIO
+# ====================================================================
+# Enable HDMI audio
+dtparam=audio=on
+
+# ====================================================================
+# PERFORMANCE
+# ====================================================================
+# Disable boot delay for faster startup
+boot_delay=0
+
+# Disable splash screen (use Crankshaft splash instead)
+disable_splash=1
+
+# ====================================================================
+# CRANKSHAFT SPECIFIC
+# ====================================================================
+# Touch screen support (if connected)
+# dtoverlay=rpi-ft5406
+
+# ====================================================================
+# NOTES
+# ====================================================================
+# - VNC support deferred to Phase 2 (HDMI-only for MVP per FR-008)
+# - Configuration tested on Pi 4/5; Pi 3/Zero 2 may require adjustments
+# - For troubleshooting, see: https://www.raspberrypi.com/documentation/computers/config_txt.html

@@ -1,0 +1,63 @@
+# Project: Crankshaft
+# This file is part of Crankshaft project.
+# Copyright (C) 2025 OpenCarDev Team
+#
+#  Crankshaft is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  Crankshaft is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
+
+[Unit]
+Description=Crankshaft Automotive Infotainment System
+Documentation=https://github.com/opencardev/crankshaft.core
+After=graphical.target network-online.target
+Wants=network-online.target
+Requires=graphical.target
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/usr/lib/crankshaft
+
+# Environment configuration
+Environment="QT_QPA_PLATFORM=eglfs"
+Environment="QML2_IMPORT_PATH=/usr/lib/crankshaft/extensions"
+Environment="CRANKSHAFT_CONFIG=/etc/crankshaft/config.ini"
+Environment="CRANKSHAFT_DISPLAY=:0"
+
+# Executable
+ExecStart=/usr/bin/crankshaft-ui
+
+# Restart policy
+Restart=always
+RestartSec=5s
+StartLimitBurst=3
+StartLimitIntervalSec=60s
+
+# Resource limits
+LimitNOFILE=4096
+MemoryMax=1.5G
+
+# Security hardening (Phase 2)
+# TODO: Enable when security hardening is implemented
+# PrivateTmp=true
+# ProtectSystem=strict
+# ProtectHome=true
+# NoNewPrivileges=true
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=crankshaft
+
+[Install]
+WantedBy=graphical.target
