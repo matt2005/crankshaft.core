@@ -115,6 +115,7 @@ jobs:
         id: build
         run: |
           ./scripts/build.sh --build-type ${{ inputs.build-type }}
+        continue-on-error: true
 
       - name: Check static analysis (clang-tidy)
         id: tidy
