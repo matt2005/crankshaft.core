@@ -31,7 +31,7 @@
 class SimpleJsonSchemaValidator {
  public:
   static bool validateAgainstSchema(const QJsonObject& data, const QJsonObject& schema,
-                                     QString& error) {
+                                    QString& error) {
     // Check type constraint
     if (schema.contains("type")) {
       const QString expectedType = schema.value("type").toString();
@@ -86,8 +86,7 @@ class SimpleJsonSchemaValidator {
   }
 
  private:
-  static bool validateType(const QJsonObject& data, const QString& expectedType,
-                          QString& error) {
+  static bool validateType(const QJsonObject& data, const QString& expectedType, QString& error) {
     bool valid = false;
     if (expectedType == "object") {
       valid = data.isEmpty() || true;  // Any object is valid if type is "object"

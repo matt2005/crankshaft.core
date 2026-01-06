@@ -25,10 +25,9 @@
 class WebSocketServerValidator {
  public:
   static bool validateMessage(const QJsonObject& obj, QString& error) {
-    static const QSet<QString> allowedTypes = {QStringLiteral("subscribe"),
-                                                QStringLiteral("unsubscribe"),
-                                                QStringLiteral("publish"),
-                                                QStringLiteral("service_command")};
+    static const QSet<QString> allowedTypes = {
+        QStringLiteral("subscribe"), QStringLiteral("unsubscribe"), QStringLiteral("publish"),
+        QStringLiteral("service_command")};
 
     const QString type = obj.value("type").toString();
     if (type.isEmpty() || !allowedTypes.contains(type)) {
@@ -66,11 +65,10 @@ class WebSocketServerValidator {
   }
 
   static bool validateServiceCommand(const QString& command, QString& error) {
-    static const QSet<QString> allowedCommands = {QStringLiteral("reload_services"),
-                                                   QStringLiteral("start_service"),
-                                                   QStringLiteral("stop_service"),
-                                                   QStringLiteral("restart_service"),
-                                                   QStringLiteral("get_running_services")};
+    static const QSet<QString> allowedCommands = {
+        QStringLiteral("reload_services"), QStringLiteral("start_service"),
+        QStringLiteral("stop_service"), QStringLiteral("restart_service"),
+        QStringLiteral("get_running_services")};
 
     if (!allowedCommands.contains(command)) {
       error = QStringLiteral("unauthorised_command");
