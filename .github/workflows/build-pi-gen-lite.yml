@@ -279,6 +279,7 @@ jobs:
           ENABLE_SSH=1
           PUBKEY_SSH_FIRST_USER=""
           PUBKEY_ONLY_SSH=0
+          STAGE_LIST="stage0 stage1 stage2 stage60"
           CRANKSHAFT_APT_REPO=http://apt.opencardev.org/debian
           CRANKSHAFT_APT_SUITE=trixie
           CRANKSHAFT_APT_COMPONENT=nightly
