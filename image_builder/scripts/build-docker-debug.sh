@@ -250,9 +250,9 @@ else
 		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo "binfmt_misc still not accessible after reconfigure"
 		
 		echo "=== Starting actual build with timeout ==="
-		echo "Build will timeout after 3600 seconds (60 minutes)"
+		echo "Build will timeout after 7200 seconds (120 minutes)"
 		cd /pi-gen
-		timeout 3600 ./build.sh '"${BUILD_OPTS}"' 2>&1 | tee build-output.log
+		timeout 7200 ./build.sh '"${BUILD_OPTS}"' 2>&1 | tee build-output.log
 		BUILD_STATUS=$?
 		echo "Build exited with status: ${BUILD_STATUS}"
 		

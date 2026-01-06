@@ -261,7 +261,7 @@ jobs:
           # Try both arches to report available versions
           get_ver() {
             pkg="$1"; arch="$2";
-            url="https://opencardev.github.io/packages/dists/${release}/main/binary-${arch}/Packages"
+            url="https://apt.opencardev.org/dists/${release}/main/binary-${arch}/Packages"
             ver=$(curl -fsSL "$url" | awk -v p="Package: ${pkg}" -v f="Version:" '
               $0==p {found=1} found&&/^Version:/ {print $2; exit}
             ')

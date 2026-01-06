@@ -35,9 +35,9 @@ RUN set -e \
 # Add OpenCarDev APT repo
 RUN set -e \
     && echo "=== Adding OpenCarDev repository ===" \
-    && curl -fsSL https://opencardev.github.io/packages/opencardev.gpg.key | gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg \
+    && curl -fsSL https://apt.opencardev.org/opencardev.gpg.key | gpg --dearmor -o /usr/share/keyrings/opencardev-archive-keyring.gpg \
     && ARCH=$(dpkg --print-architecture) \
-    && echo "deb [arch=${ARCH} signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://opencardev.github.io/packages ${SUITE} nightly" > /etc/apt/sources.list.d/opencardev.list
+    && echo "deb [arch=${ARCH} signed-by=/usr/share/keyrings/opencardev-archive-keyring.gpg] https://apt.opencardev.org ${SUITE} nightly" > /etc/apt/sources.list.d/opencardev.list
 
 # Install target packages
 RUN set -e \

@@ -51,8 +51,7 @@ cat > "${METADATA_DIR}/manifest.json" << 'EOF'
     {
       "name": "Crankshaft",
       "type": "application",
-      "repository": "https://github.com/opencardev/crankshaft-mvp"
-    },
+      "repository": "https://github.com/opencardev/crankshaft"
     {
       "name": "Raspberry Pi OS Lite",
       "type": "os",
