@@ -49,6 +49,10 @@ ${DOCKER} run --rm --platform linux/arm64 busybox:latest echo "ARM64 test succes
 CONFIG_FILE=""
 if [ -f "${DIR}/config" ]; then
 	CONFIG_FILE="${DIR}/config"
+elif [ -f "${DIR}/../pi-gen-stages/config-template" ]; then
+	# Fallback to the shared template so CI/local builds do not fail when a
+	# local config copy is missing.
+	CONFIG_FILE="${DIR}/../pi-gen-stages/config-template"
 fi
 
 while getopts "c:" flag
@@ -70,9 +74,9 @@ fi
 echo "=== Configuration File Processing ==="
 echo "Config file path: ${CONFIG_FILE}"
 
-# Ensure that the confguration file is present
+# Ensure that the configuration file is present
 if test -z "${CONFIG_FILE}"; then
-	echo "Configuration file need to be present in '${DIR}/config' or path passed as parameter"
+	echo "Configuration file needs to be present at '${DIR}/config', '${DIR}/../pi-gen-stages/config-template', or passed via -c"
 	exit 1
 else
 	echo "Loading configuration from: ${CONFIG_FILE}"
@@ -177,12 +181,30 @@ if [ "${CONTAINER_EXISTS}" != "" ]; then
 		echo '=== Post-reconfigure binfmt test ==='
 		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo 'binfmt_misc still not accessible after reconfigure'
 		
-		echo '=== Starting actual build ==='
+		echo '=== Starting actual build with timeout ==='
+		echo 'Build will timeout after 3600 seconds (60 minutes)'
 		cd /pi-gen
-		./build.sh ${BUILD_OPTS}
+		timeout 3600 ./build.sh ${BUILD_OPTS} 2>&1 | tee build-output.log
+		BUILD_STATUS=$?
+		echo "Build exited with status: $BUILD_STATUS"
+		
+		echo '=== Checking for build output ==='
+		if [ -f build-output.log ]; then
+			echo "Last 50 lines of build output:"
+			tail -50 build-output.log
+		fi
 		
 		echo '=== Copying build logs ==='
-		rsync -av work/*/build.log deploy/
+		rsync -av work/*/build.log deploy/ 2>&1 || echo "rsync failed or no logs found"
+		
+		if [ -f /pi-gen/deploy/*.xz ] || [ -f /pi-gen/deploy/*.img ]; then
+			echo "=== Build produced image files ==="
+			ls -lh /pi-gen/deploy/
+		else
+			echo "=== WARNING: No image files found in deploy ==="
+			echo "Contents of work directory:"
+			find /pi-gen/work -type f -name "*.img*" 2>/dev/null | head -20
+		fi
 		" &
 	wait "$!"
 else
@@ -227,12 +249,30 @@ else
 		echo '=== Post-reconfigure binfmt test ==='
 		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo 'binfmt_misc still not accessible after reconfigure'
 		
-		echo '=== Starting actual build ==='
+		echo '=== Starting actual build with timeout ==='
+		echo 'Build will timeout after 3600 seconds (60 minutes)'
 		cd /pi-gen
-		./build.sh ${BUILD_OPTS}
+		timeout 3600 ./build.sh ${BUILD_OPTS} 2>&1 | tee build-output.log
+		BUILD_STATUS=$?
+		echo "Build exited with status: $BUILD_STATUS"
+		
+		echo '=== Checking for build output ==='
+		if [ -f build-output.log ]; then
+			echo "Last 50 lines of build output:"
+			tail -50 build-output.log
+		fi
 		
 		echo '=== Copying build logs ==='
-		rsync -av work/*/build.log deploy/
+		rsync -av work/*/build.log deploy/ 2>&1 || echo "rsync failed or no logs found"
+		
+		if [ -f /pi-gen/deploy/*.xz ] || [ -f /pi-gen/deploy/*.img ]; then
+			echo "=== Build produced image files ==="
+			ls -lh /pi-gen/deploy/
+		else
+			echo "=== WARNING: No image files found in deploy ==="
+			echo "Contents of work directory:"
+			find /pi-gen/work -type f -name "*.img*" 2>/dev/null | head -20
+		fi
 		" &
 	wait "$!"
 fi
