@@ -20,8 +20,8 @@
 #include <QSqlDatabase>
 #include <QStandardPaths>
 #include <QString>
-#include <QTest>
 #include <QTemporaryDir>
+#include <QTest>
 
 #include "../core/services/preferences/PreferencesService.h"
 
@@ -124,8 +124,8 @@ class TestSettingsPersistence : public QObject {
     QVERIFY(m_preferencesService->set(QStringLiteral("ui.theme.dark"), true));
     QVERIFY(m_preferencesService->set(QStringLiteral("ui.locale"), QStringLiteral("de-DE")));
     QVERIFY(m_preferencesService->set(QStringLiteral("audio.volume"), 80));
-    QVERIFY(
-        m_preferencesService->set(QStringLiteral("media.lastDirectory"), QStringLiteral("/home/music")));
+    QVERIFY(m_preferencesService->set(QStringLiteral("media.lastDirectory"),
+                                      QStringLiteral("/home/music")));
 
     // Verify all values
     QVERIFY(m_preferencesService->get(QStringLiteral("ui.theme.dark")).toBool() == true);

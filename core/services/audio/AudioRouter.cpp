@@ -20,9 +20,9 @@
 #include "AudioRouter.h"
 
 #include <QAudioDevice>
+#include <QDebug>
 #include <QMediaDevices>
 #include <QProcess>
-#include <QDebug>
 
 #include "../../hal/multimedia/MediaPipeline.h"
 #include "../logging/Logger.h"

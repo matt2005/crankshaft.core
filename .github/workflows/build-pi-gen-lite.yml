@@ -122,6 +122,19 @@ jobs:
           ref: ${{ matrix.branch }}
           path: pi-gen
           fetch-depth: 1
+      
+      - name: Verify checkout and list files
+        run: |
+          echo "=== Current working directory ==="
+          pwd
+          echo "=== Repository contents ==="
+          ls -la
+          echo "=== image_builder/scripts directory ==="
+          ls -la image_builder/scripts/ 2>/dev/null || echo "Directory not found"
+          echo "=== image_builder/stages directory ==="
+          ls -la image_builder/stages/ 2>/dev/null || echo "Directory not found"
+          echo "=== pi-gen directory ==="
+          ls -la pi-gen/ 2>/dev/null | head -20 || echo "Directory not found"
           
       - name: Copy build-docker-debug.sh to pi-gen folder
         run: |
@@ -151,29 +164,22 @@ jobs:
           
       - name: Copy stage60 to pi-gen folder
         run: |
-          echo "Copying stages to pi-gen folder..."
+          echo "Copying stage60 to pi-gen folder..."
           
-          # Check if stage-crankshaft exists
-          if [ -d "image_builder/pi-gen-stages/stage-crankshaft" ]; then
-            cp -r image_builder/pi-gen-stages/stage-crankshaft pi-gen/
-            echo "Copied stage-crankshaft from pi-gen-stages directory"
+          # Copy stage60 with Crankshaft configuration
+          if [ -d "image_builder/stages/stage60" ]; then
+            cp -r image_builder/stages/stage60 pi-gen/
+            echo "Copied stage60 from image_builder/stages directory"
           else
-            echo "Error: stage-crankshaft not found!"
+            echo "Error: stage60 not found in image_builder/stages!"
             exit 1
           fi
           
-          # Also check for legacy stage60 for compatibility
-          if [ -d "image_builder/stages/stage60" ]; then
-            cp -r image_builder/stages/stage60 pi-gen/
-            echo "Copied legacy stage60 for compatibility"
-          fi
-          
           # Make all scripts executable
-          find pi-gen/stage-crankshaft -type f -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
           find pi-gen/stage60 -type f -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
           
-          echo "Stages are ready in pi-gen folder"
-          ls -la pi-gen/stage-crankshaft/ 2>/dev/null || echo "stage-crankshaft not found"
+          echo "stage60 is ready in pi-gen folder"
+          ls -la pi-gen/stage60/
           
       - name: Set up QEMU for multi-architecture builds
         uses: docker/setup-qemu-action@v3
@@ -273,7 +279,11 @@ jobs:
           ENABLE_SSH=1
           PUBKEY_SSH_FIRST_USER=""
           PUBKEY_ONLY_SSH=0
-          STAGE_LIST="stage0 stage1 stage2 stage-crankshaft"
+          STAGE_LIST="stage0 stage1 stage2 stage60"
+          CRANKSHAFT_APT_REPO=http://apt.opencardev.org/debian
+          CRANKSHAFT_APT_SUITE=trixie
+          CRANKSHAFT_APT_COMPONENT=nightly
+          CRANKSHAFT_AUDIO_SYSTEM=pulseaudio
           EOF
           
           # Make all shell scripts executable
@@ -391,6 +401,29 @@ jobs:
         env:
           GIT_HASH: ${{ steps.get_version.outputs.buildhash }}
           GIT_BRANCH: ${{ steps.get_version.outputs.buildbranch }}
+          
+      - name: Verify stage60 is copied to pi-gen
+        working-directory: pi-gen
+        run: |
+          echo "=== Verifying stage60 in pi-gen directory ==="
+          if [ -d stage60 ]; then
+            echo "✓ stage60 directory exists"
+            echo "Contents:"
+            ls -la stage60/
+          else
+            echo "✗ stage60 directory NOT found!"
+            echo "Available stages:"
+            ls -la stage* 2>/dev/null || echo "No stages found"
+            exit 1
+          fi
+          
+      - name: Check build-docker-debug.sh contents
+        working-directory: pi-gen
+        run: |
+          echo "=== Checking build-docker-debug.sh ==="
+          file build-docker-debug.sh
+          head -50 build-docker-debug.sh
+          echo "=== End of build-docker-debug.sh header ==="
           
       - name: Extract logs and artifacts from Docker container
         if: always()

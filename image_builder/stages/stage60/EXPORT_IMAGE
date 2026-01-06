@@ -1,1 +1,2 @@
-IMG_SUFFIX="-opencardev"
+# Export final Crankshaft image after stage-crankshaft
+# This marker tells pi-gen to generate the .img file

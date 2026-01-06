@@ -49,6 +49,10 @@ ${DOCKER} run --rm --platform linux/arm64 busybox:latest echo "ARM64 test succes
 CONFIG_FILE=""
 if [ -f "${DIR}/config" ]; then
 	CONFIG_FILE="${DIR}/config"
+elif [ -f "${DIR}/../pi-gen-stages/config-template" ]; then
+	# Fallback to the shared template so CI/local builds do not fail when a
+	# local config copy is missing.
+	CONFIG_FILE="${DIR}/../pi-gen-stages/config-template"
 fi
 
 while getopts "c:" flag
@@ -70,9 +74,9 @@ fi
 echo "=== Configuration File Processing ==="
 echo "Config file path: ${CONFIG_FILE}"
 
-# Ensure that the confguration file is present
+# Ensure that the configuration file is present
 if test -z "${CONFIG_FILE}"; then
-	echo "Configuration file need to be present in '${DIR}/config' or path passed as parameter"
+	echo "Configuration file needs to be present at '${DIR}/config', '${DIR}/../pi-gen-stages/config-template', or passed via -c"
 	exit 1
 else
 	echo "Loading configuration from: ${CONFIG_FILE}"
@@ -146,44 +150,62 @@ if [ "${CONTAINER_EXISTS}" != "" ]; then
 		-e "GIT_BRANCH=${GIT_BRANCH}" \
 		--volumes-from="${CONTAINER_NAME}" --name "${CONTAINER_NAME}_cont" \
 		pi-gen \
-		bash -e -o pipefail -c "
-		echo '=== INSIDE CONTAINER DEBUG START ==='
-		echo 'Container architecture: \$(uname -m)'
-		echo 'Container OS: \$(cat /etc/os-release | grep PRETTY_NAME)'
+		bash -e -o pipefail -c '
+		echo "=== INSIDE CONTAINER DEBUG START ==="
+		echo "Container architecture: $(uname -m)"
+		echo "Container OS: $(cat /etc/os-release | grep PRETTY_NAME)"
 		
-		echo '=== Testing binfmt_misc inside container ==='
-		echo 'binfmt_misc module status:'
-		lsmod | grep binfmt_misc || echo 'binfmt_misc module not loaded in container'
+		echo "=== Testing binfmt_misc inside container ==="
+		echo "binfmt_misc module status:"
+		lsmod | grep binfmt_misc || echo "binfmt_misc module not loaded in container"
 		
-		echo 'Host binfmt_misc (mounted at /host-binfmt):'
-		ls -la /host-binfmt/ 2>/dev/null | head -10 || echo 'host-binfmt not accessible'
+		echo "Host binfmt_misc (mounted at /host-binfmt):"
+		ls -la /host-binfmt/ 2>/dev/null | head -10 || echo "host-binfmt not accessible"
 		
-		echo 'Attempting to bind mount host binfmt to container location:'
+		echo "Attempting to bind mount host binfmt to container location:"
 		mkdir -p /proc/sys/fs/binfmt_misc
-		mount --bind /host-binfmt /proc/sys/fs/binfmt_misc || echo 'Bind mount failed'
+		mount --bind /host-binfmt /proc/sys/fs/binfmt_misc || echo "Bind mount failed"
 		
-		echo 'binfmt_misc directory in container after bind mount:'
-		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo 'binfmt_misc still not accessible in container'
+		echo "binfmt_misc directory in container after bind mount:"
+		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo "binfmt_misc still not accessible in container"
 		
-		echo 'QEMU binaries in container:'
-		ls -la /usr/bin/qemu-*-static 2>/dev/null | head -5 || echo 'No QEMU static binaries in container'
+		echo "QEMU binaries in container:"
+		ls -la /usr/bin/qemu-*-static 2>/dev/null | head -5 || echo "No QEMU static binaries in container"
 		
-		echo 'Testing qemu-aarch64-static in container:'
-		/usr/bin/qemu-aarch64-static --version 2>/dev/null || echo 'qemu-aarch64-static failed in container'
+		echo "Testing qemu-aarch64-static in container:"
+		/usr/bin/qemu-aarch64-static --version 2>/dev/null || echo "qemu-aarch64-static failed in container"
 		
-		echo '=== Running dpkg-reconfigure qemu-user-static ==='
+		echo "=== Running dpkg-reconfigure qemu-user-static ==="
 		DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive qemu-user-static || echo "dpkg-reconfigure failed, continuing..."
 		
-		echo '=== Post-reconfigure binfmt test ==='
-		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo 'binfmt_misc still not accessible after reconfigure'
+		echo "=== Post-reconfigure binfmt test ==="
+		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo "binfmt_misc still not accessible after reconfigure"
 		
-		echo '=== Starting actual build ==='
+		echo "=== Starting actual build with timeout ==="
+		echo "Build will timeout after 3600 seconds (60 minutes)"
 		cd /pi-gen
-		./build.sh ${BUILD_OPTS}
+		timeout 3600 ./build.sh '"${BUILD_OPTS}"' 2>&1 | tee build-output.log
+		BUILD_STATUS=$?
+		echo "Build exited with status: ${BUILD_STATUS}"
 		
-		echo '=== Copying build logs ==='
-		rsync -av work/*/build.log deploy/
-		" &
+		echo "=== Checking for build output ==="
+		if [ -f build-output.log ]; then
+			echo "Last 50 lines of build output:"
+			tail -50 build-output.log
+		fi
+		
+		echo "=== Copying build logs ==="
+		rsync -av work/*/build.log deploy/ 2>&1 || echo "rsync failed or no logs found"
+		
+		if [ -f /pi-gen/deploy/*.xz ] || [ -f /pi-gen/deploy/*.img ]; then
+			echo "=== Build produced image files ==="
+			ls -lh /pi-gen/deploy/
+		else
+			echo "=== WARNING: No image files found in deploy ==="
+			echo "Contents of work directory:"
+			find /pi-gen/work -type f -name "*.img*" 2>/dev/null | head -20
+		fi
+		' &
 	wait "$!"
 else
 	echo "Using new container approach..."
@@ -196,44 +218,62 @@ else
 		-e "GIT_HASH=${GIT_HASH}" \
 		-e "GIT_BRANCH=${GIT_BRANCH}" \
 		pi-gen \
-		bash -e -o pipefail -c "
-		echo '=== INSIDE CONTAINER DEBUG START ==='
-		echo 'Container architecture: \$(uname -m)'
-		echo 'Container OS: \$(cat /etc/os-release | grep PRETTY_NAME)'
+		bash -e -o pipefail -c '
+		echo "=== INSIDE CONTAINER DEBUG START ==="
+		echo "Container architecture: $(uname -m)"
+		echo "Container OS: $(cat /etc/os-release | grep PRETTY_NAME)"
 		
-		echo '=== Testing binfmt_misc inside container ==='
-		echo 'binfmt_misc module status:'
-		lsmod | grep binfmt_misc || echo 'binfmt_misc module not loaded in container'
+		echo "=== Testing binfmt_misc inside container ==="
+		echo "binfmt_misc module status:"
+		lsmod | grep binfmt_misc || echo "binfmt_misc module not loaded in container"
 		
-		echo 'Host binfmt_misc (mounted at /host-binfmt):'
-		ls -la /host-binfmt/ 2>/dev/null | head -10 || echo 'host-binfmt not accessible'
+		echo "Host binfmt_misc (mounted at /host-binfmt):"
+		ls -la /host-binfmt/ 2>/dev/null | head -10 || echo "host-binfmt not accessible"
 		
-		echo 'Attempting to bind mount host binfmt to container location:'
+		echo "Attempting to bind mount host binfmt to container location:"
 		mkdir -p /proc/sys/fs/binfmt_misc
-		mount --bind /host-binfmt /proc/sys/fs/binfmt_misc || echo 'Bind mount failed'
+		mount --bind /host-binfmt /proc/sys/fs/binfmt_misc || echo "Bind mount failed"
 		
-		echo 'binfmt_misc directory in container after bind mount:'
-		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo 'binfmt_misc still not accessible in container'
+		echo "binfmt_misc directory in container after bind mount:"
+		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo "binfmt_misc still not accessible in container"
 		
-		echo 'QEMU binaries in container:'
-		ls -la /usr/bin/qemu-*-static 2>/dev/null | head -5 || echo 'No QEMU static binaries in container'
+		echo "QEMU binaries in container:"
+		ls -la /usr/bin/qemu-*-static 2>/dev/null | head -5 || echo "No QEMU static binaries in container"
 		
-		echo 'Testing qemu-aarch64-static in container:'
-		/usr/bin/qemu-aarch64-static --version 2>/dev/null || echo 'qemu-aarch64-static failed in container'
+		echo "Testing qemu-aarch64-static in container:"
+		/usr/bin/qemu-aarch64-static --version 2>/dev/null || echo "qemu-aarch64-static failed in container"
 		
-		echo '=== Running dpkg-reconfigure qemu-user-static ==='
+		echo "=== Running dpkg-reconfigure qemu-user-static ==="
 		DEBIAN_FRONTEND=noninteractive dpkg-reconfigure -f noninteractive qemu-user-static || echo "dpkg-reconfigure failed, continuing..."
 		
-		echo '=== Post-reconfigure binfmt test ==='
-		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo 'binfmt_misc still not accessible after reconfigure'
+		echo "=== Post-reconfigure binfmt test ==="
+		ls -la /proc/sys/fs/binfmt_misc/ 2>/dev/null | head -10 || echo "binfmt_misc still not accessible after reconfigure"
 		
-		echo '=== Starting actual build ==='
+		echo "=== Starting actual build with timeout ==="
+		echo "Build will timeout after 7200 seconds (120 minutes)"
 		cd /pi-gen
-		./build.sh ${BUILD_OPTS}
+		timeout 7200 ./build.sh '"${BUILD_OPTS}"' 2>&1 | tee build-output.log
+		BUILD_STATUS=$?
+		echo "Build exited with status: ${BUILD_STATUS}"
 		
-		echo '=== Copying build logs ==='
-		rsync -av work/*/build.log deploy/
-		" &
+		echo "=== Checking for build output ==="
+		if [ -f build-output.log ]; then
+			echo "Last 50 lines of build output:"
+			tail -50 build-output.log
+		fi
+		
+		echo "=== Copying build logs ==="
+		rsync -av work/*/build.log deploy/ 2>&1 || echo "rsync failed or no logs found"
+		
+		if [ -f /pi-gen/deploy/*.xz ] || [ -f /pi-gen/deploy/*.img ]; then
+			echo "=== Build produced image files ==="
+			ls -lh /pi-gen/deploy/
+		else
+			echo "=== WARNING: No image files found in deploy ==="
+			echo "Contents of work directory:"
+			find /pi-gen/work -type f -name "*.img*" 2>/dev/null | head -20
+		fi
+		' &
 	wait "$!"
 fi
 

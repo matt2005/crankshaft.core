@@ -7,7 +7,7 @@ echo "Adding OpenCarDev repository..."
 install -m 755 -d "${ROOTFS_DIR}/usr/share/keyrings"
 
 # Download and add the GPG key
-curl -fsSL https://opencardev.github.io/packages/opencardev.gpg.key | \
+curl -fsSL https://apt.opencardev.org/opencardev.gpg.key | \
     gpg --dearmor > "${ROOTFS_DIR}/usr/share/keyrings/opencardev-archive-keyring.gpg"
 
 # Set proper permissions on the keyring

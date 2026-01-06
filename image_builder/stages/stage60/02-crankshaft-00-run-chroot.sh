@@ -21,6 +21,8 @@
 
 set -e
 
+# This script runs inside the chroot environment via pi-gen's run_chroot
+
 echo "===================================================================="
 echo "Crankshaft Package Installation"
 echo "===================================================================="
@@ -39,8 +41,9 @@ apt-get install -y \
     ca-certificates
 
 # Add OpenCarDev APT repository GPG key
-echo "Adding OpenCarDev GPG key (placeholder)..."
 # TODO: Replace with actual GPG key when repository is live
+echo "Adding OpenCarDev GPG key (placeholder)..."
+# wget -qO - https://apt.opencardev.org/debian/opencardev-archive-keyring.gpg | apt-key add -
 
 # Update package lists with new repository
 echo "Refreshing package lists..."
@@ -65,6 +68,7 @@ apt-get install -y \
     gstreamer1.0-plugins-base \
     gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-bad \
+    gstreamer1.0-plugins-ugly \
     gstreamer1.0-alsa \
     gstreamer1.0-pulseaudio
 
@@ -127,7 +131,7 @@ Platform=eglfs
 Resolution=1920x1080
 
 [Audio]
-System=${CRANKSHAFT_AUDIO_SYSTEM:-pulseaudio}
+System=${CRANKSHAFT_AUDIO_SYSTEM:-pipewire}
 DefaultSink=hdmi
 
 [Network]

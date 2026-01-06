@@ -17,6 +17,10 @@ fi
 CONFIG_FILE=""
 if [ -f "${DIR}/config" ]; then
 	CONFIG_FILE="${DIR}/config"
+elif [ -f "${DIR}/../pi-gen-stages/config-template" ]; then
+	# Fallback to the shared template so CI/local builds do not fail when a
+	# local config copy is missing.
+	CONFIG_FILE="${DIR}/../pi-gen-stages/config-template"
 fi
 
 while getopts "c:" flag
@@ -35,9 +39,9 @@ if test -x /usr/bin/realpath; then
 	CONFIG_FILE=$(realpath -s "$CONFIG_FILE")
 fi
 
-# Ensure that the confguration file is present
+# Ensure that the configuration file is present
 if test -z "${CONFIG_FILE}"; then
-	echo "Configuration file need to be present in '${DIR}/config' or path passed as parameter"
+	echo "Configuration file needs to be present at '${DIR}/config', '${DIR}/../pi-gen-stages/config-template', or passed via -c"
 	exit 1
 else
 	# shellcheck disable=SC1090
@@ -74,8 +78,27 @@ fi
 # Modify original build-options to allow config file to be mounted in the docker container
 BUILD_OPTS="$(echo "${BUILD_OPTS:-}" | sed -E 's@\-c\s?([^ ]+)@-c /config@')"
 
+echo "=== DEBUG: Build Configuration ==="
+echo "DIR: ${DIR}"
+echo "CONFIG_FILE: ${CONFIG_FILE}"
+echo "IMG_NAME: ${IMG_NAME}"
+echo "CONTAINER_NAME: ${CONTAINER_NAME}"
+echo "BUILD_OPTS: ${BUILD_OPTS}"
+echo "DOCKER: ${DOCKER}"
+echo "GIT_HASH: ${GIT_HASH}"
+echo "GIT_BRANCH: ${GIT_BRANCH}"
+echo "=================================="
+
+echo "=== DEBUG: Building pi-gen Docker image ==="
 ${DOCKER} build -t pi-gen "${DIR}"
+echo "=== DEBUG: Docker build completed ===" 
 if [ "${CONTAINER_EXISTS}" != "" ]; then
+	echo "=== DEBUG: Container exists, running continuation ==="
+	echo "=== DEBUG: Docker run command (continuation mode) ==="
+	echo "CONTAINER_NAME: ${CONTAINER_NAME}"
+	echo "CONFIG_FILE: ${CONFIG_FILE}"
+	echo "Build command: cd /pi-gen; ./build.sh ${BUILD_OPTS}"
+	echo "==========================================="
 	trap 'echo "got CTRL+C... please wait 5s" && ${DOCKER} stop -t 5 ${CONTAINER_NAME}_cont' SIGINT SIGTERM
 	time ${DOCKER} run --rm --privileged \
 		--volume "${CONFIG_FILE}":/config:ro \
@@ -83,29 +106,52 @@ if [ "${CONTAINER_EXISTS}" != "" ]; then
 		-e "GIT_BRANCH=${GIT_BRANCH}" \
 		--volumes-from="${CONTAINER_NAME}" --name "${CONTAINER_NAME}_cont" \
 		pi-gen \
-		bash -e -o pipefail -c "dpkg-reconfigure qemu-user-static &&
-	cd /pi-gen; ./build.sh ${BUILD_OPTS} &&
-	rsync -av work/*/build.log deploy/" &
+		bash -e -o pipefail -c "echo '=== Inside container ===' && pwd && ls -la /pi-gen/ && dpkg-reconfigure qemu-user-static &&
+	cd /pi-gen; echo '=== About to run ./build.sh ===' && ./build.sh ${BUILD_OPTS} &&
+	echo '=== Build completed, syncing logs ===' && rsync -av work/*/build.log deploy/" &
 	wait "$!"
 else
+	echo "=== DEBUG: No existing container, creating new ==="
+	echo "=== DEBUG: Docker run command (new mode) ==="
+	echo "CONTAINER_NAME: ${CONTAINER_NAME}"
+	echo "CONFIG_FILE: ${CONFIG_FILE}"
+	echo "Build command: cd /pi-gen; ./build.sh ${BUILD_OPTS}"
+	echo "==========================================="
 	trap 'echo "got CTRL+C... please wait 5s" && ${DOCKER} stop -t 5 ${CONTAINER_NAME}' SIGINT SIGTERM
 	time ${DOCKER} run --name "${CONTAINER_NAME}" --privileged \
 		--volume "${CONFIG_FILE}":/config:ro \
 		-e "GIT_HASH=${GIT_HASH}" \
 		-e "GIT_BRANCH=${GIT_BRANCH}" \
 		pi-gen \
-		bash -e -o pipefail -c "dpkg-reconfigure qemu-user-static &&
-	cd /pi-gen; ./build.sh ${BUILD_OPTS} &&
-	rsync -av work/*/build.log deploy/" &
+		bash -e -o pipefail -c "echo '=== Inside container ===' && pwd && ls -la /pi-gen/ && dpkg-reconfigure qemu-user-static &&
+	cd /pi-gen; echo '=== About to run ./build.sh ===' && ./build.sh ${BUILD_OPTS} &&
+	echo '=== Build completed, syncing logs ===' && rsync -av work/*/build.log deploy/" &
 	wait "$!"
 fi
-echo "copying results from deploy/"
-${DOCKER} cp "${CONTAINER_NAME}":/pi-gen/deploy .
-ls -lah deploy
+echo "=== DEBUG: Copying results from deploy/ ==="
+echo "CONTAINER_NAME: ${CONTAINER_NAME}"
+${DOCKER} ps -a --filter name="${CONTAINER_NAME}" --format "table {{.Names}}\t{{.Status}}"
+echo "=== DEBUG: Attempting to copy deploy/ from container ==="
+${DOCKER} cp "${CONTAINER_NAME}":/pi-gen/deploy . || echo "=== DEBUG: Copy failed - deploy may not exist in container ==="
+echo "=== DEBUG: Checking deploy directory ==="
+if [ -d deploy ]; then
+	echo "=== DEBUG: deploy/ directory exists locally ==="
+	ls -lah deploy
+	echo "=== DEBUG: Contents of deploy/ ==="
+	find deploy -type f -exec ls -lh {} \;
+else
+	echo "=== DEBUG: ERROR - deploy/ directory NOT found locally ==="
+	echo "=== DEBUG: Current directory contents ==="
+	ls -la
+fi
 
 # cleanup
 if [ "${PRESERVE_CONTAINER}" != "1" ]; then
-	${DOCKER} rm -v "${CONTAINER_NAME}"
+	echo "=== DEBUG: Cleaning up container ==="
+	${DOCKER} rm -v "${CONTAINER_NAME}" || echo "=== DEBUG: Container cleanup failed or already removed ==="
+else
+	echo "=== DEBUG: Preserving container (PRESERVE_CONTAINER=${PRESERVE_CONTAINER}) ==="
 fi
 
+echo "=== DEBUG: Build script completed ==="
 echo "Done! Your image(s) should be in deploy/"
