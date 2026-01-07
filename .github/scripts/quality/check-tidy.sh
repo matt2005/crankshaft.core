@@ -24,6 +24,7 @@
 #   ./check-tidy.sh                      # Check and report issues
 #   ./check-tidy.sh --fix                # Fix issues in-place (where possible)
 #   ./check-tidy.sh --json               # Output results as JSON
+#   ./check-tidy.sh --dry-run            # Show fixes that would be applied, don't modify files
 #   ./check-tidy.sh --help               # Show this help message
 #
 # Environment:
@@ -48,6 +49,7 @@ CLANG_TIDY="${CLANG_TIDY:-clang-tidy}"
 COMPILE_DB="${COMPILE_DB:-${REPO_ROOT}/build/compile_commands.json}"
 CI_MODE="${CI_MODE:-false}"
 FIX_MODE="${FIX_MODE:-false}"
+DRY_RUN="${DRY_RUN:-false}"
 JSON_MODE="${JSON_MODE:-false}"
 
 # Track results
@@ -66,9 +68,10 @@ Usage: check-tidy.sh [OPTION]
 Static analysis check using clang-tidy.
 
 Options:
-  --fix               Fix auto-fixable issues in-place
-  --json              Output results as JSON for machine parsing
-  --help              Show this help message
+    --fix               Fix auto-fixable issues in-place
+    --dry-run           Show fixes that would be applied (do not modify files)
+    --json              Output results as JSON for machine parsing
+    --help              Show this help message
 
 Environment Variables:
   CI_MODE             Set to 'true' for CI/CD (non-interactive, machine-readable)
@@ -178,7 +181,7 @@ check_file() {
     if [[ ${issue_count} -gt 0 ]]; then
         ((FILES_WITH_ISSUES++))
         ((TOTAL_ISSUES += issue_count))
-        
+
         if [[ "${CI_MODE}" == "false" ]]; then
             log_warning "Found ${issue_count} issue(s): ${relative_path}"
             echo "${output}" | head -n 10
@@ -186,14 +189,22 @@ check_file() {
                 echo "... and $((issue_count - 10)) more issues"
             fi
         fi
-    fi
 
-    if [[ "${FIX_MODE}" == "true" ]] && [[ ${issue_count} -gt 0 ]]; then
-        if "${CLANG_TIDY}" -p "${REPO_ROOT}/build" -fix "$file" &> /dev/null; then
-            log_success "Fixed ${issue_count} issue(s): ${relative_path}"
-        else
-            ((FAILED_FILES++))
-            log_error "Failed to fix: ${relative_path}"
+        if [[ "${FIX_MODE}" == "true" ]]; then
+            if [[ "${DRY_RUN}" == "true" ]]; then
+                log_info "Would fix ${issue_count} issue(s): ${relative_path}"
+            else
+                # Run clang-tidy fix and capture output; do not silence so we can show errors
+                local fix_output
+                local fix_exit=0
+                fix_output=$("${CLANG_TIDY}" -p "${REPO_ROOT}/build" -fix "$file" 2>&1) || fix_exit=$?
+                if [[ ${fix_exit} -eq 0 ]]; then
+                    log_success "Fixed ${issue_count} issue(s): ${relative_path}"
+                else
+                    ((FAILED_FILES++))
+                    log_error "Failed to fix: ${relative_path}: ${fix_output}"
+                fi
+            fi
         fi
     fi
 }
@@ -261,6 +272,10 @@ parse_arguments() {
                 FIX_MODE="true"
                 shift
                 ;;
+            --dry-run)
+                DRY_RUN="true"
+                shift
+                ;;
             --json)
                 JSON_MODE="true"
                 shift
@@ -289,7 +304,9 @@ main() {
 
     # Find and check all C++ files
     while IFS= read -r file; do
-        check_file "$file"
+        if ! check_file "$file"; then
+            log_warning "check_file failed for ${file}, continuing"
+        fi
     done < <(find_cpp_files)
 
     # Output results

@@ -24,6 +24,7 @@
 #   ./check-format.sh                    # Check and report differences (exit 1 if changes needed)
 #   ./check-format.sh --fix              # Fix formatting in-place
 #   ./check-format.sh --json             # Output results as JSON
+#   ./check-format.sh --dry-run          # Show files that would be changed, don't write fixes
 #   ./check-format.sh --help             # Show this help message
 #
 # Environment:
@@ -47,6 +48,7 @@ CLANG_FORMAT="${CLANG_FORMAT:-clang-format}"
 FORMAT_STYLE="${FORMAT_STYLE:-${REPO_ROOT}/.clang-format}"
 CI_MODE="${CI_MODE:-false}"
 FIX_MODE="${FIX_MODE:-false}"
+DRY_RUN="${DRY_RUN:-false}"
 JSON_MODE="${JSON_MODE:-false}"
 
 # Track results
@@ -64,9 +66,10 @@ Usage: check-format.sh [OPTION]
 Code formatting check using clang-format.
 
 Options:
-  --fix               Fix formatting in-place (modifies files)
-  --json              Output results as JSON for machine parsing
-  --help              Show this help message
+    --fix               Fix formatting in-place (modifies files)
+    --dry-run           Show files that would be changed (don't write files)
+    --json              Output results as JSON for machine parsing
+    --help              Show this help message
 
 Environment Variables:
   CI_MODE             Set to 'true' for CI/CD (non-interactive, machine-readable)
@@ -155,14 +158,19 @@ check_file() {
 
     ((TOTAL_FILES++))
 
+    log_info "Formatting: ${relative_path}"
+
     # Get formatted version
     local formatted
-    formatted=$("${CLANG_FORMAT}" --style=file:"${FORMAT_STYLE}" "$file" 2>/dev/null) || {
-        log_error "Failed to format: ${relative_path}"
-        ERRORS+=("${relative_path}: clang-format execution failed")
+    # Run clang-format and do not silence stderr so we can capture problems.
+    # Use --style=file so clang-format searches for the repository .clang-format.
+    if ! formatted=$("${CLANG_FORMAT}" --style=file "$file" 2>&1); then
+        log_error "Failed to run clang-format on: ${relative_path}"
+        ERRORS+=("${relative_path}: clang-format execution failed: ${formatted}")
         ((FAILED_FILES++))
-        return 1
-    }
+        # Do not return non-zero here — record the error and continue checking other files.
+        return 0
+    fi
 
     # Compare with original
     local original
@@ -170,9 +178,15 @@ check_file() {
 
     if [[ "${original}" != "${formatted}" ]]; then
         if [[ "${FIX_MODE}" == "true" ]]; then
-            echo "${formatted}" > "$file"
-            log_success "Fixed: ${relative_path}"
-            ((FORMATTED_FILES++))
+            if [[ "${DRY_RUN}" == "true" ]]; then
+                log_info "Would fix: ${relative_path}"
+                ((FORMATTED_FILES++))
+            else
+                # Use printf to preserve content exactly (avoid echo interpretation issues).
+                printf '%s' "$formatted" > "$file"
+                log_success "Fixed: ${relative_path}"
+                ((FORMATTED_FILES++))
+            fi
         else
             log_warning "Needs formatting: ${relative_path}"
             ((FORMATTED_FILES++))
@@ -263,6 +277,10 @@ parse_arguments() {
                 FIX_MODE="true"
                 shift
                 ;;
+            --dry-run)
+                DRY_RUN="true"
+                shift
+                ;;
             --json)
                 JSON_MODE="true"
                 shift
@@ -291,7 +309,9 @@ main() {
 
     # Find and check all C++ files
     while IFS= read -r file; do
-        check_file "$file"
+        if ! check_file "$file"; then
+            log_warning "check_file failed for ${file}, continuing"
+        fi
     done < <(find_cpp_files)
 
     # Output results
