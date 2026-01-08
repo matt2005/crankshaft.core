@@ -57,7 +57,11 @@ qt_add_translations(crankshaft-ui
   RESOURCE_PREFIX "/i18n"
 )
 
-# Components QML Module (auto-generates qmldir and qmltypes)
+# Components QML Module - as static library integrated into main binary
+qt_add_library(crankshaft-ui-components STATIC
+  qml/components/CrankshaftComponents.h
+)
+
 qt_add_qml_module(crankshaft-ui-components
   URI Crankshaft.Components
   VERSION 1.0
@@ -121,7 +125,7 @@ target_link_libraries(crankshaft-ui PRIVATE
   Qt6::Qml
   Qt6::Quick
   Qt6::WebSockets
-  crankshaft-ui-components
+  crankshaft-ui-componentsplugin
 )
 
 # Install ui executable
