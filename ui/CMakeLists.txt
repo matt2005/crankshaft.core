@@ -62,6 +62,11 @@ qt_add_library(crankshaft-ui-components STATIC
   qml/components/CrankshaftComponents.h
 )
 
+# Enable AUTOMOC for metatype generation on components module
+set_target_properties(crankshaft-ui-components PROPERTIES
+  AUTOMOC ON
+)
+
 qt_add_qml_module(crankshaft-ui-components
   URI Crankshaft.Components
   VERSION 1.0
@@ -74,7 +79,15 @@ qt_add_qml_module(crankshaft-ui-components
     qml/components/LocaleSelector.qml
     qml/components/SystemClock.qml
     qml/components/Tile.qml
-    qml/components/MaterialDesignIcons.js
+)
+
+# Add JS helper (skip entry in qmldir)
+set_source_files_properties(qml/components/MaterialDesignIcons.js
+  PROPERTIES QT_QML_SKIP_QMLDIR_ENTRY ON
+)
+qt_add_resources(crankshaft-ui-components "components-js"
+  PREFIX "/qt/qml/Crankshaft/Components"
+  FILES qml/components/MaterialDesignIcons.js
 )
 
 target_link_libraries(crankshaft-ui-components PRIVATE
@@ -102,8 +115,6 @@ qt_add_qml_module(crankshaft-ui
     qml/models/Strings.qml
   RESOURCES
     assets/icons/mdi.svg
-  DEPENDS
-    Crankshaft.Components
 )
 
 # Add Material Design Icons font as a separate resource
