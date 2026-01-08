@@ -25,10 +25,14 @@
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QTranslator>
+#include <QtQml/QQmlExtensionPlugin>
 
 #include "Theme.h"
 #include "WebSocketClient.h"
 #include "build_info.h"
+
+// Import QML plugin for Crankshaft.Components module
+Q_IMPORT_QML_PLUGIN(Crankshaft_ComponentsPlugin)
 
 int main(int argc, char* argv[]) {
   // Start timing for cold-start performance measurement

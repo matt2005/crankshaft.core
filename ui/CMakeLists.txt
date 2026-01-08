@@ -57,11 +57,58 @@ qt_add_translations(crankshaft-ui
   RESOURCE_PREFIX "/i18n"
 )
 
+# Components QML Module - as static library integrated into main binary
+qt_add_library(crankshaft-ui-components STATIC
+  qml/components/CrankshaftComponents.h
+)
+
+# Enable AUTOMOC for metatype generation on components module
+set_target_properties(crankshaft-ui-components PROPERTIES
+  AUTOMOC ON
+)
+
+qt_add_qml_module(crankshaft-ui-components
+  URI Crankshaft.Components
+  VERSION 1.0
+  NO_PLUGIN_OPTIONAL
+  QML_FILES
+    qml/components/AppButton.qml
+    qml/components/Card.qml
+    qml/components/DrivingModeIndicator.qml
+    qml/components/Icon.qml
+    qml/components/LocaleSelector.qml
+    qml/components/SystemClock.qml
+    qml/components/Tile.qml
+)
+
+# Add JS helper (skip entry in qmldir)
+set_source_files_properties(qml/components/MaterialDesignIcons.js
+  PROPERTIES QT_QML_SKIP_QMLDIR_ENTRY ON
+)
+qt_add_resources(crankshaft-ui-components "components-js"
+  PREFIX "/qt/qml/Crankshaft/Components"
+  FILES qml/components/MaterialDesignIcons.js
+)
+
+target_link_libraries(crankshaft-ui-components PRIVATE
+  Qt6::Core
+  Qt6::Gui
+  Qt6::Qml
+  Qt6::Quick
+)
+
+# Mark singletons BEFORE qt_add_qml_module (critical!)
+set_source_files_properties(
+  qml/models/SettingsModel.qml
+  qml/models/Strings.qml
+  PROPERTIES
+  QT_QML_SINGLETON_TYPE TRUE
+)
+# Main UI QML Module
 qt_add_qml_module(crankshaft-ui
   URI Crankshaft
   VERSION 1.0
   NO_PLUGIN_OPTIONAL
-  NO_GENERATE_QMLDIR
   QML_FILES
     qml/screens/Main.qml
     qml/screens/HomeScreen.qml
@@ -73,14 +120,10 @@ qt_add_qml_module(crankshaft-ui
     qml/screens/BluetoothSettingsPage.qml
     qml/models/SettingsModel.qml
     qml/models/Strings.qml
-    qml/components/AppButton.qml
-    qml/components/Card.qml
-    qml/components/Icon.qml
-    qml/components/MaterialDesignIcons.js
   RESOURCES
     assets/icons/mdi.svg
-    qmldir
 )
+
 
 # Add Material Design Icons font as a separate resource
 if(MDI_FONT_FILE AND EXISTS "${MDI_FONT_FILE}")
@@ -101,6 +144,7 @@ target_link_libraries(crankshaft-ui PRIVATE
   Qt6::Qml
   Qt6::Quick
   Qt6::WebSockets
+  crankshaft-ui-componentsplugin
 )
 
 # Install ui executable

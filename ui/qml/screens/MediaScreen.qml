@@ -21,8 +21,8 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
-import Crankshaft.Components 1.0
 import Crankshaft 1.0
+import Crankshaft.Components 1.0
 
 Page {
     id: root
