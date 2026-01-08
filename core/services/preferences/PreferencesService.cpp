@@ -62,6 +62,7 @@ bool PreferencesService::initialize() {
     return false;
   }
 
+
   Logger::instance().info("[PreferencesService] Initialized successfully");
   return true;
 }
