@@ -1,6 +1,9 @@
 module Crankshaft.Components
+prefer :/qt/qml/Crankshaft/qml/components/
 AppButton 1.0 AppButton.qml
 Card 1.0 Card.qml
+DrivingModeIndicator 1.0 DrivingModeIndicator.qml
 Icon 1.0 Icon.qml
-Tile 1.0 Tile.qml
+LocaleSelector 1.0 LocaleSelector.qml
 SystemClock 1.0 SystemClock.qml
+Tile 1.0 Tile.qml

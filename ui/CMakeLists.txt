@@ -75,11 +75,16 @@ qt_add_qml_module(crankshaft-ui
     qml/models/Strings.qml
     qml/components/AppButton.qml
     qml/components/Card.qml
+    qml/components/DrivingModeIndicator.qml
     qml/components/Icon.qml
+    qml/components/LocaleSelector.qml
+    qml/components/SystemClock.qml
+    qml/components/Tile.qml
     qml/components/MaterialDesignIcons.js
   RESOURCES
     assets/icons/mdi.svg
     qmldir
+    qml/components/qmldir
 )
 
 # Add Material Design Icons font as a separate resource
