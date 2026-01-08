@@ -1,7 +1,6 @@
 module Crankshaft
 typeinfo crankshaft-ui.qmltypes
 prefer :/qt/qml/Crankshaft/
-depends Crankshaft.Components 1.0
 Main 1.0 qml/screens/Main.qml
 HomeScreen 1.0 qml/screens/HomeScreen.qml
 SettingsScreen 1.0 qml/screens/SettingsScreen.qml
