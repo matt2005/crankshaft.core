@@ -97,6 +97,13 @@ target_link_libraries(crankshaft-ui-components PRIVATE
   Qt6::Quick
 )
 
+# Mark singletons BEFORE qt_add_qml_module (critical!)
+set_source_files_properties(
+  qml/models/SettingsModel.qml
+  qml/models/Strings.qml
+  PROPERTIES
+  QT_QML_SINGLETON_TYPE TRUE
+)
 # Main UI QML Module
 qt_add_qml_module(crankshaft-ui
   URI Crankshaft
@@ -116,6 +123,7 @@ qt_add_qml_module(crankshaft-ui
   RESOURCES
     assets/icons/mdi.svg
 )
+
 
 # Add Material Design Icons font as a separate resource
 if(MDI_FONT_FILE AND EXISTS "${MDI_FONT_FILE}")
