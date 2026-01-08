@@ -38,7 +38,7 @@ case "$1" in
         if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
             systemctl stop crankshaft-core.service >/dev/null 2>&1 || true
         fi
-        
+
         # Wait for process to exit (with timeout)
         for i in 1 2 3 4 5; do
             if ! pgrep -f '[c]rankshaft-core' >/dev/null 2>&1; then
@@ -46,10 +46,10 @@ case "$1" in
             fi
             sleep 1
         done
-        
+
         # Force kill if still running
         pkill -9 -f '[c]rankshaft-core' >/dev/null 2>&1 || true
-        
+
         echo "Crankshaft Core stopped for upgrade"
     ;;
 esac

@@ -108,6 +108,7 @@ class TestSettingsPersistence : public QObject {
 
   // Test 4: Locale fallback to default
   void testLocaleDefaultFallback() {
+    QVERIFY(m_preferencesService->clear());
     QVERIFY(!m_preferencesService->contains(QStringLiteral("ui.locale")));
 
     // Get non-existent locale with default fallback
