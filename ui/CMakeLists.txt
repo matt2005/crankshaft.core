@@ -57,34 +57,7 @@ qt_add_translations(crankshaft-ui
   RESOURCE_PREFIX "/i18n"
 )
 
-# Components QML Module - must be defined first
-qt_add_qml_module(crankshaft-ui-components
-  URI Crankshaft.Components
-  VERSION 1.0
-  NO_PLUGIN_OPTIONAL
-  NO_GENERATE_QMLDIR
-  QML_FILES
-    qml/components/AppButton.qml
-    qml/components/Card.qml
-    qml/components/DrivingModeIndicator.qml
-    qml/components/Icon.qml
-    qml/components/LocaleSelector.qml
-    qml/components/SystemClock.qml
-    qml/components/Tile.qml
-    qml/components/MaterialDesignIcons.js
-  RESOURCES
-    qml/components/qmldir
-)
-
-target_include_directories(crankshaft-ui-components PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-target_link_libraries(crankshaft-ui-components PRIVATE
-  Qt6::Core
-  Qt6::Gui
-  Qt6::Qml
-  Qt6::Quick
-)
-
-# Main UI QML Module - depends on Components
+# Main UI QML Module
 qt_add_qml_module(crankshaft-ui
   URI Crankshaft
   VERSION 1.0
@@ -101,11 +74,17 @@ qt_add_qml_module(crankshaft-ui
     qml/screens/BluetoothSettingsPage.qml
     qml/models/SettingsModel.qml
     qml/models/Strings.qml
+    qml/components/AppButton.qml
+    qml/components/Card.qml
+    qml/components/DrivingModeIndicator.qml
+    qml/components/Icon.qml
+    qml/components/LocaleSelector.qml
+    qml/components/SystemClock.qml
+    qml/components/Tile.qml
+    qml/components/MaterialDesignIcons.js
   RESOURCES
     assets/icons/mdi.svg
     qmldir
-  DEPENDS
-    Crankshaft.Components
 )
 
 # Add Material Design Icons font as a separate resource
@@ -127,7 +106,6 @@ target_link_libraries(crankshaft-ui PRIVATE
   Qt6::Qml
   Qt6::Quick
   Qt6::WebSockets
-  crankshaft-ui-components
 )
 
 # Install ui executable
