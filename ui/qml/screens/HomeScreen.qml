@@ -20,7 +20,6 @@
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
-import Crankshaft.Components 1.0
 import Crankshaft 1.0
 
 Page {
