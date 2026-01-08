@@ -21,7 +21,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Dialogs
-import "../components"
+import Crankshaft.Components 1.0
 import Crankshaft 1.0
 
 Page {
