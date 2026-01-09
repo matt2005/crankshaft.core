@@ -41,6 +41,11 @@ case "$1" in
             [ -f /etc/crankshaft/crankshaft.json ] && chmod 644 /etc/crankshaft/crankshaft.json || true
         fi
         
+        # Create profiles directory
+        mkdir -p /etc/crankshaft/profiles || true
+        chown crankshaft:crankshaft /etc/crankshaft/profiles || true
+        chmod 755 /etc/crankshaft/profiles || true
+        
         # Create runtime directories
         mkdir -p /var/lib/crankshaft /var/log/crankshaft || true
         chown -R crankshaft:crankshaft /var/lib/crankshaft /var/log/crankshaft || true
