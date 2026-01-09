@@ -101,6 +101,7 @@ target_link_libraries(crankshaft-ui-components PRIVATE
 set_source_files_properties(
   qml/models/SettingsModel.qml
   qml/models/Strings.qml
+  qml/models/AndroidAutoStatus.qml
   PROPERTIES
   QT_QML_SINGLETON_TYPE TRUE
 )
@@ -120,6 +121,7 @@ qt_add_qml_module(crankshaft-ui
     qml/screens/BluetoothSettingsPage.qml
     qml/models/SettingsModel.qml
     qml/models/Strings.qml
+    qml/models/AndroidAutoStatus.qml
   RESOURCES
     assets/icons/mdi.svg
 )
