@@ -70,8 +70,8 @@ void ProfileManager::initializeDefaultProfiles() {
   // Create default development host profile
   HostProfile devHostProfile;
   devHostProfile.id = QUuid::createUuid().toString();
-  devHostProfile.name = "Development Host";
-  devHostProfile.description = "Default development host with all mock devices enabled";
+  devHostProfile.name = "Default Host";
+  devHostProfile.description = "Default host profile with real device support";
   devHostProfile.isActive = true;
   devHostProfile.createdAt = QDateTime::currentDateTime();
   devHostProfile.modifiedAt = QDateTime::currentDateTime();
@@ -84,7 +84,7 @@ void ProfileManager::initializeDefaultProfiles() {
   androidAutoDevice.name = "AndroidAuto";
   androidAutoDevice.type = "AndroidAuto";
   androidAutoDevice.enabled = true;
-  androidAutoDevice.useMock = true;
+  androidAutoDevice.useMock = false;
   androidAutoDevice.description = "Android Auto projection service";
   androidAutoDevice.settings["resolution"] = "1024x600";
   androidAutoDevice.settings["fps"] = 30;
@@ -115,7 +115,7 @@ void ProfileManager::initializeDefaultProfiles() {
   bluetoothDevice.name = "Bluetooth";
   bluetoothDevice.type = "Bluetooth";
   bluetoothDevice.enabled = true;
-  bluetoothDevice.useMock = true;
+  bluetoothDevice.useMock = false;
   bluetoothDevice.description = "Bluetooth connectivity";
   devHostProfile.devices.append(bluetoothDevice);
 
@@ -123,7 +123,7 @@ void ProfileManager::initializeDefaultProfiles() {
   wifiDevice.name = "WiFi";
   wifiDevice.type = "WiFi";
   wifiDevice.enabled = true;
-  wifiDevice.useMock = true;
+  wifiDevice.useMock = false;
   wifiDevice.description = "WiFi connectivity";
   devHostProfile.devices.append(wifiDevice);
 
