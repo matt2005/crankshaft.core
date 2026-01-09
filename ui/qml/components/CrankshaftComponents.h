@@ -15,7 +15,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef CRANKSHAFT_COMPONENTS_H
 #define CRANKSHAFT_COMPONENTS_H
@@ -24,4 +24,4 @@
 // This file exists to satisfy Qt6 CMake requirements for metatype generation
 // in QML modules. The actual component implementations are in QML.
 
-#endif // CRANKSHAFT_COMPONENTS_H
+#endif  // CRANKSHAFT_COMPONENTS_H

@@ -15,7 +15,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 // Stub file to enable metatype generation for QML-only components module
 // This file is intentionally minimal and exists solely to satisfy Qt6's
