@@ -72,9 +72,9 @@ The home screen displays a modern, uncluttered layout with only two feature tile
 - **FR-007**: The UI MUST adapt to single‑ and multi‑display configurations with graceful reflow and no clipping/overlap.
 - **FR-008**: When AndroidAuto is unavailable, the UI MUST present a clear message and disable launch; when available, launch MUST complete within 5 s under normal conditions.
 - **FR-009**: Settings MUST enable users to adjust appearance (theme), language, and display/layout preferences; changes MUST persist.
-- **FR-010**: Multi‑display allocation with AndroidAuto active MUST be defined to avoid confusion. [NEEDS CLARIFICATION: Which display(s) show AA content vs status/controls?]
-- **FR-011**: AndroidAuto first‑run flow MUST handle user consent if required. [NEEDS CLARIFICATION: Require a legal disclaimer/consent on first use?]
-- **FR-012**: Scope of Settings MUST be clear. [NEEDS CLARIFICATION: Do settings apply globally, per device, or per display?]
+- **FR-010**: Multi‑display allocation with AndroidAuto active MUST show AA content on the primary display; when a secondary display exists, it shows status/quick controls. On single‑display setups, AA content includes inline status/controls.
+- **FR-011**: AndroidAuto first‑run flow MUST present a one‑time consent/disclaimer and require acceptance while the vehicle is stationary/parked before enabling AA.
+- **FR-012**: Settings MUST apply globally across all displays for the device (theme, language, layout preferences) and persist across sessions.
 - **FR-013**: The UI MUST avoid presenting yet‑to‑be‑implemented features (media, radio, bluetooth, etc.).
 - **FR-014**: Error states MUST be user‑friendly (plain language), with safe fallbacks and clear recovery actions.
 
@@ -95,6 +95,13 @@ Deviations: None proposed.
 - **Display**: Represents an available output surface; attributes include `identifier`, `resolution`, `orientation`, `role`.
 - **Setting**: Represents user preferences; attributes include `theme`, `language`, `layout_preference`, `persisted_at`.
 - **Feature Tile**: Represents an actionable home tile; attributes include `name`, `visibility`, `availability_state`.
+
+### Assumptions
+
+- At most two displays are connected; if only one display is present, AndroidAuto content includes inline status and controls.
+- User consent for AndroidAuto is required once and only while stationary/parked.
+- Settings apply globally across the device and persist across restarts.
+- Default language is en‑GB; additional languages depend on available translations.
 
 ## Success Criteria *(mandatory)*
 
