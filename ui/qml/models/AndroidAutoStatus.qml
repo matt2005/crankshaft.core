@@ -36,7 +36,8 @@ QtObject {
         }
     }
 
-    Connections {
+    // Wrap Connections inside a property to avoid default-property issues on QtObject
+    property var _connections: Connections {
         target: wsClient
 
         function onConnectedChanged() {
