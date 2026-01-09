@@ -27,9 +27,14 @@ case "$1" in
             systemctl disable crankshaft-ui.service >/dev/null 2>&1 || true
         fi
 
-        # Kill any remaining processes (best effort, never block)
-        pkill -f '^/usr/bin/crankshaft-ui' >/dev/null 2>&1 || true
-        pkill -f '[c]rankshaft-ui' >/dev/null 2>&1 || true
+        # Stop stray processes without relying on pkill (may be absent on minimal systems)
+            # If systemd handled stop, avoid extra manual kill to prevent accidental TERM
+            if ! command -v systemctl >/dev/null 2>&1 || [ ! -d /run/systemd/system ]; then
+                if command -v start-stop-daemon >/dev/null 2>&1; then
+                    start-stop-daemon --stop --quiet --oknodo --retry=TERM/5 --name crankshaft-ui || true
+                    start-stop-daemon --stop --quiet --oknodo --retry=TERM/5 --exec /usr/bin/crankshaft-ui || true
+                fi
+            fi
 
         echo "Crankshaft UI pre-removal cleanup done"
     ;;
@@ -47,8 +52,14 @@ case "$1" in
             sleep 1
         done
 
-        # Force kill if still running
-        pkill -9 -f '[c]rankshaft-ui' >/dev/null 2>&1 || true
+        # Force kill if still running (without pkill dependency)
+            # Force kill only when systemd is absent
+            if ! command -v systemctl >/dev/null 2>&1 || [ ! -d /run/systemd/system ]; then
+                if command -v start-stop-daemon >/dev/null 2>&1; then
+                    start-stop-daemon --stop --quiet --oknodo --retry=KILL/5 --name crankshaft-ui || true
+                    start-stop-daemon --stop --quiet --oknodo --retry=KILL/5 --exec /usr/bin/crankshaft-ui || true
+                fi
+            fi
 
         echo "Crankshaft UI stopped for upgrade"
     ;;

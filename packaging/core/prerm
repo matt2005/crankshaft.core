@@ -17,25 +17,37 @@
 #  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
 
 set -e
+set -x  # Debug: trace execution to find where prerm terminates
 export DEBIAN_FRONTEND=noninteractive
 
 case "$1" in
     remove|deconfigure)
+        echo "[prerm core] phase=remove"
         # Stop and disable systemd service (if systemd is present)
         if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+            echo "[prerm core] stopping service"
             systemctl stop crankshaft-core.service >/dev/null 2>&1 || true
+            echo "[prerm core] disabling service"
             systemctl disable crankshaft-core.service >/dev/null 2>&1 || true
         fi
 
-        # Kill any remaining processes (best effort)
-        pkill -f '^/usr/bin/crankshaft-core' >/dev/null 2>&1 || true
-        pkill -f '[c]rankshaft-core' >/dev/null 2>&1 || true
+        # If systemd handled stop, avoid further manual killing to prevent accidental TERM
+        if ! command -v systemctl >/dev/null 2>&1 || [ ! -d /run/systemd/system ]; then
+            if command -v start-stop-daemon >/dev/null 2>&1; then
+                echo "[prerm core] stopping by name (no systemd)"
+                start-stop-daemon --stop --quiet --oknodo --retry=TERM/5 --name crankshaft-core || true
+                echo "[prerm core] stopping by exec (no systemd)"
+                start-stop-daemon --stop --quiet --oknodo --retry=TERM/5 --exec /usr/bin/crankshaft-core || true
+            fi
+        fi
 
         echo "Crankshaft Core pre-removal cleanup done"
     ;;
     upgrade)
+        echo "[prerm core] phase=upgrade"
         # During upgrade, only stop the service gracefully
         if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+            echo "[prerm core] stopping service"
             systemctl stop crankshaft-core.service >/dev/null 2>&1 || true
         fi
 
@@ -44,11 +56,19 @@ case "$1" in
             if ! pgrep -f '[c]rankshaft-core' >/dev/null 2>&1; then
                 break
             fi
+            echo "[prerm core] waiting for crankshaft-core to exit (attempt $i)"
             sleep 1
         done
 
-        # Force kill if still running
-        pkill -9 -f '[c]rankshaft-core' >/dev/null 2>&1 || true
+        # Force kill only when systemd is absent (avoid double-stop TERM)
+        if ! command -v systemctl >/dev/null 2>&1 || [ ! -d /run/systemd/system ]; then
+            if command -v start-stop-daemon >/dev/null 2>&1; then
+                echo "[prerm core] force kill by name (no systemd)"
+                start-stop-daemon --stop --quiet --oknodo --retry=KILL/5 --name crankshaft-core || true
+                echo "[prerm core] force kill by exec (no systemd)"
+                start-stop-daemon --stop --quiet --oknodo --retry=KILL/5 --exec /usr/bin/crankshaft-core || true
+            fi
+        fi
 
         echo "Crankshaft Core stopped for upgrade"
     ;;
