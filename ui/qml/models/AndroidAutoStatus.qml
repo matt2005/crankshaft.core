@@ -48,8 +48,7 @@ QtObject {
     property int launchTimeoutMs: 5000
     property int launchElapsedMs: 0
     
-    // Signals for state transitions
-    signal stateChanged(string newState)
+    // Signals for custom state transitions
     signal launchStarted()
     signal launchCompleted()
     signal launchFailed(string reason)
@@ -291,8 +290,6 @@ QtObject {
                 newState: newState,
                 timestamp: new Date().getTime()
             })
-            
-            stateChanged(newState)
         }
     }
     
