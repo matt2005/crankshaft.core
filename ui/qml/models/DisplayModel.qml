@@ -33,7 +33,6 @@ QtObject {
     
     // Signal emitted when displays change (connect/disconnect)
     signal displaysChanged()
-    signal primaryDisplayChanged(string displayId)
     signal primaryDisplayDisconnected()
     
     // Available displays detected on system
@@ -94,7 +93,6 @@ QtObject {
                 displayName: display.name,
                 resolution: display.width + 'x' + display.height
             })
-            primaryDisplayChanged(displayId)
             return true
         }
         console.warn("Display not found: " + displayId)
@@ -119,7 +117,6 @@ QtObject {
                     displayName: newDisplays[0].name
                 })
                 primaryDisplayId = newPrimaryId
-                primaryDisplayChanged(newPrimaryId)
             } else {
                 logStructured('ERROR', 'display_unavailable', 'No displays available', {})
                 primaryDisplayId = ""
