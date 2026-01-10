@@ -412,4 +412,5 @@
         <location filename="../qml/Strings.qml" line="94"/>
         <source>Allow Android Auto to access vehicle data for projections</source>
         <translation>Allow Android Auto to access vehicle data for projections</translation>
-    </message>
+    </message></context>
+</TS>
