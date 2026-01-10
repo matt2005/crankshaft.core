@@ -1,0 +1,152 @@
+openapi: 3.0.3
+info:
+  title: Crankshaft UI Config API (UI-only scope)
+  version: 0.1.0
+  description: Minimal contracts for settings, displays, and AndroidAuto availability used by the UI.
+paths:
+  /ui/displays:
+    get:
+      summary: List detected displays and roles
+      responses:
+        '200':
+          description: Displays
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Display'
+  /ui/settings:
+    get:
+      summary: Get current UI settings
+      responses:
+        '200':
+          description: Current settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+    patch:
+      summary: Update UI settings (theme, language, layout)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SettingsPatch'
+      responses:
+        '200':
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Settings'
+  /ui/androidauto/status:
+    get:
+      summary: Get AndroidAuto availability and consent state
+      responses:
+        '200':
+          description: AA status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AAStatus'
+  /ui/androidauto/consent:
+    post:
+      summary: Record one-time consent while stationary/parked
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                accepted:
+                  type: boolean
+                  enum: [true]
+      responses:
+        '200':
+          description: Consent recorded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AAStatus'
+        '409':
+          description: Movement detected; consent not accepted
+
+components:
+  schemas:
+    Display:
+      type: object
+      required: [id, role, resolution]
+      properties:
+        id:
+          type: string
+        role:
+          type: string
+          enum: [primary, secondary]
+        is_primary_detected:
+          type: boolean
+          description: True when auto-detected as primary (fallback if user preference unset)
+        resolution:
+          type: object
+          required: [width, height]
+          properties:
+            width:
+              type: integer
+              minimum: 1
+            height:
+              type: integer
+              minimum: 1
+        orientation:
+          type: string
+          enum: [landscape, portrait]
+        dpi:
+          type: number
+          format: float
+    Settings:
+      type: object
+      required: [theme, language, layout_preference, aa_consent]
+      properties:
+        theme:
+          type: string
+          enum: [light, dark]
+        language:
+          type: string
+          example: en-GB
+        layout_preference:
+          type: string
+          enum: [auto, primary_only, split_status]
+        primary_display_id:
+          type: string
+          nullable: true
+          description: User-selected primary display id; fallback to detected primary when null
+        aa_consent:
+          type: boolean
+    SettingsPatch:
+      type: object
+      additionalProperties: false
+      properties:
+        theme:
+          type: string
+          enum: [light, dark]
+        language:
+          type: string
+        layout_preference:
+          type: string
+          enum: [auto, primary_only, split_status]
+        primary_display_id:
+          type: string
+          nullable: true
+    AAStatus:
+      type: object
+      required: [state, consent_required]
+      properties:
+        state:
+          type: string
+          enum: [available, unavailable, blocked, launching, active]
+        consent_required:
+          type: boolean
+        reason:
+          type: string
+          description: Optional message when blocked/unavailable

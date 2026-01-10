@@ -19,28 +19,72 @@
 
 pragma Singleton
 import QtQuick
+import Crankshaft 1.0
 
 // Settings data model - extensions can append to this
 QtObject {
     id: settingsModel
     
+    // Structured logging helper for settings changes
+    function logSettingChanged(key, oldValue, newValue) {
+        var timestamp = new Date().toISOString()
+        console.log('[' + timestamp + '] [INFO] [settings_changed] Setting updated | ' +
+                    'Key: ' + key + ', Old: ' + oldValue + ', New: ' + newValue)
+    }
+    
+    // Bind to SettingsRegistry for persistence
+    property string currentTheme: SettingsRegistry.theme()
+    property string currentLanguage: SettingsRegistry.language()
+    property string currentLayoutPreference: SettingsRegistry.layoutPreference()
+    property string currentPrimaryDisplayId: SettingsRegistry.primaryDisplayId()
+    property bool currentAaConsent: SettingsRegistry.aaConsent()
+    
+    // Connect to SettingsRegistry signals for reactive updates
+    Connections {
+        target: SettingsRegistry
+        
+        function onThemeChanged(value) {
+            settingsModel.currentTheme = value
+        }
+        
+        function onLanguageChanged(value) {
+            settingsModel.currentLanguage = value
+        }
+        
+        function onLayoutPreferenceChanged(value) {
+            settingsModel.currentLayoutPreference = value
+        }
+        
+        function onPrimaryDisplayIdChanged(value) {
+            settingsModel.currentPrimaryDisplayId = value
+        }
+        
+        function onAaConsentChanged(value) {
+            settingsModel.currentAaConsent = value
+        }
+    }
+    
     // Add your settings categories here
     property var categories: [
         {
             id: "appearance",
-            name: "Appearance",
+            name: qsTr("Appearance"),
             icon: "mdi-palette",
             settings: [
                 {
                     key: "ui.theme.dark",
-                    label: "Dark Mode",
-                    description: "Use dark theme for the interface",
+                    label: Strings.labelDarkMode,
+                    description: Strings.settingsUseTheme,
                     type: "toggle",
-                    value: Theme.isDark,
+                    value: settingsModel.currentTheme === "dark",
                     onChange: function(val) {
+                        var newTheme = val ? "dark" : "light"
+                        var oldTheme = settingsModel.currentTheme
+                        settingsModel.logSettingChanged("ui.theme.dark", oldTheme, newTheme)
+                        SettingsRegistry.setTheme(newTheme)
                         Theme.isDark = val
                         wsClient.publish("ui/theme/changed", {
-                            "mode": val ? "dark" : "light"
+                            "mode": newTheme
                         })
                     }
                 }
@@ -48,20 +92,21 @@ QtObject {
         },
         {
             id: "language",
-            name: "Language",
+            name: Strings.sectionLanguage,
             icon: "mdi-earth",
             settings: [
                 {
                     key: "ui.language",
-                    label: "Interface Language",
-                    description: "Choose the language for the user interface",
+                    label: Strings.labelLanguage,
+                    description: Strings.settingsChooseLanguage,
                     type: "select",
-                    value: currentLanguage || "en-GB",
+                    value: settingsModel.currentLanguage || "en-GB",
                     options: [
-                        { value: "en-GB", label: "English (UK)" },
-                        { value: "de-DE", label: "Deutsch" }
+                        { value: "en-GB", label: Strings.langEnGb },
+                        { value: "de-DE", label: Strings.langDeDe }
                     ],
                     onChange: function(val) {
+                        SettingsRegistry.setLanguage(val)
                         wsClient.publish("ui/language/changed", {
                             "language": val
                         })
@@ -76,10 +121,10 @@ QtObject {
             settings: [
                 {
                     key: "system.connection",
-                    label: "WebSocket Status",
-                    description: wsClient.connected ? "Connected to backend" : "Disconnected from backend",
+                    label: qsTr("WebSocket Status"),
+                    description: wsClient.connected ? qsTr("Connected to backend") : qsTr("Disconnected from backend"),
                     type: "info",
-                    value: wsClient.connected ? "Connected" : "Disconnected"
+                    value: wsClient.connected ? qsTr("Connected") : qsTr("Disconnected")
                 }
             ]
         },
@@ -688,6 +733,61 @@ QtObject {
                     value: true,
                     onChange: function(val) {
                         wsClient.publish("profiles/devices/uart/mock", { "enabled": val })
+                    }
+                }
+            ]
+        },
+        {
+            id: "display",
+            name: qsTr("Display"),
+            icon: "mdi-monitor",
+            settings: [
+                {
+                    key: "ui.layout.preference",
+                    label: Strings.settingsLayoutPreference,
+                    description: Strings.settingsChooseLayout,
+                    type: "select",
+                    value: settingsModel.currentLayoutPreference || "auto",
+                    options: [
+                        { value: "auto", label: Strings.settingsLayoutAuto },
+                        { value: "single", label: Strings.settingsLayoutPrimaryOnly },
+                        { value: "dual", label: Strings.settingsLayoutSplitStatus }
+                    ],
+                    onChange: function(val) {
+                        SettingsRegistry.setLayoutPreference(val)
+                        wsClient.publish("ui/layout/preference", { "mode": val })
+                    }
+                },
+                {
+                    key: "ui.display.primary",
+                    label: Strings.settingsPrimaryDisplay,
+                    description: Strings.settingsChooseDisplay,
+                    type: "select",
+                    value: settingsModel.currentPrimaryDisplayId || "",
+                    options: DisplayModel.displayOptions,
+                    onChange: function(val) {
+                        if (val && val !== settingsModel.currentPrimaryDisplayId) {
+                            SettingsRegistry.setPrimaryDisplayId(val)
+                            wsClient.publish("ui/display/primary", { "displayId": val })
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            id: "androidauto-consent",
+            name: qsTr("Android Auto Privacy"),
+            icon: "mdi-android-auto",
+            settings: [
+                {
+                    key: "androidauto.user-consent",
+                    label: Strings.settingsDataSharingConsent,
+                    description: Strings.settingsAllowAndroidAutoData,
+                    type: "toggle",
+                    value: settingsModel.currentAaConsent,
+                    onChange: function(val) {
+                        SettingsRegistry.setAaConsent(val)
+                        wsClient.publish("androidauto/consent", { "enabled": val })
                     }
                 }
             ]

@@ -53,6 +53,8 @@ QtObject {
   readonly property string cardSystemDesc: qsTr("Settings and info")
   readonly property string cardAndroidAutoTitle: qsTr("Android Auto")
   readonly property string cardAndroidAutoDesc: qsTr("Connect your phone")
+  readonly property string cardSettingsTitle: qsTr("Settings")
+  readonly property string cardSettingsDesc: qsTr("Adjust theme, language, display and more")
 
   // Android Auto page
   readonly property string aaTitle: qsTr("Android Auto")
@@ -62,4 +64,34 @@ QtObject {
   // Tools
   readonly property string cardToolsTitle: qsTr("Tools")
   readonly property string cardToolsDesc: qsTr("Utilities and diagnostics")
+
+  // Android Auto availability and consent
+  readonly property string aaAvailable: qsTr("Available")
+  readonly property string aaUnavailable: qsTr("Unavailable")
+  readonly property string aaBlocked: qsTr("Blocked")
+  readonly property string aaLaunching: qsTr("Launching...")
+  readonly property string aaActive: qsTr("Active")
+  readonly property string aaConsentRequired: qsTr("Consent Required")
+  readonly property string aaConsentMessage: qsTr("To use Android Auto, you must accept the terms while the vehicle is stationary.")
+  readonly property string aaConsentAccept: qsTr("I Accept")
+  readonly property string aaConsentDecline: qsTr("Decline")
+  readonly property string aaMovementDetected: qsTr("Vehicle movement detected. Consent cannot be accepted while moving.")
+
+  // Settings labels
+  readonly property string settingsTitle: qsTr("Settings")
+  readonly property string settingsTheme: qsTr("Theme")
+  readonly property string settingsThemeLight: qsTr("Light")
+  readonly property string settingsThemeDark: qsTr("Dark")
+  readonly property string settingsLayoutPreference: qsTr("Display Layout")
+  readonly property string settingsLayoutAuto: qsTr("Auto")
+  readonly property string settingsLayoutPrimaryOnly: qsTr("Primary Only")
+  readonly property string settingsLayoutSplitStatus: qsTr("Split Status")
+  readonly property string settingsPrimaryDisplay: qsTr("Primary Display")
+  readonly property string settingsDisplayUnset: qsTr("Auto-detect")
+  readonly property string settingsUseTheme: qsTr("Use dark theme for the interface")
+  readonly property string settingsChooseLanguage: qsTr("Choose the language for the user interface")
+  readonly property string settingsChooseLayout: qsTr("Choose between auto-responsive or fixed layout")
+  readonly property string settingsChooseDisplay: qsTr("Select which display to show main content")
+  readonly property string settingsDataSharingConsent: qsTr("Data Sharing Consent")
+  readonly property string settingsAllowAndroidAutoData: qsTr("Allow Android Auto to access vehicle data for projections")
 }

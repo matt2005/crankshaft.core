@@ -281,4 +281,66 @@ SettingsRegistry::ComplexityLevel SettingsRegistry::complexityLevelFromString(
   return Basic;
 }
 
+// User settings persistence
+QString SettingsRegistry::theme() const {
+  return m_settings.value("ui/theme", "light").toString();
+}
+
+void SettingsRegistry::setTheme(const QString &theme) {
+  if (this->theme() != theme) {
+    m_settings.setValue("ui/theme", theme);
+    emit themeChanged(theme);
+    emit settingChanged("ui/theme", theme);
+  }
+}
+
+QString SettingsRegistry::language() const {
+  return m_settings.value("ui/language", "en-GB").toString();
+}
+
+void SettingsRegistry::setLanguage(const QString &language) {
+  if (this->language() != language) {
+    m_settings.setValue("ui/language", language);
+    emit languageChanged(language);
+    emit settingChanged("ui/language", language);
+  }
+}
+
+QString SettingsRegistry::layoutPreference() const {
+  return m_settings.value("ui/layoutPreference", "auto").toString();
+}
+
+void SettingsRegistry::setLayoutPreference(const QString &pref) {
+  if (layoutPreference() != pref) {
+    m_settings.setValue("ui/layoutPreference", pref);
+    emit layoutPreferenceChanged(pref);
+    emit settingChanged("ui/layoutPreference", pref);
+  }
+}
+
+QString SettingsRegistry::primaryDisplayId() const {
+  return m_settings.value("ui/primaryDisplayId", QString()).toString();
+}
+
+void SettingsRegistry::setPrimaryDisplayId(const QString &displayId) {
+  if (primaryDisplayId() != displayId) {
+    // Validation happens in DisplayModel/main.cpp on load
+    m_settings.setValue("ui/primaryDisplayId", displayId);
+    emit primaryDisplayIdChanged(displayId);
+    emit settingChanged("ui/primaryDisplayId", displayId);
+  }
+}
+
+bool SettingsRegistry::aaConsent() const {
+  return m_settings.value("androidauto/consent", false).toBool();
+}
+
+void SettingsRegistry::setAaConsent(bool consent) {
+  if (aaConsent() != consent) {
+    m_settings.setValue("androidauto/consent", consent);
+    emit aaConsentChanged(consent);
+    emit settingChanged("androidauto/consent", consent);
+  }
+}
+
 }  // namespace Crankshaft

@@ -48,9 +48,12 @@ Button {
         border.width: 2
         radius: 4  // 4dp border radius
         
-        // Quick feedback (250ms requirement)
+        // Fast feedback (≤150ms per Design for Driving)
         Behavior on color {
-            ColorAnimation { duration: 150 }
+            ColorAnimation { duration: Theme.animationFeedback }
+        }
+        Behavior on border.color {
+            ColorAnimation { duration: Theme.animationFeedback }
         }
     }
 }

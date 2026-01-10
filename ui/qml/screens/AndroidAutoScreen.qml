@@ -25,128 +25,293 @@ import Crankshaft.Components 1.0
 
 Rectangle {
     id: androidAutoScreen
-    color: '#000000'
-
+    color: Theme.background
+    
+    // Responsive breakpoint tracking
+    property int breakpoint: LayoutUtils.breakpointTier(width)
+    
+    // Status properties
     property alias videoSurface: videoSurface
     property alias connectionStatus: connectionStatus
     property var stack: null
     
-    property string statusText: qsTr('Android Auto - Disconnected')
-    property color statusColor: '#F44336'
-    property bool isConnected: false
+    property string statusText: AndroidAutoStatus.statusText
+    property color statusColor: AndroidAutoStatus.statusColor
+    property bool isConnected: AndroidAutoStatus.isConnected
     
-    // Test timer to verify property binding works
-    Timer {
-        interval: 5000
-        running: true
-        repeat: true
-        onTriggered: {
-            console.log("[AndroidAutoScreen] STATUS TEST - statusText:", androidAutoScreen.statusText, "statusColor:", androidAutoScreen.statusColor)
-        }
-    }
+    // Responsive dimensions
+    property int headerHeight: Math.max(Theme.spacing6 * 2 + 24, 60)  // Min 60px for 44px buttons + spacing
+    property int controlHeight: Math.max(Theme.spacing6 * 2 + 16, 50) // Min 50px for controls
+    property int tapTarget: Theme.minTapTarget  // 44px minimum
     
     Component.onCompleted: {
-        console.log("[AndroidAutoScreen] Component initialized")
+        console.log("[AndroidAutoScreen] Initialised")
         console.log("[AndroidAutoScreen] wsClient connected?", wsClient.connected)
-        console.log("[AndroidAutoScreen] Subscribing to android-auto/status/#")
-        wsClient.subscribe("android-auto/status/#")
+        console.log("[AndroidAutoScreen] Subscribing to androidauto/#")
+        wsClient.subscribe("androidauto/#")
     }
     
-    // Also try subscribing when connection is established
+    // Reconnect when WebSocket connects
     Connections {
         target: wsClient
         function onConnectedChanged() {
             if (wsClient.connected) {
-                console.log("[AndroidAutoScreen] WebSocket connected! Re-subscribing...")
-                wsClient.subscribe("android-auto/status/#")
+                console.log("[AndroidAutoScreen] WebSocket connected; re-subscribing")
+                wsClient.subscribe("androidauto/#")
             }
         }
     }
     
+    // Listen to AA status updates
     Connections {
         target: wsClient
         
         function onEventReceived(topic, payload) {
-            console.log("[AndroidAutoScreen] Received event on topic:", topic, "payload:", payload)
-            if (topic === "android-auto/status/state-changed") {
-                let stateName = payload.stateName || "UNKNOWN"
-                console.log("[AndroidAutoScreen] State changed to:", stateName)
-                androidAutoScreen.statusText = "Android Auto - " + stateName
-                
-                if (stateName === "CONNECTED") {
-                    androidAutoScreen.statusColor = '#4CAF50'  // Green
-                    androidAutoScreen.isConnected = true
-                } else if (stateName === "DISCONNECTED") {
-                    androidAutoScreen.statusColor = '#F44336'  // Red
-                    androidAutoScreen.isConnected = false
-                } else {
-                    androidAutoScreen.statusColor = '#FF9800'  // Orange for other states
-                    androidAutoScreen.isConnected = false
-                }
-            } else if (topic === "android-auto/status/connected") {
-                let device = payload.device
-                console.log("[AndroidAutoScreen] Connected, device:", device)
-                androidAutoScreen.statusText = "Android Auto - CONNECTED (" + device.model + ")"
-                androidAutoScreen.statusColor = '#4CAF50'  // Green
-                androidAutoScreen.isConnected = true
-            } else if (topic === "android-auto/status/disconnected") {
-                console.log("[AndroidAutoScreen] Disconnected")
-                androidAutoScreen.statusText = "Android Auto - Disconnected"
-                androidAutoScreen.statusColor = '#F44336'  // Red
-                androidAutoScreen.isConnected = false
-            } else if (topic === "android-auto/status/error") {
-                console.log("[AndroidAutoScreen] Error:", payload.error)
-                androidAutoScreen.statusText = "Android Auto - Error: " + payload.error
-                androidAutoScreen.statusColor = '#F44336'  // Red
-                androidAutoScreen.isConnected = false
+            console.log("[AndroidAutoScreen] Event:", topic, JSON.stringify(payload))
+            
+            if (topic === 'androidauto/session/started') {
+                console.log('[AndroidAutoScreen] AA session started')
+            } else if (topic === 'androidauto/session/failed') {
+                console.log('[AndroidAutoScreen] AA session failed:', payload.reason)
+            } else if (topic === 'androidauto/session/terminated') {
+                console.log('[AndroidAutoScreen] AA session terminated')
             }
         }
     }
-
+    
     ColumnLayout {
         anchors.fill: parent
+        anchors.margins: 0
         spacing: 0
-
-        // Connection status bar
+        
+        // Header: Status bar with connection info
         Rectangle {
             Layout.fillWidth: true
-            Layout.preferredHeight: 60
-            color: '#1a1a1a'
-            border.color: '#333333'
+            Layout.preferredHeight: androidAutoScreen.headerHeight
+            color: Theme.surface
+            border.color: Theme.divider
             border.width: 1
-
+            
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 12
-                spacing: 12
-
+                anchors.margins: Theme.spacing2
+                spacing: Theme.spacing3
+                
+                // Status indicator dot
                 Rectangle {
-                    id: statusIndicator
-                    Layout.preferredWidth: 12
-                    Layout.preferredHeight: 12
-                    radius: 6
+                    Layout.preferredWidth: Theme.spacing3
+                    Layout.preferredHeight: Theme.spacing3
+                    radius: Theme.spacing3 / 2
                     color: AndroidAutoStatus.statusColor
                     
                     Behavior on color {
-                        ColorAnimation { duration: 300 }
+                        ColorAnimation { duration: Theme.animationDuration }
                     }
                 }
-
+                
+                // Status text
                 Text {
                     id: connectionStatus
-                    color: '#FFFFFF'
-                    font.pixelSize: 14
+                    color: Theme.onSurface
+                    font.pixelSize: LayoutUtils.responsiveFontSize(width, 14, 16)
                     font.family: 'Roboto'
+                    font.weight: Font.Medium
                     text: AndroidAutoStatus.statusText
+                    
+                    Layout.fillWidth: true
                 }
-
-                Item { Layout.fillWidth: true }
-
+                
+                // Info label
                 Text {
-                    color: '#BBBBBB'
-                    font.pixelSize: 12
+                    color: Theme.onSurfaceVariant
+                    font.pixelSize: LayoutUtils.responsiveFontSize(width, 12, 14)
                     font.family: 'Roboto'
                     text: qsTr('Connect Android device via USB')
+                    visible: width > 500  // Only show on wider displays
+                }
+            }
+        }
+        
+        // Video/content surface
+        Rectangle {
+            id: videoSurface
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            color: '#000000'
+            
+            // Touch input handler
+            MouseArea {
+                id: touchArea
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton
+                
+                onPressed: (mouse) => {
+                    wsClient.publish("androidauto/touch", {
+                        "x": mouse.x / width,
+                        "y": mouse.y / height,
+                        "action": "down"
+                    })
+                }
+                
+                onReleased: (mouse) => {
+                    wsClient.publish("androidauto/touch", {
+                        "x": mouse.x / width,
+                        "y": mouse.y / height,
+                        "action": "up"
+                    })
+                }
+                
+                onPositionChanged: (mouse) => {
+                    if (pressed) {
+                        wsClient.publish("androidauto/touch", {
+                            "x": mouse.x / width,
+                            "y": mouse.y / height,
+                            "action": "move"
+                        })
+                    }
+                }
+            }
+            
+            // Placeholder UI
+            Column {
+                anchors.centerIn: parent
+                spacing: Theme.spacing4
+                
+                BusyIndicator {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    running: AndroidAutoStatus.state === AndroidAutoStatus.stateLaunching
+                }
+                
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    color: Theme.onBackground
+                    font.pixelSize: LayoutUtils.responsiveFontSize(width, 16, 18)
+                    font.bold: true
+                    font.family: 'Roboto'
+                    text: qsTr('Android Auto Projection\nConnect your Android device via USB')
+                    horizontalAlignment: Text.AlignHCenter
+                }
+            }
+        }
+        
+        // Control buttons - responsive sizing
+        Rectangle {
+            Layout.fillWidth: true
+            Layout.preferredHeight: androidAutoScreen.controlHeight
+            color: Theme.surface
+            border.color: Theme.divider
+            border.width: 1
+            
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: Theme.spacing2
+                spacing: Theme.spacing2
+                
+                // Back button
+                Button {
+                    id: backButton
+                    Layout.preferredWidth: Math.max(androidAutoScreen.tapTarget, implicitWidth)
+                    Layout.preferredHeight: androidAutoScreen.tapTarget
+                    Layout.alignment: Qt.AlignVCenter
+                    text: '⬅'
+                    font.pixelSize: Theme.fontSizeBase
+                    
+                    background: Rectangle {
+                        color: backButton.pressed ? Theme.primary.lighter(120) : Theme.onSurface.darker(120)
+                        radius: Theme.spacing1
+                    }
+                    
+                    contentItem: Text {
+                        text: backButton.text
+                        color: Theme.onPrimary
+                        font: backButton.font
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    
+                    onClicked: wsClient.publish("androidauto/key", { "key": "BACK" })
+                }
+                
+                // Home button
+                Button {
+                    id: homeButton
+                    Layout.preferredWidth: Math.max(androidAutoScreen.tapTarget, implicitWidth)
+                    Layout.preferredHeight: androidAutoScreen.tapTarget
+                    Layout.alignment: Qt.AlignVCenter
+                    text: '⌂'
+                    font.pixelSize: Theme.fontSizeBase
+                    
+                    background: Rectangle {
+                        color: homeButton.pressed ? Theme.primary.lighter(120) : Theme.onSurface.darker(120)
+                        radius: Theme.spacing1
+                    }
+                    
+                    contentItem: Text {
+                        text: homeButton.text
+                        color: Theme.onPrimary
+                        font: homeButton.font
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    
+                    onClicked: wsClient.publish("androidauto/key", { "key": "HOME" })
+                }
+                
+                // Spacer
+                Item { Layout.fillWidth: true }
+                
+                // Disconnect button
+                Button {
+                    id: disconnectButton
+                    Layout.preferredWidth: Math.max(androidAutoScreen.tapTarget, implicitWidth)
+                    Layout.preferredHeight: androidAutoScreen.tapTarget
+                    Layout.alignment: Qt.AlignVCenter
+                    text: '✕'
+                    font.pixelSize: Theme.fontSizeBase
+                    
+                    background: Rectangle {
+                        color: disconnectButton.pressed ? Theme.error.lighter(120) : Theme.error
+                        radius: Theme.spacing1
+                    }
+                    
+                    contentItem: Text {
+                        text: disconnectButton.text
+                        color: Theme.onError
+                        font: disconnectButton.font
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    
+                    onClicked: wsClient.publish("androidauto/disconnect", {})
+                }
+                
+                // Exit button (visible on smaller displays as fallback)
+                Button {
+                    id: exitButton
+                    Layout.preferredWidth: Math.max(androidAutoScreen.tapTarget, implicitWidth)
+                    Layout.preferredHeight: androidAutoScreen.tapTarget
+                    Layout.alignment: Qt.AlignVCenter
+                    text: 'Exit'
+                    font.pixelSize: Math.max(12, Theme.fontSizeBase - 2)
+                    
+                    background: Rectangle {
+                        color: exitButton.pressed ? Theme.primary.lighter(120) : Theme.primary
+                        radius: Theme.spacing1
+                    }
+                    
+                    contentItem: Text {
+                        text: exitButton.text
+                        color: Theme.onPrimary
+                        font: exitButton.font
+                        horizontalAlignment: Text.AlignHCenter
+                        verticalAlignment: Text.AlignVCenter
+                    }
+                    
+                    onClicked: {
+                        if (stack) {
+                            stack.pop()
+                        }
+                    }
                 }
             }
         }
@@ -262,6 +427,34 @@ Rectangle {
                 }
             }
         }
+    }
+    
+    // Consent interstitial (T012)
+    ConsentDialog {
+        id: consentDialog
+        anchors.fill: parent
+        isVisible: AndroidAutoStatus.state === AndroidAutoStatus.stateBlocked && !SettingsModel.currentAaConsent
+        
+        onConsentAccepted: {
+            console.log("[AndroidAutoScreen] User accepted AA consent")
+            SettingsRegistry.setAaConsent(true)
+            wsClient.publish("androidauto/consent", { accepted: true })
+            isVisible = false
+        }
+        
+        onConsentDeclined: {
+            console.log("[AndroidAutoScreen] User declined AA consent")
+            isVisible = false
+        }
+    }
+    
+    // Status overlay for blocked/unavailable states (T013)
+    AndroidAutoStatusOverlay {
+        id: statusOverlay
+        anchors.fill: parent
+        isVisible: AndroidAutoStatus.state === AndroidAutoStatus.stateUnavailable || 
+                   (AndroidAutoStatus.state === AndroidAutoStatus.stateBlocked && SettingsModel.currentAaConsent)
+        state: AndroidAutoStatus.state
     }
 
     // Note: Status is queried via backend connection state changes

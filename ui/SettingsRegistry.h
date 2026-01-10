@@ -21,6 +21,7 @@
 
 #include <QObject>
 #include <QQmlEngine>
+#include <QSettings>
 #include <QVariantList>
 #include <QVariantMap>
 
@@ -71,6 +72,22 @@ class SettingsRegistry : public QObject {
   // Get category containing page
   Q_INVOKABLE QString getCategoryForPage(const QString &pageId) const;
 
+  // User settings persistence
+  Q_INVOKABLE QString theme() const;
+  Q_INVOKABLE void setTheme(const QString &theme);
+
+  Q_INVOKABLE QString language() const;
+  Q_INVOKABLE void setLanguage(const QString &language);
+
+  Q_INVOKABLE QString layoutPreference() const;
+  Q_INVOKABLE void setLayoutPreference(const QString &pref);
+
+  Q_INVOKABLE QString primaryDisplayId() const;
+  Q_INVOKABLE void setPrimaryDisplayId(const QString &displayId);
+
+  Q_INVOKABLE bool aaConsent() const;
+  Q_INVOKABLE void setAaConsent(bool consent);
+
   QVariantList categories() const;
   QString currentComplexityLevel() const;
   void setCurrentComplexityLevel(const QString &level);
@@ -79,6 +96,11 @@ class SettingsRegistry : public QObject {
   void categoriesChanged();
   void currentComplexityLevelChanged();
   void settingChanged(const QString &key, const QVariant &value);
+  void themeChanged(const QString &value);
+  void languageChanged(const QString &value);
+  void layoutPreferenceChanged(const QString &value);
+  void primaryDisplayIdChanged(const QString &value);
+  void aaConsentChanged(bool value);
 
  private:
   struct SettingDefinition {
@@ -115,6 +137,7 @@ class SettingsRegistry : public QObject {
   QMap<QString, SettingsCategory> m_categories;
   QMap<QString, SettingsPage> m_pages;
   ComplexityLevel m_currentComplexityLevel;
+  QSettings m_settings;
 
   void sortCategories();
   void sortPagesInCategory(const QString &categoryId);
