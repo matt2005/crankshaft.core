@@ -29,8 +29,6 @@ namespace Crankshaft {
 
 class SettingsRegistry : public QObject {
   Q_OBJECT
-  QML_ELEMENT
-  QML_SINGLETON
 
   Q_PROPERTY(QVariantList categories READ categories NOTIFY categoriesChanged)
   Q_PROPERTY(QString currentComplexityLevel READ currentComplexityLevel WRITE

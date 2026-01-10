@@ -98,9 +98,13 @@ int main(int argc, char* argv[]) {
   // Create Theme instance
   Theme* theme = new Theme(&app);
 
-  // Set context properties (Theme as global object, not singleton)
+  // Create SettingsRegistry instance
+  Crankshaft::SettingsRegistry* settingsRegistry = new Crankshaft::SettingsRegistry(&app);
+
+  // Set context properties (Theme and SettingsRegistry as global objects, not singletons)
   qInfo() << "[STARTUP]" << startupTimer.elapsed() << "ms elapsed: Setting context properties";
   engine.rootContext()->setContextProperty("Theme", theme);
+  engine.rootContext()->setContextProperty("SettingsRegistry", settingsRegistry);
   engine.rootContext()->setContextProperty("wsClient", wsClient);
   engine.rootContext()->setContextProperty("currentLanguage", currentLanguage);
 
