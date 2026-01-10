@@ -34,7 +34,6 @@ QtObject {
         console.log('[' + timestamp + '] [INFO] [settings_changed] Setting updated | ' +
                     'Key: ' + key + ', Old: ' + oldValue + ', New: ' + newValue)
     }
-    }
     
     // Bind to SettingsRegistry for persistence
     // Note: Using delayed initialization because SettingsRegistry may not be available
