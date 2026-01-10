@@ -32,7 +32,6 @@ QtObject {
     }
     
     // Signal emitted when displays change (connect/disconnect)
-    signal displaysChanged()
     signal primaryDisplayDisconnected()
     
     // Available displays detected on system
