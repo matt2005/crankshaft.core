@@ -39,7 +39,7 @@ QtObject {
     property bool isServiceAvailable: false
     
     // Whether user consent has been granted (persisted)
-    property bool hasConsent: SettingsModel.currentAaConsent
+    property bool hasConsent: false
     
     // Whether vehicle is stationary (safe to launch)
     property bool isStationary: true
@@ -134,6 +134,13 @@ QtObject {
                 return "mdi-check-circle"
             default:
                 return "mdi-help-circle"
+        }
+    }
+    
+    // Initialize from context properties when component is ready
+    Component.onCompleted: {
+        if (typeof SettingsModel !== 'undefined' && SettingsModel) {
+            hasConsent = SettingsModel.currentAaConsent
         }
     }
     
