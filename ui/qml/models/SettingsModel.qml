@@ -33,11 +33,24 @@ QtObject {
     }
     
     // Bind to SettingsRegistry for persistence
-    property string currentTheme: SettingsRegistry.theme()
-    property string currentLanguage: SettingsRegistry.language()
-    property string currentLayoutPreference: SettingsRegistry.layoutPreference()
-    property string currentPrimaryDisplayId: SettingsRegistry.primaryDisplayId()
-    property bool currentAaConsent: SettingsRegistry.aaConsent()
+    // Note: Using delayed initialization because SettingsRegistry may not be available
+    // at singleton creation time. These are initialized in Component.onCompleted.
+    property string currentTheme: ""
+    property string currentLanguage: ""
+    property string currentLayoutPreference: ""
+    property string currentPrimaryDisplayId: ""
+    property bool currentAaConsent: false
+    
+    Component.onCompleted: {
+        // Initialize from SettingsRegistry once it's available
+        if (typeof SettingsRegistry !== 'undefined' && SettingsRegistry) {
+            currentTheme = SettingsRegistry.theme()
+            currentLanguage = SettingsRegistry.language()
+            currentLayoutPreference = SettingsRegistry.layoutPreference()
+            currentPrimaryDisplayId = SettingsRegistry.primaryDisplayId()
+            currentAaConsent = SettingsRegistry.aaConsent()
+        }
+    }
     
     // Connect to SettingsRegistry signals for reactive updates
     Connections {
