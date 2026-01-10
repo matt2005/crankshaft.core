@@ -17,11 +17,14 @@
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
 */
 
-pragma Singleton
+// NOTE: The C++ SettingsModel class (accessed via context property "SettingsModel") handles
+// the core settings persistence and data management.
+// This QML file is kept for reference showing the settings structure.
+// Accessed in QML as: SettingsModel.currentTheme, SettingsModel.currentLanguage, etc.
+
 import QtQuick
 import Crankshaft 1.0
 
-// Settings data model - extensions can append to this
 QtObject {
     id: settingsModel
     
@@ -30,6 +33,7 @@ QtObject {
         var timestamp = new Date().toISOString()
         console.log('[' + timestamp + '] [INFO] [settings_changed] Setting updated | ' +
                     'Key: ' + key + ', Old: ' + oldValue + ', New: ' + newValue)
+    }
     }
     
     // Bind to SettingsRegistry for persistence

@@ -28,6 +28,7 @@
 #include <QtQml/QQmlExtensionPlugin>
 
 #include "SettingsRegistry.h"
+#include "SettingsModel.h"
 #include "Theme.h"
 #include "WebSocketClient.h"
 #include "build_info.h"
@@ -98,13 +99,17 @@ int main(int argc, char* argv[]) {
   // Create Theme instance
   Theme* theme = new Theme(&app);
 
-  // Create SettingsRegistry instance
+  // Create SettingsRegistry instance (must be created before SettingsModel)
   Crankshaft::SettingsRegistry* settingsRegistry = new Crankshaft::SettingsRegistry(&app);
 
-  // Set context properties (Theme and SettingsRegistry as global objects, not singletons)
+  // Create SettingsModel instance (depends on SettingsRegistry)
+  Crankshaft::SettingsModel* settingsModel = new Crankshaft::SettingsModel(settingsRegistry, &app);
+
+  // Set context properties (all available before QML module loads)
   qInfo() << "[STARTUP]" << startupTimer.elapsed() << "ms elapsed: Setting context properties";
   engine.rootContext()->setContextProperty("Theme", theme);
   engine.rootContext()->setContextProperty("SettingsRegistry", settingsRegistry);
+  engine.rootContext()->setContextProperty("SettingsModel", settingsModel);
   engine.rootContext()->setContextProperty("wsClient", wsClient);
   engine.rootContext()->setContextProperty("currentLanguage", currentLanguage);
 
