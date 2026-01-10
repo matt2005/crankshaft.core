@@ -30,6 +30,18 @@ Page {
     property var settingsComponent: null
     property var androidAutoComponent: null
     
+    // Navigation validation: only allow access to implemented screens
+    // Currently available: HomeScreen, SettingsScreen, AndroidAutoScreen
+    // Unavailable routes (disabled): Navigation, Phone, Media, Bluetooth, WiFi, Profiles, Tools
+    function requestNavigation(target) {
+        var validTargets = ['settings', 'androidauto', 'home']
+        if (validTargets.indexOf(target) === -1) {
+            console.warn('[HomeScreen] Navigation to unavailable route:', target)
+            return false
+        }
+        return true
+    }
+    
     background: Rectangle {
         color: Theme.background
     }
@@ -68,137 +80,73 @@ Page {
     // Main content area following Design for Driving guidelines
     ColumnLayout {
         anchors.fill: parent
-        anchors.margins: 16
-        spacing: 16
+        anchors.margins: Theme.spacingMd
+        spacing: Theme.spacingMd
         
         // Status bar - Primary driving information
         Rectangle {
             Layout.fillWidth: true
             Layout.preferredHeight: 64
             color: Theme.surface
-            radius: 4
+            radius: Theme.radiusSm
             
             RowLayout {
                 anchors.fill: parent
-                anchors.margins: 12
-                spacing: 12
+                anchors.margins: Theme.spacingSm
+                spacing: Theme.spacingMd
                 
                 Text {
                     text: Strings.homeWelcome
-                    font.pixelSize: 28
+                    font.pixelSize: Theme.fontSizeHeading2
                     font.bold: true
                     color: Theme.textPrimary
                     Layout.fillWidth: true
                 }
                 
                 SystemClock {
-                    fontSize: 20
+                    fontSize: Theme.fontSizeBody
                     textColor: Theme.textSecondary
                     timeFormat: "hh:mm"
                 }
             }
         }
         
-        // Primary action cards (60% of screen) - Navigation and Media
+        // Home tiles: Only AndroidAuto and Settings with responsive layout
         Rectangle {
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.preferredHeight: parent.height * 0.6
             color: "transparent"
             
-            GridLayout {
+            Flow {
                 anchors.fill: parent
-                columns: 3
-                rowSpacing: 12
-                columnSpacing: 12
+                spacing: Theme.spacingMd
                 
-                // Navigation - Primary driving task
-                Card {
-                    title: Strings.cardNavigationTitle
-                    description: Strings.cardNavigationDesc
-                    icon: "navigation"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.minimumHeight: 120
-                    
-                    onClicked: {
-                        // TODO: Navigate to navigation screen when implemented
-                        console.log("Navigation requested")
-                    }
-                }
-                
-                // Phone - Secondary driving task
-                Card {
-                    title: Strings.cardPhoneTitle
-                    description: Strings.cardPhoneDesc
-                    icon: "phone"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.minimumHeight: 120
-                    
-                    onClicked: {
-                        // TODO: Navigate to phone screen when implemented
-                        console.log("Phone requested")
-                    }
-                }
-                
-                // Media - Entertainment
-                Card {
-                    title: Strings.cardMediaTitle
-                    description: Strings.cardMediaDesc
-                    icon: "music"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.minimumHeight: 120
-                    
-                    onClicked: {
-                        // TODO: Navigate to media screen when implemented
-                        console.log("Media requested")
-                    }
-                }
-                
-                // Android Auto
-                Card {
+                // Android Auto - Primary tile
+                Tile {
+                    width: (parent.width - Theme.spacingMd) / 2
+                    height: Math.min(width, (parent.height - Theme.spacingMd) / 2)
                     title: Strings.cardAndroidAutoTitle
                     description: Strings.cardAndroidAutoDesc
-                    icon: "phone"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.minimumHeight: 120
+                    icon: "mdi-android-auto"
                     
                     onClicked: {
-                        if (stack && androidAutoComponent) {
-                            stack.push(androidAutoComponent, { stack: stack })
+                        if (stack && root.androidAutoComponent) {
+                            stack.push(root.androidAutoComponent, { stack: stack })
                         }
                     }
                 }
-            }
-        }
-        
-        // Secondary action - Settings (40% of screen)
-        Rectangle {
-            Layout.fillWidth: true
-            Layout.fillHeight: true
-            Layout.preferredHeight: parent.height * 0.4
-            color: "transparent"
-            
-            GridLayout {
-                anchors.fill: parent
-                columns: 1
-                rowSpacing: 12
-                columnSpacing: 12
                 
-                Card {
-                    title: Strings.cardToolsTitle
-                    description: Strings.cardToolsDesc
-                    icon: "tools"
-                    Layout.fillWidth: true
-                    Layout.fillHeight: true
-                    Layout.minimumHeight: 60
+                // Settings - Secondary tile
+                Tile {
+                    width: (parent.width - Theme.spacingMd) / 2
+                    height: Math.min(width, (parent.height - Theme.spacingMd) / 2)
+                    title: Strings.buttonSettings
+                    description: Strings.cardSettingsDesc
+                    icon: "mdi-cog"
                     
                     onClicked: {
-                        if (stack) {
-                            stack.push(Qt.resolvedUrl("ToolsPage.qml"), { stack: stack })
+                        if (stack && root.settingsComponent) {
+                            stack.push(root.settingsComponent, { stack: stack })
                         }
                     }
                 }

@@ -254,6 +254,16 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../qml/Strings.qml" line="56"/>
+        <source>Settings</source>
+        <translation>Settings</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="57"/>
+        <source>Adjust theme, language, display and more</source>
+        <translation>Adjust theme, language, display and more</translation>
+    </message>
+    <message>
         <location filename="../qml/Strings.qml" line="59"/>
         <source>Start Android Auto</source>
         <translation type="unfinished">Start Android Auto</translation>
@@ -273,5 +283,133 @@
         <source>Utilities and diagnostics</source>
         <translation type="unfinished"></translation>
     </message>
-</context>
-</TS>
+    <message>
+        <location filename="../qml/Strings.qml" line="67"/>
+        <source>Available</source>
+        <translation>Available</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="68"/>
+        <source>Unavailable</source>
+        <translation>Unavailable</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="69"/>
+        <source>Blocked</source>
+        <translation>Blocked</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="70"/>
+        <source>Launching...</source>
+        <translation>Launching...</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="71"/>
+        <source>Active</source>
+        <translation>Active</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="72"/>
+        <source>Consent Required</source>
+        <translation>Consent Required</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="73"/>
+        <source>To use Android Auto, you must accept the terms while the vehicle is stationary.</source>
+        <translation>To use Android Auto, you must accept the terms whilst the vehicle is stationary.</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="74"/>
+        <source>I Accept</source>
+        <translation>I Accept</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="75"/>
+        <source>Decline</source>
+        <translation>Decline</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="76"/>
+        <source>Vehicle movement detected. Consent cannot be accepted while moving.</source>
+        <translation>Vehicle movement detected. Consent cannot be accepted whilst moving.</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="79"/>
+        <source>Settings</source>
+        <translation>Settings</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="80"/>
+        <source>Theme</source>
+        <translation>Theme</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="81"/>
+        <source>Light</source>
+        <translation>Light</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="82"/>
+        <source>Dark</source>
+        <translation>Dark</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="83"/>
+        <source>Display Layout</source>
+        <translation>Display Layout</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="84"/>
+        <source>Auto</source>
+        <translation>Auto</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="85"/>
+        <source>Primary Only</source>
+        <translation>Primary Only</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="86"/>
+        <source>Split Status</source>
+        <translation>Split Status</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="87"/>
+        <source>Primary Display</source>
+        <translation>Primary Display</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="88"/>
+        <source>Auto-detect</source>
+        <translation>Auto-detect</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="89"/>
+        <source>Use dark theme for the interface</source>
+        <translation>Use dark theme for the interface</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="90"/>
+        <source>Choose the language for the user interface</source>
+        <translation>Choose the language for the user interface</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="91"/>
+        <source>Choose between auto-responsive or fixed layout</source>
+        <translation>Choose between auto-responsive or fixed layout</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="92"/>
+        <source>Select which display to show main content</source>
+        <translation>Select which display to show main content</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="93"/>
+        <source>Data Sharing Consent</source>
+        <translation>Data Sharing Consent</translation>
+    </message>
+    <message>
+        <location filename="../qml/Strings.qml" line="94"/>
+        <source>Allow Android Auto to access vehicle data for projections</source>
+        <translation>Allow Android Auto to access vehicle data for projections</translation>
+    </message>

@@ -1,9 +1,15 @@
 # Feature Specification: Modern Responsive UI (AndroidAuto + Settings)
 
-**Feature Branch**: `[1-modern-responsive-ui]`  
+**Feature Branch**: `[005-modern-responsive-ui]`  
 **Created**: 2026-01-09  
 **Status**: Draft  
 **Input**: User description: "modernise the UI and make it responsive. only add androidauto and settings as the other features haven't been implemented yet."
+
+## Clarifications
+
+### Session 2026-01-09
+
+- Q: For multi-display setups, who decides which screen is primary? → A: User selects the primary display; AndroidAuto follows that choice.
 
 ## User Scenarios & Testing *(mandatory)*
 
@@ -72,7 +78,7 @@ The home screen displays a modern, uncluttered layout with only two feature tile
 - **FR-007**: The UI MUST adapt to single‑ and multi‑display configurations with graceful reflow and no clipping/overlap.
 - **FR-008**: When AndroidAuto is unavailable, the UI MUST present a clear message and disable launch; when available, launch MUST complete within 5 s under normal conditions.
 - **FR-009**: Settings MUST enable users to adjust appearance (theme), language, and display/layout preferences; changes MUST persist.
-- **FR-010**: Multi‑display allocation with AndroidAuto active MUST show AA content on the primary display; when a secondary display exists, it shows status/quick controls. On single‑display setups, AA content includes inline status/controls.
+- **FR-010**: Multi-display allocation with AndroidAuto active MUST show AA content on the user-selected primary display; when a secondary display exists, it shows status/quick controls. On single-display setups, AA content includes inline status/controls.
 - **FR-011**: AndroidAuto first‑run flow MUST present a one‑time consent/disclaimer and require acceptance while the vehicle is stationary/parked before enabling AA.
 - **FR-012**: Settings MUST apply globally across all displays for the device (theme, language, layout preferences) and persist across sessions.
 - **FR-013**: The UI MUST avoid presenting yet‑to‑be‑implemented features (media, radio, bluetooth, etc.).
@@ -93,12 +99,13 @@ Deviations: None proposed.
 ### Key Entities *(include if feature involves data)*
 
 - **Display**: Represents an available output surface; attributes include `identifier`, `resolution`, `orientation`, `role`.
-- **Setting**: Represents user preferences; attributes include `theme`, `language`, `layout_preference`, `persisted_at`.
+- **Setting**: Represents user preferences; attributes include `theme`, `language`, `layout_preference`, `primary_display_id`, `aa_consent`, `persisted_at`.
 - **Feature Tile**: Represents an actionable home tile; attributes include `name`, `visibility`, `availability_state`.
 
 ### Assumptions
 
 - At most two displays are connected; if only one display is present, AndroidAuto content includes inline status and controls.
+- When multiple displays are present, the user can designate the primary display; auto-detection is only a fallback for single-display setups.
 - User consent for AndroidAuto is required once and only while stationary/parked.
 - Settings apply globally across the device and persist across restarts.
 - Default language is en‑GB; additional languages depend on available translations.

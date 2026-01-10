@@ -33,6 +33,20 @@ ApplicationWindow {
     
     color: Theme.background
     
+    // Multi-display support: determine if we're on primary display for AA
+    property bool isPrimaryDisplay: DisplayModel.primaryDisplayId === "" || true
+    
+    // Responsive breakpoint detection
+    property int breakpoint: LayoutUtils.breakpointTier(width)
+    
+    onWidthChanged: {
+        var oldBreakpoint = breakpoint
+        breakpoint = LayoutUtils.breakpointTier(width)
+        if (oldBreakpoint !== breakpoint) {
+            console.log("[Main] Breakpoint changed:", oldBreakpoint, "→", breakpoint, "Width:", width)
+        }
+    }
+    
     // Connection status indicator
     Rectangle {
         id: statusBar
@@ -41,8 +55,9 @@ ApplicationWindow {
         height: 4
         color: wsClient.connected ? Theme.success : Theme.error
         
+        // Fast theme swap: theme colors update immediately
         Behavior on color {
-            ColorAnimation { duration: Theme.animationDuration }
+            ColorAnimation { duration: Theme.animationFeedback }
         }
     }
     
@@ -82,16 +97,18 @@ ApplicationWindow {
             
             if (topic === 'ui/theme/changed') {
                 Theme.isDark = payload.mode === 'dark'
-            } else if (topic === 'android-auto/status/connected') {
-                console.log('[Main] Android Auto connected, navigating to AA screen')
-                // Automatically navigate to AA screen when device connects
+            } else if (topic === 'androidauto/session/started') {
+                console.log('[Main] Android Auto session started, navigating to AA screen')
+                // Automatically navigate to AA screen when session starts
                 if (stackView.currentItem && stackView.currentItem.stack) {
                     stackView.currentItem.stack.push(androidautoScreen, { stack: stackView })
                 }
-            } else if (topic === 'android-auto/status/disconnected') {
-                console.log('[Main] Android Auto disconnected')
+            } else if (topic === 'androidauto/session/terminated') {
+                console.log('[Main] Android Auto session terminated')
                 // Optionally: navigate back to home when disconnected
-                // This can be handled by the AndroidAutoScreen itself
+                if (stackView.depth > 1) {
+                    stackView.pop()
+                }
             }
         }
         

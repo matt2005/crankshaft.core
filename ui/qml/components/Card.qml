@@ -29,15 +29,15 @@ Item {
     property string icon: ""
     signal clicked()
     
-    // Minimum touch target: 76dp, but cards can be larger
+    // Minimum touch target: 76dp per Design for Driving, cards can be larger
     width: 200
     height: 150
     
-    // Responsive scale with fast feedback (250ms response time requirement)
+    // Responsive scale with fast feedback (≤500ms total response)
     scale: mouseArea.pressed ? 0.95 : (mouseArea.containsMouse ? 1.02 : 1.0)
     
     Behavior on scale {
-        NumberAnimation { duration: 150 }  // 150ms for quick visual feedback
+        NumberAnimation { duration: Theme.animationFeedback }  // 150ms for quick visual feedback
     }
     
     MouseArea {
@@ -50,33 +50,35 @@ Item {
     Rectangle {
         id: background
         anchors.fill: parent
-        // Ensure 4.5:1 contrast ratio
+        // Ensure 4.5:1 contrast ratio on surface
         color: Theme.surface
-        radius: 4  // 4dp border radius
+        radius: Theme.radiusSm  // Matching Theme token for consistency
         border.color: Theme.divider
         border.width: 1
         
         Behavior on color {
-            ColorAnimation { duration: 150 }
+            ColorAnimation { duration: Theme.animationFeedback }
         }
         
         Column {
             anchors.centerIn: parent
-            anchors.margins: 12  // 12dp padding per guidelines
-            spacing: 8  // 8dp spacing (grid multiples)
-            width: parent.width - 24
+            anchors.margins: Theme.spacingMd  // 16dp padding per Theme scale
+            spacing: Theme.spacingSm  // 8dp spacing (Theme.spacingScale)
+            width: parent.width - (Theme.spacingMd * 2)
             
             Icon {
                 name: root.icon
-                size: 48
+                // 48px icon size, scaled appropriately for tile
+                size: Math.round(Theme.fontSizeLarge)  // 48px from Typography
                 anchors.horizontalCenter: parent.horizontalCenter
-                // Icon must maintain 4.5:1 contrast
+                // Icon colour must maintain 4.5:1 contrast against surface
+                color: Theme.textPrimary
             }
             
             Text {
                 text: root.title
-                // Primary text: 32dp, but scaled down for cards
-                font.pixelSize: 24
+                // Card title uses subtitle1 font size for hierarchy (20–24px)
+                font.pixelSize: Theme.fontSizeSubtitle1
                 font.bold: true
                 color: Theme.textPrimary
                 horizontalAlignment: Text.AlignHCenter
@@ -88,8 +90,8 @@ Item {
             
             Text {
                 text: root.description
-                // Secondary text: 20dp per guidelines
-                font.pixelSize: 16
+                // Card description uses caption/small text (12–14px)
+                font.pixelSize: Theme.fontSizeCaption
                 color: Theme.textSecondary
                 horizontalAlignment: Text.AlignHCenter
                 width: parent.width
@@ -99,7 +101,7 @@ Item {
             }
         }
         
-        // Ripple effect - visual feedback within 250ms
+        // Ripple effect - visual feedback within fast animation budget (150ms)
         Rectangle {
             id: ripple
             anchors.centerIn: parent
@@ -111,20 +113,20 @@ Item {
             
             ParallelAnimation {
                 id: rippleAnimation
-                // Fast ripple for quick visual feedback (250ms requirement)
+                // Fast ripple for quick visual feedback (150ms matches animationFeedback)
                 NumberAnimation {
                     target: ripple
                     property: "width"
                     from: 0
                     to: background.width * 2
-                    duration: 250
+                    duration: Theme.animationFeedback
                 }
                 NumberAnimation {
                     target: ripple
                     property: "opacity"
                     from: 0.3
                     to: 0
-                    duration: 250
+                    duration: Theme.animationFeedback
                 }
             }
         }

@@ -79,6 +79,8 @@ qt_add_qml_module(crankshaft-ui-components
     qml/components/LocaleSelector.qml
     qml/components/SystemClock.qml
     qml/components/Tile.qml
+    qml/components/Theme.qml
+    qml/components/LayoutUtils.qml
 )
 
 # Add JS helper (skip entry in qmldir)
@@ -102,6 +104,7 @@ set_source_files_properties(
   qml/models/SettingsModel.qml
   qml/models/Strings.qml
   qml/models/AndroidAutoStatus.qml
+  qml/models/DisplayModel.qml
   PROPERTIES
   QT_QML_SINGLETON_TYPE TRUE
 )
@@ -122,6 +125,7 @@ qt_add_qml_module(crankshaft-ui
     qml/models/SettingsModel.qml
     qml/models/Strings.qml
     qml/models/AndroidAutoStatus.qml
+    qml/models/DisplayModel.qml
   RESOURCES
     assets/icons/mdi.svg
 )
