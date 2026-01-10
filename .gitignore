@@ -10,6 +10,7 @@ out/
 *.exe
 *.dll
 *.qm
+qmldir
 compile_commands.json
 .vscode/
 .idea/
