@@ -35,6 +35,8 @@ qt_add_executable(crankshaft-ui
   WebSocketClient.cpp
   SettingsRegistry.h
   SettingsRegistry.cpp
+  SettingsModel.h
+  SettingsModel.cpp
 )
 
 # Enable AUTOMOC for metatype generation
@@ -101,7 +103,6 @@ target_link_libraries(crankshaft-ui-components PRIVATE
 
 # Mark singletons BEFORE qt_add_qml_module (critical!)
 set_source_files_properties(
-  qml/models/SettingsModel.qml
   qml/models/Strings.qml
   qml/models/AndroidAutoStatus.qml
   qml/models/DisplayModel.qml
