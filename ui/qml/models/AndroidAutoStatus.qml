@@ -137,13 +137,6 @@ QtObject {
         }
     }
     
-    // Initialize from context properties when component is ready
-    Component.onCompleted: {
-        if (typeof SettingsModel !== 'undefined' && SettingsModel) {
-            hasConsent = SettingsModel.currentAaConsent
-        }
-    }
-    
     // Update state based on conditions
     function updateState() {
         if (!isServiceAvailable) {
@@ -346,19 +339,17 @@ QtObject {
         }
     }
     
-    // Connect to external state changes
-    property var settingsConnections: Connections {
-        target: SettingsModel
-        function onCurrentAaConsentChanged() {
-            aaStatus.onConsentChanged(SettingsModel.currentAaConsent)
-        }
-    }
-    
     Component.onCompleted: {
+        // Initialize consent from SettingsModel if available
+        if (typeof SettingsModel !== 'undefined' && SettingsModel) {
+            hasConsent = SettingsModel.currentAaConsent
+        }
+        
         // Subscribe to AA events
         if (wsClient && wsClient.subscribe) {
             wsClient.subscribe('androidauto/#')
         }
+        
         // Initialise state based on current conditions
         updateState()
     }
