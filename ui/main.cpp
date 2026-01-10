@@ -27,6 +27,7 @@
 #include <QTranslator>
 #include <QtQml/QQmlExtensionPlugin>
 
+#include "SettingsRegistry.h"
 #include "Theme.h"
 #include "WebSocketClient.h"
 #include "build_info.h"
