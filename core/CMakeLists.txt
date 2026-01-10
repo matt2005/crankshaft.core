@@ -58,7 +58,7 @@ find_package(Protobuf REQUIRED)
 
 # Add AASDK submodule
 if(EXISTS ${CMAKE_SOURCE_DIR}/external/aasdk/CMakeLists.txt)
-  add_subdirectory(${CMAKE_SOURCE_DIR}/external/aasdk aasdk)
+  add_subdirectory(${CMAKE_SOURCE_DIR}/external/aasdk ${CMAKE_BINARY_DIR}/external/aasdk)
 else()
   message(WARNING "AASDK submodule not found. Run: git submodule update --init --recursive")
 endif()
