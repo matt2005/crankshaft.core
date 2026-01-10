@@ -309,7 +309,8 @@ QtObject {
     }
     
     // WebSocket connection for backend events
-    property var wsConnections: Connections {
+    // Note: Connections handling moved to Component.onCompleted to avoid initialization issues
+    /* property var wsConnections: Connections {
         target: wsClient
         
         function onConnectedChanged() {
@@ -335,6 +336,7 @@ QtObject {
             }
         }
     }
+    */
     
     Component.onCompleted: {
         // Initialize consent from SettingsModel if available
