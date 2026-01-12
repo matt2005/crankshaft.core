@@ -28,6 +28,8 @@ INSTALL_DEPS=false
 VERSION=""
 ARCHITECTURE=""
 SKIP_TESTS=false
+# Build options
+ENABLE_SLIM_UI_FLAG="OFF"
 # Default Debian suite from host, fall back to trixie
 DEBIAN_SUITE=${VERSION_CODENAME:-trixie}
 
@@ -114,7 +116,8 @@ Named parameters:
   --version VERSION      Override project version (default: from CMakeLists.txt)
   --debian-suite SUITE   Target Debian suite (trixie|bookworm) [default: trixie]
   --architecture ARCH    Target architecture (amd64|arm64|armhf) [default: auto-detect]
-  --skip-tests           Skip running tests during build [default: false]
+    --skip-tests           Skip running tests during build [default: false]
+    --enable-slim-ui       Enable slim AndroidAuto UI build (ENABLE_SLIM_UI=ON)
   --install-deps         Install dependencies for the specified component
   --help                 Display this help message
 
@@ -180,6 +183,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --skip-tests)
             SKIP_TESTS=true
+            shift
+            ;;
+        --enable-slim-ui)
+            ENABLE_SLIM_UI_FLAG="ON"
             shift
             ;;
         --install-deps)
@@ -285,9 +292,9 @@ mkdir -p "${BUILD_DIR}"
 echo "Configuring CMake..."
 if [ -n "$VERSION" ]; then
     echo "Using custom version: $VERSION"
-    cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DCMAKE_PROJECT_VERSION="${VERSION}" -DDEBIAN_SUITE="${DEBIAN_SUITE}" $ARCH_CMAKE_FLAGS
+    cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DCMAKE_PROJECT_VERSION="${VERSION}" -DDEBIAN_SUITE="${DEBIAN_SUITE}" -DENABLE_SLIM_UI="${ENABLE_SLIM_UI_FLAG}" $ARCH_CMAKE_FLAGS
 else
-    cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DDEBIAN_SUITE="${DEBIAN_SUITE}" $ARCH_CMAKE_FLAGS
+    cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DDEBIAN_SUITE="${DEBIAN_SUITE}" -DENABLE_SLIM_UI="${ENABLE_SLIM_UI_FLAG}" $ARCH_CMAKE_FLAGS
 fi
 
 # Build

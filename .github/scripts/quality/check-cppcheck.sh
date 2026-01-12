@@ -226,7 +226,7 @@ main() {
         return 2
     fi
 
-    # Run cppcheck on core and ui directories
+    # Run cppcheck on core, ui, and ui-slim directories
     local output
     output=$("${CPPCHECK}" \
         --enable=all \
@@ -238,6 +238,7 @@ main() {
         --suppress=checkersReport \
         "${REPO_ROOT}/core" \
         "${REPO_ROOT}/ui" \
+        "${REPO_ROOT}/ui-slim" \
         2>&1) || true
 
     # Count issues by type

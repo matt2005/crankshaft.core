@@ -143,8 +143,8 @@ check_prerequisites() {
 }
 
 find_cpp_files() {
-    # Find all C++ source files in core/ and ui/ directories
-    find "${REPO_ROOT}/core" "${REPO_ROOT}/ui" \
+    # Find all C++ source files in core/, ui/, and ui-slim/ directories
+    find "${REPO_ROOT}/core" "${REPO_ROOT}/ui" "${REPO_ROOT}/ui-slim" \
         -type f \
         \( -name "*.cpp" -o -name "*.hpp" -o -name "*.h" -o -name "*.cc" \) \
         -not -path "*/build/*" \

@@ -180,7 +180,7 @@ jobs:
       uses: actions/cache@v4
       with:
         path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ matrix.arch }}-${{ hashFiles('docker/Dockerfile.build', 'CMakeLists.txt', 'core/CMakeLists.txt', 'ui/CMakeLists.txt') }}
+        key: ${{ runner.os }}-buildx-${{ matrix.arch }}-${{ hashFiles('docker/Dockerfile.build', 'CMakeLists.txt', 'core/CMakeLists.txt', 'ui/CMakeLists.txt', 'ui-slim/CMakeLists.txt') }}
         restore-keys: |
           ${{ runner.os }}-buildx-${{ matrix.arch }}-
           ${{ runner.os }}-buildx-

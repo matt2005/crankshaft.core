@@ -22,7 +22,7 @@ Implementation tasks for a lightweight, standalone AndroidAuto-focused UI on Ras
 - [X] T001 Create ui-slim directory structure in crankshaft-mvp/ with CMakeLists.txt, src/, qml/, resources/, translations/, tests/
 - [X] T002 Create ui-slim/CMakeLists.txt with Qt6 dependencies (Core, Gui, QML, Quick, Multimedia, SQL), link against crankshaft-core library, set C++17 standard, add clang-format/clang-tidy integration
 - [X] T003 Add ui-slim as subdirectory in root CMakeLists.txt with conditional build flag (ENABLE_SLIM_UI)
-- [ ] T004 Update .github/workflows for ui-slim CI: build (Debug/Release), unit tests, code quality checks (clang-format, clang-tidy, cppcheck)
+- [X] T004 Update .github/workflows for ui-slim CI: build (Debug/Release), unit tests, code quality checks (clang-format, clang-tidy, cppcheck)
 
 ### 1.2 Development Environment
 
