@@ -160,10 +160,10 @@ auto DeviceManager::onConnectionEstablished(const QString& deviceName) -> void {
 // Private methods
 auto DeviceManager::addOrUpdateDevice(const DetectedDevice& device) -> void {
     // Check if device already exists
-    for (int i = 0; i < m_devices.size(); ++i) {
-        if (m_devices[i].deviceId == device.deviceId) {
+    for (auto it = m_devices.begin(); it != m_devices.end(); ++it) {
+        if (it->deviceId == device.deviceId) {
             // Update existing device
-            m_devices[i] = device;
+            *it = device;
             sortDevicesByPriority();
             emit detectedDevicesChanged();
             emit devicesUpdated(detectedDevices());
@@ -184,7 +184,7 @@ auto DeviceManager::addOrUpdateDevice(const DetectedDevice& device) -> void {
 
 auto DeviceManager::removeDevice(const QString& deviceId) -> void {
     for (int i = 0; i < m_devices.size(); ++i) {
-        if (m_devices[i].deviceId == deviceId) {
+        if (m_devices.at(i).deviceId == deviceId) {
             m_devices.removeAt(i);
             
             int count = m_devices.size();
