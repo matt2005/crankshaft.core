@@ -24,6 +24,9 @@ on:
     paths:
       - 'src/core/**'
       - 'src/ui/**'
+      - 'core/**'
+      - 'ui/**'
+      - 'ui-slim/**'
       - '.github/workflows/ci.yml'
       - '.github/workflows/build.yml'
       - 'cmake/**'
@@ -38,6 +41,9 @@ on:
     paths:
       - 'src/core/**'
       - 'src/ui/**'
+      - 'core/**'
+      - 'ui/**'
+      - 'ui-slim/**'
       - '.github/workflows/ci.yml'
       - '.github/workflows/build.yml'
       - 'CMakeLists.txt'

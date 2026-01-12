@@ -106,6 +106,7 @@ find_package(Qt6 REQUIRED COMPONENTS Core Network WebSockets Gui Qml Quick)
 
 # Build options
 option(BUILD_TESTS "Build unit/integration tests" ON)
+option(ENABLE_SLIM_UI "Build slim AndroidAuto UI" OFF)
 
 # Enable testing when requested
 if(BUILD_TESTS)
@@ -115,6 +116,9 @@ endif()
 # Add subdirectories
 add_subdirectory(core)
 add_subdirectory(ui)
+if(ENABLE_SLIM_UI)
+	add_subdirectory(ui-slim)
+endif()
 if(BUILD_TESTS)
 	add_subdirectory(tests)
 endif()
