@@ -105,7 +105,10 @@ bool SettingsMigration::migrate(int fromVersion) {
     // }
     
     // Update schema version
-    m_preferencesService->set(SCHEMA_VERSION_KEY, CURRENT_SCHEMA_VERSION);
+    if (!m_preferencesService->set(SCHEMA_VERSION_KEY, CURRENT_SCHEMA_VERSION)) {
+        Logger::instance().warningContext(QStringLiteral("SettingsMigration"),
+                                          QStringLiteral("Failed to set schema version"));
+    }
     
     Logger::instance().infoContext(QStringLiteral("SettingsMigration"),
                                    QStringLiteral("Migration completed successfully to version %1")
@@ -152,12 +155,18 @@ bool SettingsMigration::recoverToDefaults() {
                                       QStringLiteral("Recovering settings to factory defaults"));
     
     // Set all factory defaults
-    m_preferencesService->set(KEY_DISPLAY_BRIGHTNESS, FactoryDefaults::BRIGHTNESS);
-    m_preferencesService->set(KEY_AUDIO_VOLUME, FactoryDefaults::VOLUME);
-    m_preferencesService->set(KEY_CONNECTION_PREFERENCE, FactoryDefaults::CONNECTION_PREFERENCE);
-    m_preferencesService->set(KEY_THEME_MODE, FactoryDefaults::THEME_MODE);
-    m_preferencesService->set(KEY_LAST_CONNECTED_DEVICE_ID, QString());
-    m_preferencesService->set(SCHEMA_VERSION_KEY, CURRENT_SCHEMA_VERSION);
+    bool success = true;
+    success &= m_preferencesService->set(KEY_DISPLAY_BRIGHTNESS, FactoryDefaults::BRIGHTNESS);
+    success &= m_preferencesService->set(KEY_AUDIO_VOLUME, FactoryDefaults::VOLUME);
+    success &= m_preferencesService->set(KEY_CONNECTION_PREFERENCE, FactoryDefaults::CONNECTION_PREFERENCE);
+    success &= m_preferencesService->set(KEY_THEME_MODE, FactoryDefaults::THEME_MODE);
+    success &= m_preferencesService->set(KEY_LAST_CONNECTED_DEVICE_ID, QString());
+    success &= m_preferencesService->set(SCHEMA_VERSION_KEY, CURRENT_SCHEMA_VERSION);
+    
+    if (!success) {
+        Logger::instance().warningContext(QStringLiteral("SettingsMigration"),
+                                          QStringLiteral("Some settings failed to persist during recovery"));
+    }
     
     Logger::instance().infoContext(QStringLiteral("SettingsMigration"),
                                    QStringLiteral("Settings recovered to factory defaults"));
@@ -176,33 +185,39 @@ bool SettingsMigration::initializeDefaults() {
     
     // Initialize missing settings with defaults
     if (!m_preferencesService->contains(KEY_DISPLAY_BRIGHTNESS)) {
-        m_preferencesService->set(KEY_DISPLAY_BRIGHTNESS, FactoryDefaults::BRIGHTNESS);
-        initialized = true;
+        if (m_preferencesService->set(KEY_DISPLAY_BRIGHTNESS, FactoryDefaults::BRIGHTNESS)) {
+            initialized = true;
+        }
     }
     
     if (!m_preferencesService->contains(KEY_AUDIO_VOLUME)) {
-        m_preferencesService->set(KEY_AUDIO_VOLUME, FactoryDefaults::VOLUME);
-        initialized = true;
+        if (m_preferencesService->set(KEY_AUDIO_VOLUME, FactoryDefaults::VOLUME)) {
+            initialized = true;
+        }
     }
     
     if (!m_preferencesService->contains(KEY_CONNECTION_PREFERENCE)) {
-        m_preferencesService->set(KEY_CONNECTION_PREFERENCE, FactoryDefaults::CONNECTION_PREFERENCE);
-        initialized = true;
+        if (m_preferencesService->set(KEY_CONNECTION_PREFERENCE, FactoryDefaults::CONNECTION_PREFERENCE)) {
+            initialized = true;
+        }
     }
     
     if (!m_preferencesService->contains(KEY_THEME_MODE)) {
-        m_preferencesService->set(KEY_THEME_MODE, FactoryDefaults::THEME_MODE);
-        initialized = true;
+        if (m_preferencesService->set(KEY_THEME_MODE, FactoryDefaults::THEME_MODE)) {
+            initialized = true;
+        }
     }
     
     if (!m_preferencesService->contains(KEY_LAST_CONNECTED_DEVICE_ID)) {
-        m_preferencesService->set(KEY_LAST_CONNECTED_DEVICE_ID, QString());
-        initialized = true;
+        if (m_preferencesService->set(KEY_LAST_CONNECTED_DEVICE_ID, QString())) {
+            initialized = true;
+        }
     }
     
     if (!m_preferencesService->contains(SCHEMA_VERSION_KEY)) {
-        m_preferencesService->set(SCHEMA_VERSION_KEY, CURRENT_SCHEMA_VERSION);
-        initialized = true;
+        if (m_preferencesService->set(SCHEMA_VERSION_KEY, CURRENT_SCHEMA_VERSION)) {
+            initialized = true;
+        }
     }
     
     if (initialized) {
