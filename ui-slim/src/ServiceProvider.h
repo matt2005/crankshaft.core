@@ -46,33 +46,33 @@ public:
     /**
      * @brief Get singleton instance
      */
-    static ServiceProvider& instance();
+    static auto instance() -> ServiceProvider&;
 
     /**
      * @brief Initialize all core services
      * @return true if initialization successful, false on error
      */
-    bool initialize();
+    [[nodiscard]] auto initialize() -> bool;
 
     /**
      * @brief Shutdown all core services
      */
-    void shutdown();
+    auto shutdown() -> void;
 
     /**
      * @brief Check if services are initialized
      */
-    bool isInitialized() const { return m_initialized; }
+    [[nodiscard]] auto isInitialized() const -> bool { return m_initialized; }
 
     // Service accessors
-    AndroidAutoService* androidAutoService() const { return m_androidAutoService.get(); }
-    PreferencesService* preferencesService() const { return m_preferencesService.get(); }
-    EventBus* eventBus() const;  // Returns singleton
-    AudioRouter* audioRouter() const { return m_audioRouter.get(); }
-    Logger* logger() const;  // Returns singleton
-    ServiceManager* serviceManager() const { return m_serviceManager.get(); }
-    MediaPipeline* mediaPipeline() const { return m_mediaPipeline.get(); }
-    ProfileManager* profileManager() const { return m_profileManager.get(); }
+    [[nodiscard]] auto androidAutoService() const -> AndroidAutoService* { return m_androidAutoService.get(); }
+    [[nodiscard]] auto preferencesService() const -> PreferencesService* { return m_preferencesService.get(); }
+    [[nodiscard]] auto eventBus() const -> EventBus*;  // Returns singleton
+    [[nodiscard]] auto audioRouter() const -> AudioRouter* { return m_audioRouter.get(); }
+    [[nodiscard]] auto logger() const -> Logger*;  // Returns singleton
+    [[nodiscard]] auto serviceManager() const -> ServiceManager* { return m_serviceManager.get(); }
+    [[nodiscard]] auto mediaPipeline() const -> MediaPipeline* { return m_mediaPipeline.get(); }
+    [[nodiscard]] auto profileManager() const -> ProfileManager* { return m_profileManager.get(); }
 
 signals:
     void initializationFailed(const QString& reason);
@@ -84,18 +84,12 @@ private:
     ServiceProvider(const ServiceProvider&) = delete;
     ServiceProvider& operator=(const ServiceProvider&) = delete;
 
-    bool initializePreferences();
-    bool initializeMediaPipeline();
-    bool initializeProfileManager();
-    bool initializeAndroidAuto();
-    bool initializeAudioRouter();
-    bool initializeServiceManager();
-
-    std::unique_ptr<PreferencesService> m_preferencesService;
-    std::unique_ptr<MediaPipeline> m_mediaPipeline;
-    std::unique_ptr<ProfileManager> m_profileManager;
-    std::unique_ptr<AndroidAutoService> m_androidAutoService;
-    std::unique_ptr<AudioRouter> m_audioRouter;
+    auto initializePreferences() -> bool;
+    auto initializeMediaPipeline() -> bool;
+    auto initializeProfileManager() -> bool;
+    auto initializeAndroidAuto() -> bool;
+    auto initializeAudioRouter() -> bool;
+    auto initializeServiceManager() -> bool;
     std::unique_ptr<ServiceManager> m_serviceManager;
 
     bool m_initialized{false};

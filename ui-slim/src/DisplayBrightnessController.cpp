@@ -43,7 +43,7 @@ DisplayBrightnessController::DisplayBrightnessController(QObject* parent)
     : QObject(parent) {
 }
 
-bool DisplayBrightnessController::initialize() {
+auto DisplayBrightnessController::initialize() -> bool {
     Logger::instance().infoContext(QStringLiteral("DisplayBrightnessController"),
                                    QStringLiteral("Initializing display brightness controller"));
 
@@ -74,7 +74,7 @@ bool DisplayBrightnessController::initialize() {
     return true;
 }
 
-int DisplayBrightnessController::getCurrentBrightness() const {
+auto DisplayBrightnessController::getCurrentBrightness() const -> int {
     if (m_backendType == BackendType::SYSFS) {
         return readBrightnessFromSysfs();
     }
@@ -83,7 +83,7 @@ int DisplayBrightnessController::getCurrentBrightness() const {
     return m_currentBrightness;
 }
 
-bool DisplayBrightnessController::setBrightness(int percentage) {
+auto DisplayBrightnessController::setBrightness(int percentage) -> bool {
     int validated = validatePercentage(percentage);
     
     if (validated == m_currentBrightness) {
@@ -139,11 +139,11 @@ DisplayBrightnessController::BackendType DisplayBrightnessController::getBackend
     return m_backendType;
 }
 
-bool DisplayBrightnessController::isAvailable() const {
+auto DisplayBrightnessController::isAvailable() const -> bool {
     return m_backendType != BackendType::NONE;
 }
 
-DisplayBrightnessController::BackendType DisplayBrightnessController::detectBackend() {
+auto DisplayBrightnessController::detectBackend() -> BackendType {
     // Try backends in order of preference
     
     // 1. Try sysfs (most reliable for embedded systems)
@@ -177,13 +177,13 @@ DisplayBrightnessController::BackendType DisplayBrightnessController::detectBack
     return BackendType::NONE;
 }
 
-bool DisplayBrightnessController::tryDbusBackend() {
+auto DisplayBrightnessController::tryDbusBackend() -> bool {
     // TODO: Implement DBus detection
     // Would check for systemd-logind or UPower on DBus
     return false;
 }
 
-bool DisplayBrightnessController::trySysfsBackend() {
+auto DisplayBrightnessController::trySysfsBackend() -> bool {
     // Try each known backlight path
     for (const QString& path : BACKLIGHT_PATHS) {
         QString brightnessPath = path + QStringLiteral("/") + BRIGHTNESS_FILE;
@@ -215,13 +215,13 @@ bool DisplayBrightnessController::trySysfsBackend() {
     return false;
 }
 
-bool DisplayBrightnessController::tryQtPlatformBackend() {
+auto DisplayBrightnessController::tryQtPlatformBackend() -> bool {
     // TODO: Implement Qt platform screen brightness detection
     // Would use QPlatformScreen if available
     return false;
 }
 
-bool DisplayBrightnessController::initializeSoftwareBackend() {
+auto DisplayBrightnessController::initializeSoftwareBackend() -> bool {
     // Software backend is always available if we have a QScreen
     if (!QGuiApplication::screens().isEmpty()) {
         return true;
@@ -229,7 +229,7 @@ bool DisplayBrightnessController::initializeSoftwareBackend() {
     return false;
 }
 
-int DisplayBrightnessController::readBrightnessFromSysfs() const {
+auto DisplayBrightnessController::readBrightnessFromSysfs() const -> int {
     if (m_sysfsPath.isEmpty()) {
         return -1;
     }
@@ -261,7 +261,7 @@ int DisplayBrightnessController::readBrightnessFromSysfs() const {
     return validatePercentage(percentage);
 }
 
-bool DisplayBrightnessController::writeBrightnessToSysfs(int percentage) {
+auto DisplayBrightnessController::writeBrightnessToSysfs(int percentage) -> bool {
     if (m_sysfsPath.isEmpty()) {
         return false;
     }
@@ -285,7 +285,7 @@ bool DisplayBrightnessController::writeBrightnessToSysfs(int percentage) {
     return true;
 }
 
-bool DisplayBrightnessController::applySoftwareBrightness(int percentage) {
+auto DisplayBrightnessController::applySoftwareBrightness(int percentage) -> bool {
     // Software brightness simulation using screen gamma/color adjustment
     // This doesn't actually change hardware brightness, just adjusts colors
     
@@ -307,7 +307,7 @@ bool DisplayBrightnessController::applySoftwareBrightness(int percentage) {
     return true;
 }
 
-int DisplayBrightnessController::validatePercentage(int percentage) const {
+auto DisplayBrightnessController::validatePercentage(int percentage) const -> int {
     if (percentage < 0) return 0;
     if (percentage > 100) return 100;
     return percentage;

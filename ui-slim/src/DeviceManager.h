@@ -79,15 +79,15 @@ class DeviceManager : public QObject {
     ~DeviceManager() override;
 
     // Property getters
-    QVariantList detectedDevices() const;
-    int deviceCount() const;
-    bool hasMultipleDevices() const;
-    QVariantMap lastConnectedDevice() const;
+    [[nodiscard]] auto detectedDevices() const -> QVariantList;
+    [[nodiscard]] auto deviceCount() const -> int;
+    [[nodiscard]] auto hasMultipleDevices() const -> bool;
+    [[nodiscard]] auto lastConnectedDevice() const -> QVariantMap;
 
     // Q_INVOKABLE methods for QML
-    Q_INVOKABLE void clearDevices();
-    Q_INVOKABLE QVariantMap getDevice(const QString& deviceId) const;
-    Q_INVOKABLE QString getTopPriorityDeviceId() const;
+    Q_INVOKABLE auto clearDevices() -> void;
+    Q_INVOKABLE [[nodiscard]] auto getDevice(const QString& deviceId) const -> QVariantMap;
+    Q_INVOKABLE [[nodiscard]] auto getTopPriorityDeviceId() const -> QString;
 
   signals:
     void detectedDevicesChanged();
@@ -105,12 +105,12 @@ class DeviceManager : public QObject {
     void onConnectionEstablished(const QString& deviceName);
 
   private:
-    void addOrUpdateDevice(const DetectedDevice& device);
-    void removeDevice(const QString& deviceId);
-    void sortDevicesByPriority();
-    void loadLastConnectedDevice();
-    void saveLastConnectedDevice(const QString& deviceId);
-    int calculatePriority(const DetectedDevice& device) const;
+    auto addOrUpdateDevice(const DetectedDevice& device) -> void;
+    auto removeDevice(const QString& deviceId) -> void;
+    auto sortDevicesByPriority() -> void;
+    auto loadLastConnectedDevice() -> void;
+    auto saveLastConnectedDevice(const QString& deviceId) -> void;
+    auto calculatePriority(const DetectedDevice& device) const -> int;
 
     ServiceProvider* m_serviceProvider;
     AndroidAutoFacade* m_androidAutoFacade;

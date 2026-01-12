@@ -86,7 +86,7 @@ public:
     /**
      * @brief Get singleton instance
      */
-    static ErrorHandler* instance();
+    static auto instance() -> ErrorHandler*;
 
     /**
      * @brief Report an error with code and optional context
@@ -94,28 +94,28 @@ public:
      * @param context Additional context information
      * @param severity Error severity level
      */
-    Q_INVOKABLE void reportError(ErrorCode code, const QString& context = QString(),
-                                 Severity severity = Severity::Error);
+    Q_INVOKABLE auto reportError(ErrorCode code, const QString& context = QString(),
+                                 Severity severity = Severity::Error) -> void;
 
     /**
      * @brief Clear the last error
      */
-    Q_INVOKABLE void clearError();
+    Q_INVOKABLE auto clearError() -> void;
 
     /**
      * @brief Get the last error code as string
      */
-    QString lastError() const { return m_lastErrorCode; }
+    [[nodiscard]] auto lastError() const -> QString { return m_lastErrorCode; }
 
     /**
      * @brief Get the last error message
      */
-    QString lastErrorMessage() const { return m_lastErrorMessage; }
+    [[nodiscard]] auto lastErrorMessage() const -> QString { return m_lastErrorMessage; }
 
     /**
      * @brief Check if there's an active error
      */
-    bool hasError() const { return !m_lastErrorCode.isEmpty(); }
+    [[nodiscard]] auto hasError() const -> bool { return !m_lastErrorCode.isEmpty(); }
 
 signals:
     /**
@@ -136,26 +136,22 @@ private:
     /**
      * @brief Convert error code to string
      */
-    QString errorCodeToString(ErrorCode code) const;
+    auto errorCodeToString(ErrorCode code) const -> QString;
 
     /**
      * @brief Get user-friendly message for error code
      */
-    QString getErrorMessage(ErrorCode code, const QString& context) const;
+    auto getErrorMessage(ErrorCode code, const QString& context) const -> QString;
 
     /**
      * @brief Check if error is retryable
      */
-    bool isRetryable(ErrorCode code) const;
+    auto isRetryable(ErrorCode code) const -> bool;
 
     /**
      * @brief Log error with context
      */
-    void logError(ErrorCode code, const QString& message, const QString& context,
-                  Severity severity);
-
-    QString m_lastErrorCode;
-    QString m_lastErrorMessage;
-
+    auto logError(ErrorCode code, const QString& message, const QString& context,
+                  Severity severity) -> void;
     static ErrorHandler* s_instance;
 };

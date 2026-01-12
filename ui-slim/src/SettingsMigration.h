@@ -61,7 +61,7 @@ public:
      * 
      * @return int The detected schema version, or 0 if not found
      */
-    int detectSchemaVersion() const;
+    [[nodiscard]] auto detectSchemaVersion() const -> int;
     
     /**
      * @brief Check if settings need migration
@@ -69,7 +69,7 @@ public:
      * @return true if migration is needed
      * @return false if settings are current
      */
-    bool needsMigration() const;
+    [[nodiscard]] auto needsMigration() const -> bool;
     
     /**
      * @brief Perform migration from old version to current
@@ -78,7 +78,7 @@ public:
      * @return true if migration succeeded
      * @return false if migration failed
      */
-    bool migrate(int fromVersion);
+    [[nodiscard]] auto migrate(int fromVersion) -> bool;
     
     /**
      * @brief Check if settings are corrupted
@@ -88,7 +88,7 @@ public:
      * @return true if corruption detected
      * @return false if settings are valid
      */
-    bool detectCorruption() const;
+    [[nodiscard]] auto detectCorruption() const -> bool;
     
     /**
      * @brief Recover settings by resetting to factory defaults
@@ -96,7 +96,7 @@ public:
      * @return true if recovery succeeded
      * @return false if recovery failed
      */
-    bool recoverToDefaults();
+    [[nodiscard]] auto recoverToDefaults() -> bool;
     
     /**
      * @brief Initialize settings with factory defaults if not present
@@ -104,7 +104,7 @@ public:
      * @return true if initialization succeeded
      * @return false if initialization failed
      */
-    bool initializeDefaults();
+    [[nodiscard]] auto initializeDefaults() -> bool;
     
     /**
      * @brief Validate a specific setting value
@@ -114,14 +114,14 @@ public:
      * @return true if valid
      * @return false if invalid
      */
-    bool validateSetting(const QString& key, const QVariant& value) const;
+    [[nodiscard]] auto validateSetting(const QString& key, const QVariant& value) const -> bool;
     
     /**
      * @brief Get all setting keys that should exist
      * 
      * @return QStringList List of required setting keys
      */
-    static QStringList getRequiredSettingKeys();
+    static auto getRequiredSettingKeys() -> QStringList;
 
 private:
     PreferencesService* m_preferencesService;
@@ -132,7 +132,7 @@ private:
      * @return true if migration succeeded
      * @return false if migration failed
      */
-    bool migrateV0ToV1();
+    auto migrateV0ToV1() -> bool;
     
     /**
      * @brief Validate percentage value (0-100)
@@ -141,7 +141,7 @@ private:
      * @return true if valid
      * @return false if invalid
      */
-    bool validatePercentage(const QVariant& value) const;
+    auto validatePercentage(const QVariant& value) const -> bool;
     
     /**
      * @brief Validate enum value against allowed values
@@ -151,5 +151,5 @@ private:
      * @return true if valid
      * @return false if invalid
      */
-    bool validateEnum(const QVariant& value, const QStringList& allowedValues) const;
+    auto validateEnum(const QVariant& value, const QStringList& allowedValues) const -> bool;
 };

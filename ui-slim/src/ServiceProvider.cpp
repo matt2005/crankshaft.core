@@ -46,7 +46,7 @@ ServiceProvider& ServiceProvider::instance() {
     return instance;
 }
 
-bool ServiceProvider::initialize() {
+auto ServiceProvider::initialize() -> bool {
     if (m_initialized) {
         return true;
     }
@@ -91,7 +91,7 @@ bool ServiceProvider::initialize() {
     return true;
 }
 
-void ServiceProvider::shutdown() {
+auto ServiceProvider::shutdown() -> void {
     if (!m_initialized) {
         return;
     }
@@ -117,7 +117,7 @@ Logger* ServiceProvider::logger() const {
     return &Logger::instance();
 }
 
-bool ServiceProvider::initializePreferences() {
+auto ServiceProvider::initializePreferences() -> bool {
     QString dbPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) +
                      "/slim-ui-preferences.db";
 
@@ -135,7 +135,7 @@ bool ServiceProvider::initializePreferences() {
     return true;
 }
 
-bool ServiceProvider::initializeMediaPipeline() {
+auto ServiceProvider::initializeMediaPipeline() -> bool {
     // MediaPipeline construction - actual implementation depends on core structure
     // For now, create a basic instance
     m_mediaPipeline = std::make_unique<MediaPipeline>();
@@ -144,7 +144,7 @@ bool ServiceProvider::initializeMediaPipeline() {
     return true;
 }
 
-bool ServiceProvider::initializeProfileManager() {
+auto ServiceProvider::initializeProfileManager() -> bool {
     // ProfileManager needs a config directory, use standard app data location
     QString configDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/profiles";
     m_profileManager = std::make_unique<ProfileManager>(configDir);
@@ -154,7 +154,7 @@ bool ServiceProvider::initializeProfileManager() {
     return true;
 }
 
-bool ServiceProvider::initializeAndroidAuto() {
+auto ServiceProvider::initializeAndroidAuto() -> bool {
     m_androidAutoService = std::unique_ptr<AndroidAutoService>(
         AndroidAutoService::create(m_mediaPipeline.get(), m_profileManager.get(), this));
 
@@ -174,7 +174,7 @@ bool ServiceProvider::initializeAndroidAuto() {
     return true;
 }
 
-bool ServiceProvider::initializeAudioRouter() {
+auto ServiceProvider::initializeAudioRouter() -> bool {
     m_audioRouter = std::make_unique<AudioRouter>(m_mediaPipeline.get(), this);
 
     if (!m_audioRouter->initialize()) {
@@ -188,7 +188,7 @@ bool ServiceProvider::initializeAudioRouter() {
     return true;
 }
 
-bool ServiceProvider::initializeServiceManager() {
+auto ServiceProvider::initializeServiceManager() -> bool {
     m_serviceManager = std::make_unique<ServiceManager>(m_profileManager.get(), this);
 
     Logger::instance().infoContext("ServiceProvider", "ServiceManager initialized");

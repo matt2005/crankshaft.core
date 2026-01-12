@@ -47,28 +47,28 @@ AndroidAutoFacade::~AndroidAutoFacade() {
 }
 
 // Property getters
-int AndroidAutoFacade::connectionState() const {
+auto AndroidAutoFacade::connectionState() const -> int {
     return m_connectionState;
 }
 
-QString AndroidAutoFacade::connectedDeviceName() const {
+auto AndroidAutoFacade::connectedDeviceName() const -> QString {
     return m_connectedDeviceName;
 }
 
-QString AndroidAutoFacade::lastError() const {
+auto AndroidAutoFacade::lastError() const -> QString {
     return m_lastError;
 }
 
-bool AndroidAutoFacade::isVideoActive() const {
+auto AndroidAutoFacade::isVideoActive() const -> bool {
     return m_isVideoActive;
 }
 
-bool AndroidAutoFacade::isAudioActive() const {
+auto AndroidAutoFacade::isAudioActive() const -> bool {
     return m_isAudioActive;
 }
 
 // Q_INVOKABLE methods
-void AndroidAutoFacade::startDiscovery() {
+auto AndroidAutoFacade::startDiscovery() -> void {
     Logger::instance().infoContext("AndroidAutoFacade", "Starting device discovery");
     
     auto* aaService = m_serviceProvider->androidAutoService();
@@ -83,7 +83,7 @@ void AndroidAutoFacade::startDiscovery() {
     aaService->startSearching();
 }
 
-void AndroidAutoFacade::stopDiscovery() {
+auto AndroidAutoFacade::stopDiscovery() -> void {
     Logger::instance().infoContext("AndroidAutoFacade", "Stopping device discovery");
     
     auto* aaService = m_serviceProvider->androidAutoService();
@@ -98,7 +98,7 @@ void AndroidAutoFacade::stopDiscovery() {
     }
 }
 
-void AndroidAutoFacade::connectToDevice(const QString& deviceId) {
+auto AndroidAutoFacade::connectToDevice(const QString& deviceId) -> void {
     Logger::instance().infoContext("AndroidAutoFacade", 
                 QString("Connecting to device: %1").arg(deviceId));
     
@@ -114,7 +114,7 @@ void AndroidAutoFacade::connectToDevice(const QString& deviceId) {
     aaService->connectToDevice(deviceId);
 }
 
-void AndroidAutoFacade::disconnectDevice() {
+auto AndroidAutoFacade::disconnectDevice() -> void {
     Logger::instance().infoContext("AndroidAutoFacade", "Disconnecting device");
     
     auto* aaService = m_serviceProvider->androidAutoService();
@@ -131,7 +131,7 @@ void AndroidAutoFacade::disconnectDevice() {
     emit connectedDeviceNameChanged(m_connectedDeviceName);
 }
 
-void AndroidAutoFacade::retryConnection() {
+auto AndroidAutoFacade::retryConnection() -> void {
     Logger::instance().infoContext("AndroidAutoFacade", "Retrying connection");
     
     m_lastError.clear();
@@ -141,7 +141,7 @@ void AndroidAutoFacade::retryConnection() {
 }
 
 // EventBus slot handlers
-void AndroidAutoFacade::onCoreConnectionStateChanged(int state) {
+auto AndroidAutoFacade::onCoreConnectionStateChanged(int state) -> void {
     Logger::instance().debugContext("AndroidAutoFacade", 
                 QString("Core connection state changed: %1").arg(state));
     
@@ -159,7 +159,7 @@ void AndroidAutoFacade::onCoreConnectionStateChanged(int state) {
     }
 }
 
-void AndroidAutoFacade::onCoreDeviceDiscovered(const QVariantMap& device) {
+auto AndroidAutoFacade::onCoreDeviceDiscovered(const QVariantMap& device) -> void {
     Logger::instance().debugContext("AndroidAutoFacade", 
                 QString("Device discovered: %1").arg(device.value("name").toString()));
     
@@ -171,14 +171,14 @@ void AndroidAutoFacade::onCoreDeviceDiscovered(const QVariantMap& device) {
     emit devicesDetected(deviceList);
 }
 
-void AndroidAutoFacade::onCoreDeviceRemoved(const QString& deviceId) {
+auto AndroidAutoFacade::onCoreDeviceRemoved(const QString& deviceId) -> void {
     Logger::instance().debugContext("AndroidAutoFacade", 
                 QString("Device removed: %1").arg(deviceId));
     
     emit deviceRemoved(deviceId);
 }
 
-void AndroidAutoFacade::onCoreVideoStateChanged(bool active) {
+auto AndroidAutoFacade::onCoreVideoStateChanged(bool active) -> void {
     Logger::instance().debugContext("AndroidAutoFacade", 
                 QString("Video state changed: %1").arg(active ? "active" : "inactive"));
     
@@ -188,7 +188,7 @@ void AndroidAutoFacade::onCoreVideoStateChanged(bool active) {
     }
 }
 
-void AndroidAutoFacade::onCoreAudioStateChanged(bool active) {
+auto AndroidAutoFacade::onCoreAudioStateChanged(bool active) -> void {
     Logger::instance().debugContext("AndroidAutoFacade", 
                 QString("Audio state changed: %1").arg(active ? "active" : "inactive"));
     
@@ -198,7 +198,7 @@ void AndroidAutoFacade::onCoreAudioStateChanged(bool active) {
     }
 }
 
-void AndroidAutoFacade::onCoreConnectionError(const QString& error) {
+auto AndroidAutoFacade::onCoreConnectionError(const QString& error) -> void {
     Logger::instance().errorContext("AndroidAutoFacade", 
                 QString("Connection error: %1").arg(error));
     
@@ -207,7 +207,7 @@ void AndroidAutoFacade::onCoreConnectionError(const QString& error) {
 }
 
 // Private methods
-void AndroidAutoFacade::setupEventBusConnections() {
+auto AndroidAutoFacade::setupEventBusConnections() -> void {
     auto* eventBus = m_serviceProvider->eventBus();
     if (!eventBus) {
         Logger::instance().warningContext("AndroidAutoFacade", "EventBus not available");
@@ -232,7 +232,7 @@ void AndroidAutoFacade::setupEventBusConnections() {
     Logger::instance().debugContext("AndroidAutoFacade", "EventBus connections set up");
 }
 
-void AndroidAutoFacade::updateConnectionState(int newState) {
+auto AndroidAutoFacade::updateConnectionState(int newState) -> void {
     if (m_connectionState != newState) {
         m_connectionState = newState;
         emit connectionStateChanged(m_connectionState);
@@ -242,7 +242,7 @@ void AndroidAutoFacade::updateConnectionState(int newState) {
     }
 }
 
-void AndroidAutoFacade::reportError(const QString& errorMessage) {
+auto AndroidAutoFacade::reportError(const QString& errorMessage) -> void {
     m_lastError = errorMessage;
     emit lastErrorChanged(m_lastError);
     

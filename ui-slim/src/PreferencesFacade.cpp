@@ -42,27 +42,27 @@ PreferencesFacade::PreferencesFacade(ServiceProvider* serviceProvider, QObject* 
     loadSettings();
 }
 
-int PreferencesFacade::displayBrightness() const {
+auto PreferencesFacade::displayBrightness() const -> int {
     return m_displayBrightness;
 }
 
-int PreferencesFacade::audioVolume() const {
+auto PreferencesFacade::audioVolume() const -> int {
     return m_audioVolume;
 }
 
-QString PreferencesFacade::connectionPreference() const {
+auto PreferencesFacade::connectionPreference() const -> QString {
     return m_connectionPreference;
 }
 
-QString PreferencesFacade::themeMode() const {
+auto PreferencesFacade::themeMode() const -> QString {
     return m_themeMode;
 }
 
-QString PreferencesFacade::lastConnectedDeviceId() const {
+auto PreferencesFacade::lastConnectedDeviceId() const -> QString {
     return m_lastConnectedDeviceId;
 }
 
-void PreferencesFacade::setDisplayBrightness(int value) {
+auto PreferencesFacade::setDisplayBrightness(int value) -> void {
     int validated = validatePercentage(value);
     if (validated == m_displayBrightness) {
         return;
@@ -75,7 +75,7 @@ void PreferencesFacade::setDisplayBrightness(int value) {
     emit displayBrightnessChanged(m_displayBrightness);
 }
 
-void PreferencesFacade::setAudioVolume(int value) {
+auto PreferencesFacade::setAudioVolume(int value) -> void {
     int validated = validatePercentage(value);
     if (validated == m_audioVolume) {
         return;
@@ -88,7 +88,7 @@ void PreferencesFacade::setAudioVolume(int value) {
     emit audioVolumeChanged(m_audioVolume);
 }
 
-void PreferencesFacade::setConnectionPreference(const QString& mode) {
+auto PreferencesFacade::setConnectionPreference(const QString& mode) -> void {
     if (mode == m_connectionPreference) {
         return;
     }
@@ -107,7 +107,7 @@ void PreferencesFacade::setConnectionPreference(const QString& mode) {
     emit connectionPreferenceChanged(m_connectionPreference);
 }
 
-void PreferencesFacade::setThemeMode(const QString& mode) {
+auto PreferencesFacade::setThemeMode(const QString& mode) -> void {
     if (mode == m_themeMode) {
         return;
     }
@@ -126,7 +126,7 @@ void PreferencesFacade::setThemeMode(const QString& mode) {
     emit themeModeChanged(m_themeMode);
 }
 
-void PreferencesFacade::setLastConnectedDeviceId(const QString& deviceId) {
+auto PreferencesFacade::setLastConnectedDeviceId(const QString& deviceId) -> void {
     if (deviceId == m_lastConnectedDeviceId) {
         return;
     }
@@ -137,7 +137,7 @@ void PreferencesFacade::setLastConnectedDeviceId(const QString& deviceId) {
     emit lastConnectedDeviceIdChanged(m_lastConnectedDeviceId);
 }
 
-void PreferencesFacade::loadSettings() {
+auto PreferencesFacade::loadSettings() -> void {
     if (!m_serviceProvider) {
         Logger::instance().errorContext(QStringLiteral("PreferencesFacade"), 
                                          QStringLiteral("ServiceProvider not available, using defaults"));
@@ -172,7 +172,7 @@ void PreferencesFacade::loadSettings() {
     emit settingsLoaded();
 }
 
-void PreferencesFacade::saveSettings() {
+auto PreferencesFacade::saveSettings() -> void {
     if (!m_serviceProvider) {
         Logger::instance().errorContext(QStringLiteral("PreferencesFacade"), 
                                          QStringLiteral("ServiceProvider not available, cannot save"));
@@ -197,7 +197,7 @@ void PreferencesFacade::saveSettings() {
     emit settingsSaved();
 }
 
-void PreferencesFacade::resetToDefaults() {
+auto PreferencesFacade::resetToDefaults() -> void {
     Logger::instance().infoContext(QStringLiteral("PreferencesFacade"), QStringLiteral("Resetting settings to factory defaults"));
 
     m_displayBrightness = DEFAULT_BRIGHTNESS;
@@ -215,7 +215,7 @@ void PreferencesFacade::resetToDefaults() {
     emit lastConnectedDeviceIdChanged(m_lastConnectedDeviceId);
 }
 
-QVariant PreferencesFacade::loadSetting(const QString& key, const QVariant& defaultValue) {
+auto PreferencesFacade::loadSetting(const QString& key, const QVariant& defaultValue) -> QVariant {
     if (!m_serviceProvider) {
         return defaultValue;
     }
@@ -229,7 +229,7 @@ QVariant PreferencesFacade::loadSetting(const QString& key, const QVariant& defa
     return value.isValid() ? value : defaultValue;
 }
 
-bool PreferencesFacade::saveSetting(const QString& key, const QVariant& value) {
+auto PreferencesFacade::saveSetting(const QString& key, const QVariant& value) -> bool {
     if (!m_serviceProvider) {
         return false;
     }
@@ -242,7 +242,7 @@ bool PreferencesFacade::saveSetting(const QString& key, const QVariant& value) {
     return prefsService->set(key, value);
 }
 
-int PreferencesFacade::validatePercentage(int value) const {
+auto PreferencesFacade::validatePercentage(int value) const -> int {
     if (value < MIN_PERCENTAGE) {
         return MIN_PERCENTAGE;
     }
@@ -252,7 +252,7 @@ int PreferencesFacade::validatePercentage(int value) const {
     return value;
 }
 
-QString PreferencesFacade::detectAndRecoverCorruption() {
+auto PreferencesFacade::detectAndRecoverCorruption() -> QString {
     QStringList recoveredFields;
 
     // Validate each setting and reset if invalid

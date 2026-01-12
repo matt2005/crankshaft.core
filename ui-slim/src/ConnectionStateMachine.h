@@ -51,18 +51,18 @@ class ConnectionStateMachine : public QObject {
     ~ConnectionStateMachine() override;
 
     // Property getters
-    int currentState() const;
-    int retryCount() const;
-    int nextRetryDelay() const;
-    bool isRetrying() const;
-    QString lastError() const;
-    QDateTime lastTransitionTime() const;
+    [[nodiscard]] auto currentState() const -> int;
+    [[nodiscard]] auto retryCount() const -> int;
+    [[nodiscard]] auto nextRetryDelay() const -> int;
+    [[nodiscard]] auto isRetrying() const -> bool;
+    [[nodiscard]] auto lastError() const -> QString;
+    [[nodiscard]] auto lastTransitionTime() const -> QDateTime;
 
     // Q_INVOKABLE methods for QML
-    Q_INVOKABLE void startConnection();
-    Q_INVOKABLE void stopConnection();
-    Q_INVOKABLE void resetRetryCount();
-    Q_INVOKABLE void handleError(const QString& error);
+    Q_INVOKABLE auto startConnection() -> void;
+    Q_INVOKABLE auto stopConnection() -> void;
+    Q_INVOKABLE auto resetRetryCount() -> void;
+    Q_INVOKABLE auto handleError(const QString& error) -> void;
 
   signals:
     void currentStateChanged(int state);
@@ -85,12 +85,12 @@ class ConnectionStateMachine : public QObject {
     void onConnectionTimeout();
 
   private:
-    void transitionToState(State newState);
-    void startRetryTimer();
-    void stopRetryTimer();
-    int calculateRetryDelay() const;
-    bool isValidTransition(State from, State to) const;
-    void logTransition(State from, State to);
+    auto transitionToState(State newState) -> void;
+    auto startRetryTimer() -> void;
+    auto stopRetryTimer() -> void;
+    auto calculateRetryDelay() const -> int;
+    auto isValidTransition(State from, State to) const -> bool;
+    auto logTransition(State from, State to) -> void;
 
     AndroidAutoFacade* m_androidAutoFacade;
     State m_currentState;

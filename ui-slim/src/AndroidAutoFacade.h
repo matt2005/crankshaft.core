@@ -56,18 +56,18 @@ class AndroidAutoFacade : public QObject {
     ~AndroidAutoFacade() override;
 
     // Property getters
-    int connectionState() const;
-    QString connectedDeviceName() const;
-    QString lastError() const;
-    bool isVideoActive() const;
-    bool isAudioActive() const;
+    [[nodiscard]] auto connectionState() const -> int;
+    [[nodiscard]] auto connectedDeviceName() const -> QString;
+    [[nodiscard]] auto lastError() const -> QString;
+    [[nodiscard]] auto isVideoActive() const -> bool;
+    [[nodiscard]] auto isAudioActive() const -> bool;
 
     // Q_INVOKABLE methods for QML
-    Q_INVOKABLE void startDiscovery();
-    Q_INVOKABLE void stopDiscovery();
-    Q_INVOKABLE void connectToDevice(const QString& deviceId);
-    Q_INVOKABLE void disconnectDevice();
-    Q_INVOKABLE void retryConnection();
+    Q_INVOKABLE auto startDiscovery() -> void;
+    Q_INVOKABLE auto stopDiscovery() -> void;
+    Q_INVOKABLE auto connectToDevice(const QString& deviceId) -> void;
+    Q_INVOKABLE auto disconnectDevice() -> void;
+    Q_INVOKABLE auto retryConnection() -> void;
 
   signals:
     // Connection state changes
@@ -99,9 +99,9 @@ class AndroidAutoFacade : public QObject {
     void onCoreConnectionError(const QString& error);
 
   private:
-    void setupEventBusConnections();
-    void updateConnectionState(int newState);
-    void reportError(const QString& errorMessage);
+    auto setupEventBusConnections() -> void;
+    auto updateConnectionState(int newState) -> void;
+    auto reportError(const QString& errorMessage) -> void;
 
     ServiceProvider* m_serviceProvider;
     int m_connectionState;

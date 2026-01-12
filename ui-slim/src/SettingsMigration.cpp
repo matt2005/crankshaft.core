@@ -43,7 +43,7 @@ SettingsMigration::SettingsMigration(PreferencesService* preferencesService)
     : m_preferencesService(preferencesService) {
 }
 
-int SettingsMigration::detectSchemaVersion() const {
+auto SettingsMigration::detectSchemaVersion() const -> int {
     if (!m_preferencesService) {
         Logger::instance().errorContext(QStringLiteral("SettingsMigration"),
                                         QStringLiteral("PreferencesService is null"));
@@ -70,12 +70,12 @@ int SettingsMigration::detectSchemaVersion() const {
     return version;
 }
 
-bool SettingsMigration::needsMigration() const {
+auto SettingsMigration::needsMigration() const -> bool {
     int currentVersion = detectSchemaVersion();
     return currentVersion < CURRENT_SCHEMA_VERSION;
 }
 
-bool SettingsMigration::migrate(int fromVersion) {
+auto SettingsMigration::migrate(int fromVersion) -> bool {
     if (!m_preferencesService) {
         Logger::instance().errorContext(QStringLiteral("SettingsMigration"),
                                         QStringLiteral("Cannot migrate: PreferencesService is null"));
@@ -117,7 +117,7 @@ bool SettingsMigration::migrate(int fromVersion) {
     return true;
 }
 
-bool SettingsMigration::detectCorruption() const {
+auto SettingsMigration::detectCorruption() const -> bool {
     if (!m_preferencesService) {
         return true; // Null service is corruption
     }
@@ -144,7 +144,7 @@ bool SettingsMigration::detectCorruption() const {
     return false;
 }
 
-bool SettingsMigration::recoverToDefaults() {
+auto SettingsMigration::recoverToDefaults() -> bool {
     if (!m_preferencesService) {
         Logger::instance().errorContext(QStringLiteral("SettingsMigration"),
                                         QStringLiteral("Cannot recover: PreferencesService is null"));
@@ -174,7 +174,7 @@ bool SettingsMigration::recoverToDefaults() {
     return true;
 }
 
-bool SettingsMigration::initializeDefaults() {
+auto SettingsMigration::initializeDefaults() -> bool {
     if (!m_preferencesService) {
         Logger::instance().errorContext(QStringLiteral("SettingsMigration"),
                                         QStringLiteral("Cannot initialize: PreferencesService is null"));
@@ -228,7 +228,7 @@ bool SettingsMigration::initializeDefaults() {
     return true;
 }
 
-bool SettingsMigration::validateSetting(const QString& key, const QVariant& value) const {
+auto SettingsMigration::validateSetting(const QString& key, const QVariant& value) const -> bool {
     if (key == KEY_DISPLAY_BRIGHTNESS || key == KEY_AUDIO_VOLUME) {
         return validatePercentage(value);
     }
@@ -268,7 +268,7 @@ QStringList SettingsMigration::getRequiredSettingKeys() {
     };
 }
 
-bool SettingsMigration::migrateV0ToV1() {
+auto SettingsMigration::migrateV0ToV1() -> bool {
     // Version 0 to Version 1 migration
     // In v0, settings may not have been structured or may be missing
     // In v1, we ensure all required settings exist with valid values
@@ -287,13 +287,13 @@ bool SettingsMigration::migrateV0ToV1() {
     return initializeDefaults();
 }
 
-bool SettingsMigration::validatePercentage(const QVariant& value) const {
+auto SettingsMigration::validatePercentage(const QVariant& value) const -> bool {
     bool ok = false;
     int intValue = value.toInt(&ok);
     return ok && intValue >= MIN_PERCENTAGE && intValue <= MAX_PERCENTAGE;
 }
 
-bool SettingsMigration::validateEnum(const QVariant& value, const QStringList& allowedValues) const {
+auto SettingsMigration::validateEnum(const QVariant& value, const QStringList& allowedValues) const -> bool {
     QString strValue = value.toString();
     return allowedValues.contains(strValue);
 }

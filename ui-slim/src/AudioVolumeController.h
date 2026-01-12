@@ -75,14 +75,14 @@ public:
      * @return true if initialization succeeded
      * @return false if initialization failed (audio unavailable)
      */
-    bool initialize();
+    [[nodiscard]] auto initialize() -> bool;
 
     /**
      * @brief Get the current volume level
      * 
      * @return int Volume percentage (0-100), or -1 if unavailable
      */
-    int getCurrentVolume() const;
+    [[nodiscard]] auto getCurrentVolume() const -> int;
 
     /**
      * @brief Set the volume level
@@ -91,7 +91,7 @@ public:
      * @return true if volume was set successfully
      * @return false if operation failed
      */
-    bool setVolume(int percentage);
+    [[nodiscard]] auto setVolume(int percentage) -> bool;
 
     /**
      * @brief Check if audio is muted
@@ -99,7 +99,7 @@ public:
      * @return true if muted
      * @return false if not muted or status unknown
      */
-    bool isMuted() const;
+    [[nodiscard]] auto isMuted() const -> bool;
 
     /**
      * @brief Set mute state
@@ -108,14 +108,14 @@ public:
      * @return true if mute state was set successfully
      * @return false if operation failed
      */
-    bool setMuted(bool muted);
+    [[nodiscard]] auto setMuted(bool muted) -> bool;
 
     /**
      * @brief Get the current backend type
      * 
      * @return BackendType The active backend
      */
-    BackendType getBackendType() const;
+    [[nodiscard]] auto getBackendType() const -> BackendType;
 
     /**
      * @brief Check if audio control is available
@@ -123,14 +123,14 @@ public:
      * @return true if volume can be controlled
      * @return false if no backend is available (FR-025)
      */
-    bool isAvailable() const;
+    [[nodiscard]] auto isAvailable() const -> bool;
 
     /**
      * @brief Get error message for last failure
      * 
      * @return QString Error message, empty if no error
      */
-    QString getLastError() const;
+    [[nodiscard]] auto getLastError() const -> QString;
 
 signals:
     /**
@@ -172,7 +172,7 @@ private:
      * 
      * @return BackendType The detected backend
      */
-    BackendType detectBackend();
+    auto detectBackend() -> BackendType;
 
     /**
      * @brief Try to initialize AudioRouter backend
@@ -180,7 +180,7 @@ private:
      * @return true if AudioRouter is available
      * @return false otherwise
      */
-    bool tryAudioRouterBackend();
+    auto tryAudioRouterBackend() -> bool;
 
     /**
      * @brief Try to initialize PulseAudio backend
@@ -188,7 +188,7 @@ private:
      * @return true if PulseAudio is available
      * @return false otherwise
      */
-    bool tryPulseAudioBackend();
+    auto tryPulseAudioBackend() -> bool;
 
     /**
      * @brief Try to initialize ALSA backend
@@ -196,7 +196,7 @@ private:
      * @return true if ALSA is available
      * @return false otherwise
      */
-    bool tryAlsaBackend();
+    auto tryAlsaBackend() -> bool;
 
     /**
      * @brief Try to initialize Qt Multimedia backend
@@ -204,14 +204,14 @@ private:
      * @return true if Qt Multimedia is available
      * @return false otherwise
      */
-    bool tryQtMultimediaBackend();
+    auto tryQtMultimediaBackend() -> bool;
 
     /**
      * @brief Read volume from AudioRouter
      * 
      * @return int Volume percentage (0-100), or -1 on error
      */
-    int readVolumeFromAudioRouter() const;
+    auto readVolumeFromAudioRouter() const -> int;
 
     /**
      * @brief Set volume via AudioRouter
@@ -220,7 +220,7 @@ private:
      * @return true if successful
      * @return false on error
      */
-    bool setVolumeViaAudioRouter(int percentage);
+    auto setVolumeViaAudioRouter(int percentage) -> bool;
 
     /**
      * @brief Handle audio backend error (FR-025)
@@ -228,7 +228,7 @@ private:
      * @param context Error context
      * @param message Error message
      */
-    void handleAudioError(const QString& context, const QString& message);
+    auto handleAudioError(const QString& context, const QString& message) -> void;
 
     /**
      * @brief Validate and clamp volume percentage
@@ -236,12 +236,6 @@ private:
      * @param percentage Input percentage
      * @return int Clamped percentage (0-100)
      */
-    int validatePercentage(int percentage) const;
-
-    AudioRouter* m_audioRouter = nullptr;
-    BackendType m_backendType = BackendType::NONE;
-    int m_currentVolume = -1;
-    bool m_isMuted = false;
-    QString m_lastError;
+    auto validatePercentage(int percentage) const -> int;
     bool m_audioAvailable = false;
 };

@@ -59,7 +59,7 @@ QSize TouchEventForwarder::displaySize() const {
     return m_displaySize;
 }
 
-void TouchEventForwarder::setDisplaySize(const QSize& size) {
+auto TouchEventForwarder::setDisplaySize(const QSize& size) -> void {
     if (m_displaySize != size) {
         m_displaySize = size;
         emit displaySizeChanged(size);
@@ -74,7 +74,7 @@ QSize TouchEventForwarder::androidAutoSize() const {
     return m_androidAutoSize;
 }
 
-void TouchEventForwarder::setAndroidAutoSize(const QSize& size) {
+auto TouchEventForwarder::setAndroidAutoSize(const QSize& size) -> void {
     if (m_androidAutoSize != size) {
         m_androidAutoSize = size;
         emit androidAutoSizeChanged(size);
@@ -85,11 +85,11 @@ void TouchEventForwarder::setAndroidAutoSize(const QSize& size) {
     }
 }
 
-bool TouchEventForwarder::isEnabled() const {
+auto TouchEventForwarder::isEnabled() const -> bool {
     return m_isEnabled;
 }
 
-void TouchEventForwarder::setEnabled(bool enabled) {
+auto TouchEventForwarder::setEnabled(bool enabled) -> void {
     if (m_isEnabled != enabled) {
         m_isEnabled = enabled;
         emit enabledChanged(enabled);
@@ -99,12 +99,12 @@ void TouchEventForwarder::setEnabled(bool enabled) {
     }
 }
 
-int TouchEventForwarder::averageLatency() const {
+auto TouchEventForwarder::averageLatency() const -> int {
     return m_averageLatency;
 }
 
 // Q_INVOKABLE methods
-void TouchEventForwarder::forwardTouchEvent(const QString& eventType, const QVariantList& touchPoints) {
+auto TouchEventForwarder::forwardTouchEvent(const QString& eventType, const QVariantList& touchPoints) -> void {
     if (!m_isEnabled) {
         return;
     }
@@ -142,7 +142,7 @@ void TouchEventForwarder::forwardTouchEvent(const QString& eventType, const QVar
                     .arg(latency));
 }
 
-void TouchEventForwarder::forwardMouseEvent(const QString& eventType, qreal x, qreal y) {
+auto TouchEventForwarder::forwardMouseEvent(const QString& eventType, qreal x, qreal y) -> void {
     if (!m_isEnabled) {
         return;
     }
@@ -173,7 +173,7 @@ TouchPoint TouchEventForwarder::createTouchPoint(int id, qreal x, qreal y,
     return point;
 }
 
-QList<TouchPoint> TouchEventForwarder::convertTouchPoints(const QVariantList& qmlTouchPoints) {
+auto TouchEventForwarder::convertTouchPoints(const QVariantList& qmlTouchPoints) -> QList {
     QList<TouchPoint> points;
     
     for (const QVariant& var : qmlTouchPoints) {
@@ -218,7 +218,7 @@ void TouchEventForwarder::sendToAndroidAuto(const QString& eventType,
                     .arg(points.size()));
 }
 
-void TouchEventForwarder::updateLatencyStats(qint64 latencyMs) {
+auto TouchEventForwarder::updateLatencyStats(qint64 latencyMs) -> void {
     m_latencyHistory.append(latencyMs);
     
     // Keep only last MAX_LATENCY_SAMPLES
@@ -240,7 +240,7 @@ void TouchEventForwarder::updateLatencyStats(qint64 latencyMs) {
     }
 }
 
-QPointF TouchEventForwarder::scaleCoordinates(const QPointF& point) const {
+auto TouchEventForwarder::scaleCoordinates(const QPointF& point) const -> QPointF {
     if (m_displaySize.width() == 0 || m_displaySize.height() == 0) {
         Logger::instance().warningContext("TouchEventForwarder", 
                     "Invalid display size for coordinate scaling");

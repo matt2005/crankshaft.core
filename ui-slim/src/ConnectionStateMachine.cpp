@@ -66,23 +66,23 @@ ConnectionStateMachine::~ConnectionStateMachine() {
 }
 
 // Property getters
-int ConnectionStateMachine::currentState() const {
+auto ConnectionStateMachine::currentState() const -> int {
     return static_cast<int>(m_currentState);
 }
 
-int ConnectionStateMachine::retryCount() const {
+auto ConnectionStateMachine::retryCount() const -> int {
     return m_retryCount;
 }
 
-int ConnectionStateMachine::nextRetryDelay() const {
+auto ConnectionStateMachine::nextRetryDelay() const -> int {
     return m_nextRetryDelay;
 }
 
-bool ConnectionStateMachine::isRetrying() const {
+auto ConnectionStateMachine::isRetrying() const -> bool {
     return m_retryTimer->isActive();
 }
 
-QString ConnectionStateMachine::lastError() const {
+auto ConnectionStateMachine::lastError() const -> QString {
     return m_lastError;
 }
 
@@ -91,7 +91,7 @@ QDateTime ConnectionStateMachine::lastTransitionTime() const {
 }
 
 // Q_INVOKABLE methods
-void ConnectionStateMachine::startConnection() {
+auto ConnectionStateMachine::startConnection() -> void {
     Logger::instance().infoContext("ConnectionStateMachine", "Starting connection");
 
     if (m_currentState == State::Connected) {
@@ -110,7 +110,7 @@ void ConnectionStateMachine::startConnection() {
     }
 }
 
-void ConnectionStateMachine::stopConnection() {
+auto ConnectionStateMachine::stopConnection() -> void {
     Logger::instance().infoContext("ConnectionStateMachine", "Stopping connection");
 
     stopRetryTimer();
@@ -123,7 +123,7 @@ void ConnectionStateMachine::stopConnection() {
     transitionToState(State::Disconnected);
 }
 
-void ConnectionStateMachine::resetRetryCount() {
+auto ConnectionStateMachine::resetRetryCount() -> void {
     Logger::instance().infoContext("ConnectionStateMachine", "Resetting retry count");
     
     m_retryCount = 0;
@@ -133,7 +133,7 @@ void ConnectionStateMachine::resetRetryCount() {
     emit nextRetryDelayChanged(m_nextRetryDelay);
 }
 
-void ConnectionStateMachine::handleError(const QString& error) {
+auto ConnectionStateMachine::handleError(const QString& error) -> void {
     Logger::instance().errorContext("ConnectionStateMachine", 
                 QString("Handling error: %1").arg(error));
 
@@ -153,7 +153,7 @@ void ConnectionStateMachine::handleError(const QString& error) {
 }
 
 // Private slots
-void ConnectionStateMachine::onFacadeConnectionStateChanged(int state) {
+auto ConnectionStateMachine::onFacadeConnectionStateChanged(int state) -> void {
     Logger::instance().debugContext("ConnectionStateMachine", 
                 QString("Facade state changed: %1").arg(state));
 
@@ -161,14 +161,14 @@ void ConnectionStateMachine::onFacadeConnectionStateChanged(int state) {
     transitionToState(newState);
 }
 
-void ConnectionStateMachine::onFacadeConnectionFailed(const QString& reason) {
+auto ConnectionStateMachine::onFacadeConnectionFailed(const QString& reason) -> void {
     Logger::instance().errorContext("ConnectionStateMachine", 
                 QString("Connection failed: %1").arg(reason));
 
     handleError(reason);
 }
 
-void ConnectionStateMachine::onFacadeConnectionEstablished(const QString& deviceName) {
+auto ConnectionStateMachine::onFacadeConnectionEstablished(const QString& deviceName) -> void {
     Logger::instance().infoContext("ConnectionStateMachine", 
                 QString("Connection established to: %1").arg(deviceName));
 
@@ -183,7 +183,7 @@ void ConnectionStateMachine::onFacadeConnectionEstablished(const QString& device
     transitionToState(State::Connected);
 }
 
-void ConnectionStateMachine::onRetryTimerTimeout() {
+auto ConnectionStateMachine::onRetryTimerTimeout() -> void {
     Logger::instance().infoContext("ConnectionStateMachine", 
                 QString("Retry attempt %1 after %2ms delay")
                     .arg(m_retryCount + 1)
@@ -208,7 +208,7 @@ void ConnectionStateMachine::onRetryTimerTimeout() {
     }
 }
 
-void ConnectionStateMachine::onConnectionTimeout() {
+auto ConnectionStateMachine::onConnectionTimeout() -> void {
     Logger::instance().warningContext("ConnectionStateMachine", 
                 QString("Connection timeout after %1ms").arg(CONNECTION_TIMEOUT_MS));
 
@@ -216,7 +216,7 @@ void ConnectionStateMachine::onConnectionTimeout() {
 }
 
 // Private methods
-void ConnectionStateMachine::transitionToState(State newState) {
+auto ConnectionStateMachine::transitionToState(State newState) -> void {
     if (m_currentState == newState) {
         return;
     }
@@ -267,7 +267,7 @@ void ConnectionStateMachine::transitionToState(State newState) {
     }
 }
 
-void ConnectionStateMachine::startRetryTimer() {
+auto ConnectionStateMachine::startRetryTimer() -> void {
     if (m_retryTimer->isActive()) {
         stopRetryTimer();
     }
@@ -279,7 +279,7 @@ void ConnectionStateMachine::startRetryTimer() {
     emit retryingChanged(true);
 }
 
-void ConnectionStateMachine::stopRetryTimer() {
+auto ConnectionStateMachine::stopRetryTimer() -> void {
     if (m_retryTimer->isActive()) {
         m_retryTimer->stop();
         emit retryingChanged(false);
@@ -288,7 +288,7 @@ void ConnectionStateMachine::stopRetryTimer() {
     }
 }
 
-int ConnectionStateMachine::calculateRetryDelay() const {
+auto ConnectionStateMachine::calculateRetryDelay() const -> int {
     // Exponential backoff: delay = INITIAL_RETRY_DELAY * 2^retryCount
     int delay = INITIAL_RETRY_DELAY_MS * qPow(2, m_retryCount);
     
@@ -296,7 +296,7 @@ int ConnectionStateMachine::calculateRetryDelay() const {
     return qMin(delay, MAX_RETRY_DELAY_MS);
 }
 
-bool ConnectionStateMachine::isValidTransition(State from, State to) const {
+auto ConnectionStateMachine::isValidTransition(State from, State to) const -> bool {
     // Allow transitions to same state (no-op)
     if (from == to) {
         return true;
@@ -324,7 +324,7 @@ bool ConnectionStateMachine::isValidTransition(State from, State to) const {
     }
 }
 
-void ConnectionStateMachine::logTransition(State from, State to) {
+auto ConnectionStateMachine::logTransition(State from, State to) -> void {
     const char* stateNames[] = {"Disconnected", "Searching", "Connecting", "Connected", "Error"};
     
     Logger::instance().infoContext("ConnectionStateMachine", 

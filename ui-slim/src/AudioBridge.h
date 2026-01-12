@@ -45,15 +45,15 @@ class AudioBridge : public QObject {
     ~AudioBridge() override;
 
     // Property getters
-    bool isAudioAvailable() const;
-    QString audioBackend() const;
-    int bufferSize() const;
-    int sampleRate() const;
+    [[nodiscard]] auto isAudioAvailable() const -> bool;
+    [[nodiscard]] auto audioBackend() const -> QString;
+    [[nodiscard]] auto bufferSize() const -> int;
+    [[nodiscard]] auto sampleRate() const -> int;
 
     // Q_INVOKABLE methods for QML
-    Q_INVOKABLE bool initialize();
-    Q_INVOKABLE void shutdown();
-    Q_INVOKABLE bool setVolume(int volume); // 0-100
+    Q_INVOKABLE [[nodiscard]] auto initialize() -> bool;
+    Q_INVOKABLE auto shutdown() -> void;
+    Q_INVOKABLE [[nodiscard]] auto setVolume(int volume) -> bool; // 0-100
 
   signals:
     void audioAvailabilityChanged(bool available);
@@ -70,11 +70,11 @@ class AudioBridge : public QObject {
     void onCoreAudioError(const QString& error);
 
   private:
-    void detectAudioBackend();
-    bool initializeAudioRouter();
-    void setupEventBusConnections();
-    void handleAudioData(const QByteArray& data);
-    void reportError(const QString& errorMessage);
+    auto detectAudioBackend() -> void;
+    auto initializeAudioRouter() -> bool;
+    auto setupEventBusConnections() -> void;
+    auto handleAudioData(const QByteArray& data) -> void;
+    auto reportError(const QString& errorMessage) -> void;
 
     ServiceProvider* m_serviceProvider;
     AudioBackend m_audioBackend;

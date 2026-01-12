@@ -33,7 +33,7 @@ ErrorHandler* ErrorHandler::instance() {
     return s_instance;
 }
 
-void ErrorHandler::reportError(ErrorCode code, const QString& context, Severity severity) {
+auto ErrorHandler::reportError(ErrorCode code, const QString& context, Severity severity) -> void {
     QString errorCode = errorCodeToString(code);
     QString message = getErrorMessage(code, context);
     bool retryable = isRetryable(code);
@@ -50,7 +50,7 @@ void ErrorHandler::reportError(ErrorCode code, const QString& context, Severity 
     emit errorOccurred(errorCode, message, static_cast<int>(severity), retryable);
 }
 
-void ErrorHandler::clearError() {
+auto ErrorHandler::clearError() -> void {
     if (!m_lastErrorCode.isEmpty()) {
         m_lastErrorCode.clear();
         m_lastErrorMessage.clear();
@@ -58,7 +58,7 @@ void ErrorHandler::clearError() {
     }
 }
 
-QString ErrorHandler::errorCodeToString(ErrorCode code) const {
+auto ErrorHandler::errorCodeToString(ErrorCode code) const -> QString {
     switch (code) {
         case ErrorCode::ConnectionFailed:
             return QStringLiteral("CONNECTION_FAILED");
@@ -93,7 +93,7 @@ QString ErrorHandler::errorCodeToString(ErrorCode code) const {
     }
 }
 
-QString ErrorHandler::getErrorMessage(ErrorCode code, const QString& context) const {
+auto ErrorHandler::getErrorMessage(ErrorCode code, const QString& context) const -> QString {
     QString message;
 
     switch (code) {
@@ -152,7 +152,7 @@ QString ErrorHandler::getErrorMessage(ErrorCode code, const QString& context) co
     return message;
 }
 
-bool ErrorHandler::isRetryable(ErrorCode code) const {
+auto ErrorHandler::isRetryable(ErrorCode code) const -> bool {
     switch (code) {
         case ErrorCode::ConnectionFailed:
         case ErrorCode::ConnectionTimeout:

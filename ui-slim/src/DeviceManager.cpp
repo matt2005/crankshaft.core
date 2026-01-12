@@ -69,11 +69,11 @@ QVariantList DeviceManager::detectedDevices() const {
     return list;
 }
 
-int DeviceManager::deviceCount() const {
+auto DeviceManager::deviceCount() const -> int {
     return m_devices.size();
 }
 
-bool DeviceManager::hasMultipleDevices() const {
+auto DeviceManager::hasMultipleDevices() const -> bool {
     return m_devices.size() > 1;
 }
 
@@ -87,7 +87,7 @@ QVariantMap DeviceManager::lastConnectedDevice() const {
 }
 
 // Q_INVOKABLE methods
-void DeviceManager::clearDevices() {
+auto DeviceManager::clearDevices() -> void {
     Logger::instance().debugContext("DeviceManager", "Clearing all devices");
     
     m_devices.clear();
@@ -105,7 +105,7 @@ QVariantMap DeviceManager::getDevice(const QString& deviceId) const {
     return QVariantMap();
 }
 
-QString DeviceManager::getTopPriorityDeviceId() const {
+auto DeviceManager::getTopPriorityDeviceId() const -> QString {
     if (m_devices.isEmpty()) {
         return QString();
     }
@@ -115,7 +115,7 @@ QString DeviceManager::getTopPriorityDeviceId() const {
 }
 
 // Private slots
-void DeviceManager::onDeviceAdded(const QVariantMap& deviceMap) {
+auto DeviceManager::onDeviceAdded(const QVariantMap& deviceMap) -> void {
     DetectedDevice device = DetectedDevice::fromVariantMap(deviceMap);
     
     // Check if this is the last connected device
@@ -135,7 +135,7 @@ void DeviceManager::onDeviceAdded(const QVariantMap& deviceMap) {
     emit deviceDiscovered(device.toVariantMap());
 }
 
-void DeviceManager::onDeviceRemoved(const QString& deviceId) {
+auto DeviceManager::onDeviceRemoved(const QString& deviceId) -> void {
     Logger::instance().infoContext("DeviceManager", 
                 QString("Device removed: %1").arg(deviceId));
     
@@ -143,7 +143,7 @@ void DeviceManager::onDeviceRemoved(const QString& deviceId) {
     emit deviceRemoved(deviceId);
 }
 
-void DeviceManager::onConnectionEstablished(const QString& deviceName) {
+auto DeviceManager::onConnectionEstablished(const QString& deviceName) -> void {
     Logger::instance().infoContext("DeviceManager", 
                 QString("Connection established to: %1").arg(deviceName));
     
@@ -158,7 +158,7 @@ void DeviceManager::onConnectionEstablished(const QString& deviceName) {
 }
 
 // Private methods
-void DeviceManager::addOrUpdateDevice(const DetectedDevice& device) {
+auto DeviceManager::addOrUpdateDevice(const DetectedDevice& device) -> void {
     // Check if device already exists
     for (int i = 0; i < m_devices.size(); ++i) {
         if (m_devices[i].deviceId == device.deviceId) {
@@ -182,7 +182,7 @@ void DeviceManager::addOrUpdateDevice(const DetectedDevice& device) {
     emit devicesUpdated(detectedDevices());
 }
 
-void DeviceManager::removeDevice(const QString& deviceId) {
+auto DeviceManager::removeDevice(const QString& deviceId) -> void {
     for (int i = 0; i < m_devices.size(); ++i) {
         if (m_devices[i].deviceId == deviceId) {
             m_devices.removeAt(i);
@@ -197,7 +197,7 @@ void DeviceManager::removeDevice(const QString& deviceId) {
     }
 }
 
-void DeviceManager::sortDevicesByPriority() {
+auto DeviceManager::sortDevicesByPriority() -> void {
     std::sort(m_devices.begin(), m_devices.end(),
               [](const DetectedDevice& a, const DetectedDevice& b) {
                   // Higher priority first
@@ -213,7 +213,7 @@ void DeviceManager::sortDevicesByPriority() {
               });
 }
 
-void DeviceManager::loadLastConnectedDevice() {
+auto DeviceManager::loadLastConnectedDevice() -> void {
     auto* prefsService = m_serviceProvider->preferencesService();
     if (!prefsService) {
         Logger::instance().warningContext("DeviceManager", 
@@ -230,7 +230,7 @@ void DeviceManager::loadLastConnectedDevice() {
     }
 }
 
-void DeviceManager::saveLastConnectedDevice(const QString& deviceId) {
+auto DeviceManager::saveLastConnectedDevice(const QString& deviceId) -> void {
     auto* prefsService = m_serviceProvider->preferencesService();
     if (!prefsService) {
         Logger::instance().warningContext("DeviceManager", 
@@ -247,7 +247,7 @@ void DeviceManager::saveLastConnectedDevice(const QString& deviceId) {
                 QString("Saved last connected device: %1").arg(deviceId));
 }
 
-int DeviceManager::calculatePriority(const DetectedDevice& device) const {
+auto DeviceManager::calculatePriority(const DetectedDevice& device) const -> int {
     int priority = 0;
     
     // Last connected device gets highest priority
