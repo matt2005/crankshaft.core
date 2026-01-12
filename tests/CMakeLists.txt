@@ -90,6 +90,7 @@ add_executable(test_websocket
   ../core/hal/multimedia/IAudioMixer.cpp
   ../core/hal/multimedia/AudioMixer.cpp
   ../core/services/audio/AudioRouter.cpp
+  ../core/services/session/SessionStore.cpp
 )
 
 set_target_properties(test_websocket PROPERTIES

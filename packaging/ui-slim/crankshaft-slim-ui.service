@@ -1,0 +1,69 @@
+# Project: Crankshaft
+# This file is part of Crankshaft project.
+# Copyright (C) 2025 OpenCarDev Team
+#
+#  Crankshaft is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  Crankshaft is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
+
+[Unit]
+Description=Crankshaft Slim AndroidAuto UI Service
+Documentation=https://github.com/opencardev/crankshaft.core
+After=crankshaft-core.service graphical.target network.target
+Requires=crankshaft-core.service
+Wants=graphical.target
+
+[Service]
+Type=simple
+User=crankshaft
+Group=crankshaft
+ExecStart=/usr/bin/crankshaft-slim-ui
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Environment for Qt platform (EGLFS for physical display, VNC for remote)
+Environment="QT_QPA_PLATFORM=eglfs"
+Environment="QT_QPA_EGLFS_INTEGRATION=eglfs_kms"
+Environment="QT_QPA_EGLFS_ALWAYS_SET_MODE=1"
+
+# Debug output (set to 1 for verbose logging)
+Environment="SLIM_UI_DEBUG=0"
+Environment="QT_LOGGING_RULES=*.debug=false"
+
+# QML engine settings
+Environment="QML_DISABLE_DISK_CACHE=0"
+Environment="QML_FORCE_DISK_CACHE=1"
+
+# Audio backend preference
+Environment="QT_MULTIMEDIA_PREFERRED_PLUGINS=pulseaudio,alsa"
+
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/crankshaft /var/log/crankshaft /run/crankshaft
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+
+# Resource limits
+MemoryMax=200M
+CPUQuota=80%
+
+# Watchdog (restart if no keep-alive received within 30s)
+WatchdogSec=30
+
+[Install]
+WantedBy=graphical.target

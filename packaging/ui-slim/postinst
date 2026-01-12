@@ -1,0 +1,120 @@
+#!/bin/bash
+# Project: Crankshaft
+# This file is part of Crankshaft project.
+# Copyright (C) 2025 OpenCarDev Team
+#
+#  Crankshaft is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  Crankshaft is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
+
+set -e
+
+# Post-installation script for crankshaft-slim-ui
+
+case "$1" in
+    configure)
+        echo "Configuring crankshaft-slim-ui..."
+
+        # Create crankshaft user if it doesn't exist
+        if ! getent passwd crankshaft >/dev/null; then
+            echo "Creating crankshaft user..."
+            useradd --system --home-dir /var/lib/crankshaft --create-home \
+                    --shell /usr/sbin/nologin --comment "Crankshaft System User" \
+                    crankshaft
+        fi
+
+        # Create required directories
+        mkdir -p /var/lib/crankshaft/slim-ui
+        mkdir -p /var/log/crankshaft
+        mkdir -p /run/crankshaft
+        mkdir -p /etc/crankshaft
+
+        # Set ownership
+        chown -R crankshaft:crankshaft /var/lib/crankshaft
+        chown -R crankshaft:crankshaft /var/log/crankshaft
+        chown -R crankshaft:crankshaft /run/crankshaft
+
+        # Add crankshaft user to required groups for hardware access
+        usermod -a -G video crankshaft || true
+        usermod -a -G audio crankshaft || true
+        usermod -a -G input crankshaft || true
+        usermod -a -G render crankshaft || true
+        usermod -a -G plugdev crankshaft || true
+
+        # Set permissions for QML cache directory
+        if [ -d /var/cache/crankshaft ]; then
+            chown -R crankshaft:crankshaft /var/cache/crankshaft
+        else
+            mkdir -p /var/cache/crankshaft
+            chown -R crankshaft:crankshaft /var/cache/crankshaft
+        fi
+
+        # Enable and reload systemd service
+        if [ -d /run/systemd/system ]; then
+            echo "Reloading systemd daemon..."
+            systemctl daemon-reload || true
+
+            echo "Enabling crankshaft-slim-ui service..."
+            systemctl enable crankshaft-slim-ui.service || true
+
+            # Don't start automatically during package installation
+            # User should manually start or reboot
+            echo ""
+            echo "==================================================================="
+            echo "Crankshaft Slim UI installed successfully!"
+            echo ""
+            echo "To start the service:"
+            echo "  sudo systemctl start crankshaft-slim-ui"
+            echo ""
+            echo "To check service status:"
+            echo "  sudo systemctl status crankshaft-slim-ui"
+            echo ""
+            echo "To view logs:"
+            echo "  sudo journalctl -u crankshaft-slim-ui -f"
+            echo ""
+            echo "Configuration directory: /etc/crankshaft/"
+            echo "Data directory: /var/lib/crankshaft/slim-ui/"
+            echo "==================================================================="
+            echo ""
+        fi
+
+        # Set up logrotate for application logs
+        if [ -d /etc/logrotate.d ]; then
+            cat > /etc/logrotate.d/crankshaft-slim-ui <<EOF
+/var/log/crankshaft/slim-ui.log {
+    daily
+    rotate 7
+    compress
+    delaycompress
+    missingok
+    notifempty
+    create 0640 crankshaft crankshaft
+    sharedscripts
+    postrotate
+        systemctl reload crankshaft-slim-ui.service > /dev/null 2>&1 || true
+    endscript
+}
+EOF
+        fi
+
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+exit 0
