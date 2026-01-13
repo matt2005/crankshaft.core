@@ -76,7 +76,7 @@ class AudioMixer : public IAudioMixer {
   QByteArray resample(const QByteArray& input, int inputSampleRate, int outputSampleRate,
                       int channels, int bitsPerSample);
   void mixBuffers();
-  float applySaturation(float sample);
+  auto applySaturation(float sample) -> float;
 
   AudioFormat m_masterFormat;
   float m_masterVolume{0.75f};

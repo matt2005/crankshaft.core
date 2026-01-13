@@ -35,7 +35,7 @@ class WebSocketClient : public QObject {
   Q_INVOKABLE void unsubscribe(const QString& topic);
   Q_INVOKABLE void publish(const QString& topic, const QVariantMap& payload);
 
-  [[nodiscard]] bool isConnected() const;
+  [[nodiscard]] auto isConnected() const -> bool;
 
  signals:
   void eventReceived(const QString& topic, const QVariantMap& payload);

@@ -49,19 +49,19 @@ class ExtensionManager : public QObject {
 
   // Install or update an extension from a JSON manifest
   // Returns: error message (empty if successful)
-  Q_INVOKABLE QString installExtension(const QString &manifestJson, const QString &targetDir);
+  Q_INVOKABLE auto installExtension(const QString &manifestJson, const QString &targetDir) -> QString;
 
   // Uninstall an extension
-  Q_INVOKABLE QString uninstallExtension(const QString &extensionId);
+  Q_INVOKABLE auto uninstallExtension(const QString &extensionId) -> QString;
 
   // Start an extension process
-  Q_INVOKABLE QString startExtension(const QString &extensionId);
+  Q_INVOKABLE auto startExtension(const QString &extensionId) -> QString;
 
   // Stop an extension process
-  Q_INVOKABLE QString stopExtension(const QString &extensionId);
+  Q_INVOKABLE auto stopExtension(const QString &extensionId) -> QString;
 
   // Restart an extension process
-  Q_INVOKABLE QString restartExtension(const QString &extensionId);
+  Q_INVOKABLE auto restartExtension(const QString &extensionId) -> QString;
 
   // List all installed extensions
   Q_INVOKABLE QJsonArray listExtensions();
@@ -70,7 +70,7 @@ class ExtensionManager : public QObject {
   Q_INVOKABLE QJsonObject getExtensionInfo(const QString &extensionId);
 
   // Check if extension has a specific permission
-  Q_INVOKABLE bool hasPermission(const QString &extensionId, const QString &permission);
+  Q_INVOKABLE auto hasPermission(const QString &extensionId, const QString &permission) -> bool;
 
   // Get all extensions with a specific permission
   Q_INVOKABLE QJsonArray getExtensionsWithPermission(const QString &permission);
@@ -93,19 +93,19 @@ class ExtensionManager : public QObject {
   ExtensionInfo parseManifest(const QJsonObject &manifest, const QString &installDir);
 
   // Validate manifest against schema
-  bool validateManifest(const QJsonObject &manifest);
+  auto validateManifest(const QJsonObject &manifest) -> bool;
 
   // Set up cgroup v2 resource limits for extension process
-  bool setupCgroupLimits(qint64 pid, const QString &extensionId);
+  auto setupCgroupLimits(qint64 pid, const QString &extensionId) -> bool;
 
   // Start supervised process with error handling
   qint64 startProcess(const QString &extensionId, const ExtensionInfo &info);
 
   // Stop process gracefully with fallback to kill
-  bool stopProcess(qint64 pid);
+  auto stopProcess(qint64 pid) -> bool;
 
   // Apply resource limits to cgroup
-  bool applyCgroupLimits(const QString &cgroupPath, qint64 cpuQuotaUs, qint64 memoryLimitBytes);
+  auto applyCgroupLimits(const QString &cgroupPath, qint64 cpuQuotaUs, qint64 memoryLimitBytes) -> bool;
 
   QString m_extensionsDir;
   QMap<QString, ExtensionInfo> m_extensions;

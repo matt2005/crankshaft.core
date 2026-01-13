@@ -295,7 +295,7 @@ class AndroidAutoServiceImpl : public AndroidAutoService {
 AndroidAutoService::AndroidAutoService(QObject* parent) : QObject(parent) {}
 
 // Base class destructor
-AndroidAutoService::~AndroidAutoService() {}
+AndroidAutoService::~AndroidAutoService() = default;
 
 // Static factory function
 AndroidAutoService* AndroidAutoService::create(MediaPipeline* mediaPipeline,

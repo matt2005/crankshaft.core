@@ -41,11 +41,11 @@ class SettingsModel : public QObject {
   ~SettingsModel() override;
 
   // Getters
-  QString currentTheme() const;
-  QString currentLanguage() const;
-  QString currentLayoutPreference() const;
-  QString currentPrimaryDisplayId() const;
-  bool currentAaConsent() const;
+  auto currentTheme() const -> QString;
+  auto currentLanguage() const -> QString;
+  auto currentLayoutPreference() const -> QString;
+  auto currentPrimaryDisplayId() const -> QString;
+  auto currentAaConsent() const -> bool;
 
   // Setters
   void setCurrentTheme(const QString& theme);

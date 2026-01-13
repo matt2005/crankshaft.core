@@ -69,26 +69,26 @@ class SettingsRegistry : public QObject {
   Q_INVOKABLE QVariantMap getPage(const QString &pageId) const;
 
   // Get category containing page
-  Q_INVOKABLE QString getCategoryForPage(const QString &pageId) const;
+  Q_INVOKABLE auto getCategoryForPage(const QString &pageId) const -> QString;
 
   // User settings persistence
-  Q_INVOKABLE QString theme() const;
+  Q_INVOKABLE auto theme() const -> QString;
   Q_INVOKABLE void setTheme(const QString &theme);
 
-  Q_INVOKABLE QString language() const;
+  Q_INVOKABLE auto language() const -> QString;
   Q_INVOKABLE void setLanguage(const QString &language);
 
-  Q_INVOKABLE QString layoutPreference() const;
+  Q_INVOKABLE auto layoutPreference() const -> QString;
   Q_INVOKABLE void setLayoutPreference(const QString &pref);
 
-  Q_INVOKABLE QString primaryDisplayId() const;
+  Q_INVOKABLE auto primaryDisplayId() const -> QString;
   Q_INVOKABLE void setPrimaryDisplayId(const QString &displayId);
 
-  Q_INVOKABLE bool aaConsent() const;
+  Q_INVOKABLE auto aaConsent() const -> bool;
   Q_INVOKABLE void setAaConsent(bool consent);
 
   QVariantList categories() const;
-  QString currentComplexityLevel() const;
+  auto currentComplexityLevel() const -> QString;
   void setCurrentComplexityLevel(const QString &level);
 
  signals:
@@ -143,7 +143,7 @@ class SettingsRegistry : public QObject {
   QVariantMap pageToVariantMap(const SettingsPage &page) const;
   QVariantMap settingToVariantMap(const SettingDefinition &setting) const;
   ComplexityLevel complexityLevelFromInt(int level) const;
-  QString complexityLevelToString(ComplexityLevel level) const;
+  auto complexityLevelToString(ComplexityLevel level) const -> QString;
   ComplexityLevel complexityLevelFromString(const QString &level) const;
 };
 

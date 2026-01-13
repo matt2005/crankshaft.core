@@ -87,12 +87,12 @@ class CANDevice : public FunctionalDevice {
   /**
    * @brief Send CAN message
    */
-  bool sendMessage(const CANMessage& message);
+  auto sendMessage(const CANMessage& message) -> bool;
 
   /**
    * @brief Set CAN bus bit rate
    */
-  bool setBitRate(quint32 bitRate);
+  auto setBitRate(quint32 bitRate) -> bool;
 
   /**
    * @brief Get current bit rate

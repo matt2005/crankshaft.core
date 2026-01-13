@@ -53,7 +53,7 @@ class DiagnosticsEndpoint : public QObject {
    * Initialise the diagnostics endpoint
    * @return true if successfully initialised, false otherwise
    */
-  bool init();
+  auto init() -> bool;
 
   /**
    * Shutdown the diagnostics endpoint
@@ -143,12 +143,12 @@ class DiagnosticsEndpoint : public QObject {
   /**
    * Calculate CPU usage percentage
    */
-  float calculateCpuUsage();
+  auto calculateCpuUsage() -> float;
 
   /**
    * Calculate memory usage in MB
    */
-  float calculateMemoryUsage();
+  auto calculateMemoryUsage() -> float;
 
   EventBus* m_eventBus;
   ServiceManager* m_serviceManager;

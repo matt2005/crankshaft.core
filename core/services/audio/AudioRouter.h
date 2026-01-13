@@ -72,7 +72,7 @@ class AudioRouter : public QObject {
   /**
    * @brief Initialize audio router with PipeWire/PulseAudio
    */
-  bool initialize();
+  auto initialize() -> bool;
 
   /**
    * @brief Route audio data from AA channel to vehicle output
@@ -87,7 +87,7 @@ class AudioRouter : public QObject {
    * - Format: PCM 16-bit signed
    * - Endianness: Native (typically little-endian on ARM)
    */
-  bool routeAudioFrame(AAudioStreamRole role, const QByteArray& audioData);
+  auto routeAudioFrame(AAudioStreamRole role, const QByteArray& audioData) -> bool;
 
   /**
    * @brief Set target audio device for given stream role
@@ -96,7 +96,7 @@ class AudioRouter : public QObject {
    * @param deviceId Device ID to route to (empty = default)
    * @return true if device set successfully
    */
-  bool setAudioDevice(AAudioStreamRole role, const QString& deviceId);
+  auto setAudioDevice(AAudioStreamRole role, const QString& deviceId) -> bool;
 
   /**
    * @brief Get list of available audio output devices
@@ -110,12 +110,12 @@ class AudioRouter : public QObject {
    * @param volume Volume level (0-100)
    * @return true if volume set successfully
    */
-  bool setStreamVolume(AAudioStreamRole role, int volume);
+  auto setStreamVolume(AAudioStreamRole role, int volume) -> bool;
 
   /**
    * @brief Mute/unmute specific audio stream
    */
-  bool setStreamMuted(AAudioStreamRole role, bool muted);
+  auto setStreamMuted(AAudioStreamRole role, bool muted) -> bool;
 
   /**
    * @brief Enable audio ducking for non-critical streams
@@ -123,12 +123,12 @@ class AudioRouter : public QObject {
    * When guidance audio is active, automatically reduce volume
    * of media and system sounds to improve comprehension
    */
-  bool enableAudioDucking(bool enable);
+  auto enableAudioDucking(bool enable) -> bool;
 
   /**
    * @brief Shutdown audio routing and cleanup resources
    */
-  bool shutdown();
+  auto shutdown() -> bool;
 
  signals:
   void audioDevicesChanged();
@@ -141,12 +141,12 @@ class AudioRouter : public QObject {
   /**
    * @brief Initialize PipeWire backend
    */
-  bool initializePipeWire();
+  auto initializePipeWire() -> bool;
 
   /**
    * @brief Initialize PulseAudio backend
    */
-  bool initializePulseAudio();
+  auto initializePulseAudio() -> bool;
 
   /**
    * @brief Select appropriate audio device based on role

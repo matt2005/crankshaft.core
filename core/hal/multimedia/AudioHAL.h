@@ -39,18 +39,18 @@ class AudioHAL : public QObject {
   explicit AudioHAL(QObject* parent = nullptr);
   ~AudioHAL() override;
 
-  bool setVolume(int volume);
-  int getVolume() const;
+  auto setVolume(int volume) -> bool;
+  auto getVolume() const -> int;
 
-  bool setMute(bool muted);
-  bool isMuted() const;
+  auto setMute(bool muted) -> bool;
+  auto isMuted() const -> bool;
 
-  bool setRoute(AudioRoute route);
+  auto setRoute(AudioRoute route) -> bool;
   AudioRoute getCurrentRoute() const;
 
-  bool startStream(const QString& streamName, int sampleRate, int channels);
-  bool stopStream(const QString& streamName);
-  bool pushAudioData(const QByteArray& data);
+  auto startStream(const QString& streamName, int sampleRate, int channels) -> bool;
+  auto stopStream(const QString& streamName) -> bool;
+  auto pushAudioData(const QByteArray& data) -> bool;
 
   QStringList getAvailableDevices() const;
 
@@ -63,7 +63,7 @@ class AudioHAL : public QObject {
   void routeChanged(AudioRoute route);
 
  private:
-  bool initializePipeline();
+  auto initializePipeline() -> bool;
   void cleanup();
 
   class AudioHALPrivate;

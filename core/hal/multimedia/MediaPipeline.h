@@ -64,17 +64,17 @@ class MediaPipeline : public QObject {
   /**
    * @brief Start the media pipeline with given configuration
    */
-  bool start(const MediaConfig& config);
+  auto start(const MediaConfig& config) -> bool;
 
   /**
    * @brief Stop the media pipeline
    */
-  bool stop();
+  auto stop() -> bool;
 
   /**
    * @brief Check if pipeline is active
    */
-  bool isActive() const;
+  auto isActive() const -> bool;
 
   /**
    * @brief Get audio HAL
@@ -89,12 +89,12 @@ class MediaPipeline : public QObject {
   /**
    * @brief Push audio data to pipeline
    */
-  bool pushAudioData(const QByteArray& data);
+  auto pushAudioData(const QByteArray& data) -> bool;
 
   /**
    * @brief Push video frame to pipeline
    */
-  bool pushVideoFrame(const QByteArray& frameData);
+  auto pushVideoFrame(const QByteArray& frameData) -> bool;
 
   /**
    * @brief Get current configuration
@@ -104,7 +104,7 @@ class MediaPipeline : public QObject {
   /**
    * @brief Update configuration dynamically
    */
-  bool updateConfig(const MediaConfig& config);
+  auto updateConfig(const MediaConfig& config) -> bool;
 
  signals:
   void pipelineStarted();
