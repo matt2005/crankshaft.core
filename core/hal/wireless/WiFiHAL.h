@@ -71,7 +71,8 @@ class WiFiHAL : public QObject {
   auto getSignalStrength() const -> int;
   auto getIPAddress() const -> QString;
 
-  auto connectToNetwork(const QString& ssid, const QString& password, WiFiSecurity security) -> bool;
+  auto connectToNetwork(const QString& ssid, const QString& password, WiFiSecurity security)
+      -> bool;
   auto disconnect() -> bool;
   auto forgetNetwork(const QString& ssid) -> bool;
   QStringList getSavedNetworks() const;

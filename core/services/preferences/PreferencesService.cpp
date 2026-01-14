@@ -147,7 +147,8 @@ bool PreferencesService::set(const QString& key, const QVariant& value) {
   // Handle different QVariant types for proper JSON serialization
   if (value.metaType().id() == QMetaType::Bool) {
     jsonString = value.toBool() ? QStringLiteral("true") : QStringLiteral("false");
-  } else if (value.metaType().id() == QMetaType::Int || value.metaType().id() == QMetaType::Double) {
+  } else if (value.metaType().id() == QMetaType::Int ||
+             value.metaType().id() == QMetaType::Double) {
     jsonString = value.toString();
   } else if (value.metaType().id() == QMetaType::QString) {
     // Escape quotes in string values

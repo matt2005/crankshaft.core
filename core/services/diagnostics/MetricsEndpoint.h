@@ -56,11 +56,11 @@ class MetricTimeSeries {
   void addSample(qint64 timestamp, double value);
 
   QJsonObject toJson(int lastN = -1) const;
-    [[nodiscard]] double getLatest() const;
-    [[nodiscard]] double getAverage(int lastN = -1) const;
-    [[nodiscard]] double getMin(int lastN = -1) const;
-    [[nodiscard]] double getMax(int lastN = -1) const;
-    [[nodiscard]] int getSampleCount() const;
+  [[nodiscard]] double getLatest() const;
+  [[nodiscard]] double getAverage(int lastN = -1) const;
+  [[nodiscard]] double getMin(int lastN = -1) const;
+  [[nodiscard]] double getMax(int lastN = -1) const;
+  [[nodiscard]] int getSampleCount() const;
 
   const QString& getName() const {
     return m_name;
@@ -122,7 +122,7 @@ class MetricsEndpoint : public QObject {
   // Metric collection control
   void startCollection(int intervalMs = 60000);  // Default: 1 minute
   void stopCollection();
-    [[nodiscard]] bool isCollecting() const;
+  [[nodiscard]] bool isCollecting() const;
 
   // Manual metric recording
   void recordMemoryUsage(double memoryMB);
@@ -164,10 +164,10 @@ class MetricsEndpoint : public QObject {
 
  private:
   // System metrics collection
-    [[nodiscard]] double getCurrentMemoryUsageMB() const;
-    [[nodiscard]] double getCurrentCpuPercent() const;
-    [[nodiscard]] int getActiveWebSocketConnections() const;
-    [[nodiscard]] int getTotalWebSocketConnections() const;
+  [[nodiscard]] double getCurrentMemoryUsageMB() const;
+  [[nodiscard]] double getCurrentCpuPercent() const;
+  [[nodiscard]] int getActiveWebSocketConnections() const;
+  [[nodiscard]] int getTotalWebSocketConnections() const;
 
   // Alert evaluation
   void evaluateAlert(const MetricAlert& alert, double currentValue);

@@ -15,7 +15,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef SETTINGSMODEL_H
 #define SETTINGSMODEL_H
@@ -30,11 +30,16 @@ class SettingsRegistry;
 class SettingsModel : public QObject {
   Q_OBJECT
 
-  Q_PROPERTY(QString currentTheme READ currentTheme WRITE setCurrentTheme NOTIFY currentThemeChanged)
-  Q_PROPERTY(QString currentLanguage READ currentLanguage WRITE setCurrentLanguage NOTIFY currentLanguageChanged)
-  Q_PROPERTY(QString currentLayoutPreference READ currentLayoutPreference WRITE setCurrentLayoutPreference NOTIFY currentLayoutPreferenceChanged)
-  Q_PROPERTY(QString currentPrimaryDisplayId READ currentPrimaryDisplayId WRITE setCurrentPrimaryDisplayId NOTIFY currentPrimaryDisplayIdChanged)
-  Q_PROPERTY(bool currentAaConsent READ currentAaConsent WRITE setCurrentAaConsent NOTIFY currentAaConsentChanged)
+  Q_PROPERTY(
+      QString currentTheme READ currentTheme WRITE setCurrentTheme NOTIFY currentThemeChanged)
+  Q_PROPERTY(QString currentLanguage READ currentLanguage WRITE setCurrentLanguage NOTIFY
+                 currentLanguageChanged)
+  Q_PROPERTY(QString currentLayoutPreference READ currentLayoutPreference WRITE
+                 setCurrentLayoutPreference NOTIFY currentLayoutPreferenceChanged)
+  Q_PROPERTY(QString currentPrimaryDisplayId READ currentPrimaryDisplayId WRITE
+                 setCurrentPrimaryDisplayId NOTIFY currentPrimaryDisplayIdChanged)
+  Q_PROPERTY(bool currentAaConsent READ currentAaConsent WRITE setCurrentAaConsent NOTIFY
+                 currentAaConsentChanged)
 
  public:
   explicit SettingsModel(SettingsRegistry* registry, QObject* parent = nullptr);
