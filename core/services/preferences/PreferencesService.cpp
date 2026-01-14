@@ -145,11 +145,11 @@ bool PreferencesService::set(const QString& key, const QVariant& value) {
   QString jsonString;
 
   // Handle different QVariant types for proper JSON serialization
-  if (value.type() == QVariant::Bool) {
+  if (value.metaType().id() == QMetaType::Bool) {
     jsonString = value.toBool() ? QStringLiteral("true") : QStringLiteral("false");
-  } else if (value.type() == QVariant::Int || value.type() == QVariant::Double) {
+  } else if (value.metaType().id() == QMetaType::Int || value.metaType().id() == QMetaType::Double) {
     jsonString = value.toString();
-  } else if (value.type() == QVariant::String) {
+  } else if (value.metaType().id() == QMetaType::QString) {
     // Escape quotes in string values
     jsonString = QStringLiteral("\"%1\"").arg(value.toString().replace("\"", "\\\""));
   } else {

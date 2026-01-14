@@ -98,7 +98,8 @@ class TestAASessionLifecycle : public QObject {
     deviceInfo["paired"] = false;
     deviceInfo["capabilities"] = "media";
 
-    m_sessionStore->createDevice(deviceId, deviceInfo);
+    bool deviceCreated = m_sessionStore->createDevice(deviceId, deviceInfo);
+    QVERIFY(deviceCreated);
 
     // Create session in NEGOTIATING state
     QString sessionId = QUuid::createUuid().toString();
@@ -183,17 +184,21 @@ class TestAASessionLifecycle : public QObject {
     deviceInfo["paired"] = false;
     deviceInfo["capabilities"] = "media";
 
-    m_sessionStore->createDevice(deviceId, deviceInfo);
+    bool deviceCreated = m_sessionStore->createDevice(deviceId, deviceInfo);
+    QVERIFY(deviceCreated);
 
     QString session1Id = QUuid::createUuid().toString();
-    m_sessionStore->createSession(session1Id, deviceId, "active");
+    bool session1Created = m_sessionStore->createSession(session1Id, deviceId, "active");
+    QVERIFY(session1Created);
 
     // Simulate disconnect
-    m_sessionStore->updateSessionState(session1Id, "ended");
+    bool stateUpdated = m_sessionStore->updateSessionState(session1Id, "ended");
+    QVERIFY(stateUpdated);
 
     // Second connection (device still in database)
     QString session2Id = QUuid::createUuid().toString();
-    m_sessionStore->createSession(session2Id, deviceId, "active");
+    bool session2Created = m_sessionStore->createSession(session2Id, deviceId, "active");
+    QVERIFY(session2Created);
 
     // Both sessions should exist
     QVariantMap sess1 = m_sessionStore->getSession(session1Id);
@@ -217,10 +222,12 @@ class TestAASessionLifecycle : public QObject {
     deviceInfo["paired"] = false;
     deviceInfo["capabilities"] = "media";
 
-    m_sessionStore->createDevice(deviceId, deviceInfo);
+    bool deviceCreated = m_sessionStore->createDevice(deviceId, deviceInfo);
+    QVERIFY(deviceCreated);
 
     QString sessionId = QUuid::createUuid().toString();
-    m_sessionStore->createSession(sessionId, deviceId, "negotiating");
+    bool sessionCreated = m_sessionStore->createSession(sessionId, deviceId, "negotiating");
+    QVERIFY(sessionCreated);
 
     // Transition to ERROR state (connection failed)
     bool updated = m_sessionStore->updateSessionState(sessionId, "error");
@@ -253,15 +260,19 @@ class TestAASessionLifecycle : public QObject {
     deviceInfo2["paired"] = false;
     deviceInfo2["capabilities"] = "media";
 
-    m_sessionStore->createDevice(device1Id, deviceInfo1);
-    m_sessionStore->createDevice(device2Id, deviceInfo2);
+    bool device1Created = m_sessionStore->createDevice(device1Id, deviceInfo1);
+    QVERIFY(device1Created);
+    bool device2Created = m_sessionStore->createDevice(device2Id, deviceInfo2);
+    QVERIFY(device2Created);
 
     // Create concurrent sessions
     QString session1Id = QUuid::createUuid().toString();
     QString session2Id = QUuid::createUuid().toString();
 
-    m_sessionStore->createSession(session1Id, device1Id, "active");
-    m_sessionStore->createSession(session2Id, device2Id, "active");
+    bool session1Created = m_sessionStore->createSession(session1Id, device1Id, "active");
+    QVERIFY(session1Created);
+    bool session2Created = m_sessionStore->createSession(session2Id, device2Id, "active");
+    QVERIFY(session2Created);
 
     // Both sessions should be active independently
     QVariantMap sess1 = m_sessionStore->getSession(session1Id);
@@ -272,7 +283,8 @@ class TestAASessionLifecycle : public QObject {
     QVERIFY(sess1.value("device_id") != sess2.value("device_id"));
 
     // Update one without affecting the other
-    m_sessionStore->updateSessionState(session1Id, "ended");
+    bool updated = m_sessionStore->updateSessionState(session1Id, "ended");
+    QVERIFY(updated);
 
     sess1 = m_sessionStore->getSession(session1Id);
     sess2 = m_sessionStore->getSession(session2Id);
@@ -292,7 +304,8 @@ class TestAASessionLifecycle : public QObject {
     deviceInfo["paired"] = false;
     deviceInfo["capabilities"] = "media";
 
-    m_sessionStore->createDevice(deviceId, deviceInfo);
+    bool deviceCreated = m_sessionStore->createDevice(deviceId, deviceInfo);
+    QVERIFY(deviceCreated);
 
     // Get initial device
     QVariantMap device1 = m_sessionStore->getDevice(deviceId);
@@ -321,10 +334,12 @@ class TestAASessionLifecycle : public QObject {
     deviceInfo["paired"] = false;
     deviceInfo["capabilities"] = "media";
 
-    m_sessionStore->createDevice(deviceId, deviceInfo);
+    bool deviceCreated = m_sessionStore->createDevice(deviceId, deviceInfo);
+    QVERIFY(deviceCreated);
 
     QString sessionId = QUuid::createUuid().toString();
-    m_sessionStore->createSession(sessionId, deviceId, "active");
+    bool sessionCreated = m_sessionStore->createSession(sessionId, deviceId, "active");
+    QVERIFY(sessionCreated);
 
     // End the session
     bool ended = m_sessionStore->endSession(sessionId);
