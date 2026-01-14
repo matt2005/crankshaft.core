@@ -139,7 +139,7 @@
     <message>
         <location filename="../qml/Strings.qml" line="25"/>
         <source>Back</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Back</translation>
     </message>
     <message>
         <location filename="../qml/Strings.qml" line="26"/>
