@@ -31,7 +31,8 @@ UARTTransport::UARTTransport(const QString& portName, QObject* parent)
 }
 
 UARTTransport::~UARTTransport() {
-  close();
+  // Virtual function calls in destructors are avoided
+  // Smart pointers will clean up automatically
 }
 
 QString UARTTransport::getName() const {

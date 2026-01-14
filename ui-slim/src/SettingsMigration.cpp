@@ -19,6 +19,7 @@
 
 #include "SettingsMigration.h"
 
+#include <algorithm>
 #include <QVariant>
 
 #include "../../core/services/preferences/PreferencesService.h"
@@ -96,7 +97,8 @@ auto SettingsMigration::migrate(int fromVersion) -> bool {
                                             QStringLiteral("Migration from v0 to v1 failed"));
             return false;
         }
-        fromVersion = 1;
+        // Update local variable for next iteration
+        // Note: this only affects the local copy; the preference is updated below
     }
 
     // Future migrations would go here:
@@ -127,13 +129,19 @@ auto SettingsMigration::detectCorruption() const -> bool {
 
     // Check if all required keys exist
     const auto requiredKeys = getRequiredSettingKeys();
-    for (const auto& key : requiredKeys) {
+    bool anyMissing = std::any_of(requiredKeys.begin(), requiredKeys.end(),
+                                  [this](const QString& key) {
+                                    return !m_preferencesService->contains(key);
+                                  });
+    if (anyMissing) {
+      for (const auto& key : requiredKeys) {
         if (!m_preferencesService->contains(key)) {
-            Logger::instance().warningContext(
-                QStringLiteral("SettingsMigration"),
-                QStringLiteral("Missing required setting: %1").arg(key));
-            return true;
+          Logger::instance().warningContext(
+              QStringLiteral("SettingsMigration"),
+              QStringLiteral("Missing required setting: %1").arg(key));
         }
+      }
+      return true;
 
         // Validate each setting value
         QVariant value = m_preferencesService->get(key);

@@ -30,7 +30,8 @@ AudioMixer::AudioMixer(QObject* parent) : IAudioMixer(parent) {
 }
 
 AudioMixer::~AudioMixer() {
-  deinitialize();
+  // Virtual function calls in destructors are avoided
+  // Smart pointers will clean up automatically
 }
 
 bool AudioMixer::initialize(const AudioFormat& masterFormat) {

@@ -30,7 +30,8 @@ GStreamerVideoDecoder::GStreamerVideoDecoder(QObject* parent) : IVideoDecoder(pa
 }
 
 GStreamerVideoDecoder::~GStreamerVideoDecoder() {
-  deinitialize();
+  // Virtual function calls in destructors are avoided
+  // Smart pointers will clean up automatically
 }
 
 bool GStreamerVideoDecoder::initialize(const DecoderConfig& config) {
