@@ -15,7 +15,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef ANDROIDAUTOFACADE_H
 #define ANDROIDAUTOFACADE_H
@@ -31,18 +31,19 @@ class AndroidAutoFacade : public QObject {
 
     // Connection state: Maps to core AndroidAutoService::ConnectionState
     Q_PROPERTY(int connectionState READ connectionState NOTIFY connectionStateChanged)
-    
+
     // Connected device information
-    Q_PROPERTY(QString connectedDeviceName READ connectedDeviceName NOTIFY connectedDeviceNameChanged)
-    
+    Q_PROPERTY(
+        QString connectedDeviceName READ connectedDeviceName NOTIFY connectedDeviceNameChanged)
+
     // Last error message
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
-    
+
     // Media state
     Q_PROPERTY(bool isVideoActive READ isVideoActive NOTIFY isVideoActiveChanged)
     Q_PROPERTY(bool isAudioActive READ isAudioActive NOTIFY isAudioActiveChanged)
 
-  public:
+public:
     enum ConnectionState {
         Disconnected = 0,
         Searching = 1,
@@ -69,27 +70,27 @@ class AndroidAutoFacade : public QObject {
     Q_INVOKABLE auto disconnectDevice() -> void;
     Q_INVOKABLE auto retryConnection() -> void;
 
-  signals:
+signals:
     // Connection state changes
     void connectionStateChanged(int state);
     void connectedDeviceNameChanged(const QString& name);
     void lastErrorChanged(const QString& error);
-    
+
     // Media state changes
     void isVideoActiveChanged(bool active);
     void isAudioActiveChanged(bool active);
-    
+
     // Discovery events
     void devicesDetected(const QVariantList& devices);
     void deviceAdded(const QVariantMap& device);
     void deviceRemoved(const QString& deviceId);
-    
+
     // Connection events
     void connectionFailed(const QString& reason);
     void connectionEstablished(const QString& deviceName);
     void disconnectionRequested();
 
-  private slots:
+private slots:
     // EventBus subscriptions
     void onCoreConnectionStateChanged(int state);
     void onCoreDeviceDiscovered(const QVariantMap& device);
@@ -98,7 +99,7 @@ class AndroidAutoFacade : public QObject {
     void onCoreAudioStateChanged(bool active);
     void onCoreConnectionError(const QString& error);
 
-  private:
+private:
     auto setupEventBusConnections() -> void;
     auto updateConnectionState(int newState) -> void;
     auto reportError(const QString& errorMessage) -> void;
@@ -111,4 +112,4 @@ class AndroidAutoFacade : public QObject {
     bool m_isAudioActive;
 };
 
-#endif // ANDROIDAUTOFACADE_H
+#endif  // ANDROIDAUTOFACADE_H

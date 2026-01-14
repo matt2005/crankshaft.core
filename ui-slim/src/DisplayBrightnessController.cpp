@@ -18,30 +18,28 @@
  */
 
 #include "DisplayBrightnessController.h"
-#include "Logger.h"
 
 #include <QDir>
 #include <QFile>
-#include <QTextStream>
-#include <QScreen>
 #include <QGuiApplication>
+#include <QScreen>
+
+#include <QTextStream>
+
+#include "Logger.h"
 
 namespace {
 // Sysfs backlight paths to try
-const QStringList BACKLIGHT_PATHS = {
-    QStringLiteral("/sys/class/backlight/rpi_backlight"),
-    QStringLiteral("/sys/class/backlight/backlight"),
-    QStringLiteral("/sys/class/backlight/acpi_video0"),
-    QStringLiteral("/sys/class/backlight/intel_backlight")
-};
+const QStringList BACKLIGHT_PATHS = {QStringLiteral("/sys/class/backlight/rpi_backlight"),
+                                     QStringLiteral("/sys/class/backlight/backlight"),
+                                     QStringLiteral("/sys/class/backlight/acpi_video0"),
+                                     QStringLiteral("/sys/class/backlight/intel_backlight")};
 
 const char* BRIGHTNESS_FILE = "brightness";
 const char* MAX_BRIGHTNESS_FILE = "max_brightness";
-}
+}  // namespace
 
-DisplayBrightnessController::DisplayBrightnessController(QObject* parent)
-    : QObject(parent) {
-}
+DisplayBrightnessController::DisplayBrightnessController(QObject* parent) : QObject(parent) {}
 
 auto DisplayBrightnessController::initialize() -> bool {
     Logger::instance().infoContext(QStringLiteral("DisplayBrightnessController"),
@@ -49,26 +47,29 @@ auto DisplayBrightnessController::initialize() -> bool {
 
     // Detect the best available backend
     m_backendType = detectBackend();
-    
+
     if (m_backendType == BackendType::NONE) {
-        Logger::instance().warningContext(QStringLiteral("DisplayBrightnessController"),
-                                          QStringLiteral("No brightness control backend available"));
+        Logger::instance().warningContext(
+            QStringLiteral("DisplayBrightnessController"),
+            QStringLiteral("No brightness control backend available"));
         return false;
     }
 
     // Read initial brightness
     m_currentBrightness = getCurrentBrightness();
-    
+
     if (m_currentBrightness < 0) {
-        Logger::instance().warningContext(QStringLiteral("DisplayBrightnessController"),
-                                          QStringLiteral("Could not read initial brightness, using default 50%"));
+        Logger::instance().warningContext(
+            QStringLiteral("DisplayBrightnessController"),
+            QStringLiteral("Could not read initial brightness, using default 50%"));
         m_currentBrightness = 50;
     }
 
-    Logger::instance().infoContext(QStringLiteral("DisplayBrightnessController"),
-                                   QStringLiteral("Initialized with backend type %1, current brightness: %2%")
-                                   .arg(static_cast<int>(m_backendType))
-                                   .arg(m_currentBrightness));
+    Logger::instance().infoContext(
+        QStringLiteral("DisplayBrightnessController"),
+        QStringLiteral("Initialized with backend type %1, current brightness: %2%")
+            .arg(static_cast<int>(m_backendType))
+            .arg(m_currentBrightness));
 
     emit backendDetected(m_backendType);
     return true;
@@ -78,43 +79,45 @@ auto DisplayBrightnessController::getCurrentBrightness() const -> int {
     if (m_backendType == BackendType::SYSFS) {
         return readBrightnessFromSysfs();
     }
-    
+
     // For other backends, return cached value
     return m_currentBrightness;
 }
 
 auto DisplayBrightnessController::setBrightness(int percentage) -> bool {
     int validated = validatePercentage(percentage);
-    
+
     if (validated == m_currentBrightness) {
-        return true; // No change needed
+        return true;  // No change needed
     }
 
     bool success = false;
-    
+
     switch (m_backendType) {
         case BackendType::DBUS:
             // TODO: Implement DBus brightness control
-            Logger::instance().warningContext(QStringLiteral("DisplayBrightnessController"),
-                                              QStringLiteral("DBus backend not yet implemented, using software fallback"));
+            Logger::instance().warningContext(
+                QStringLiteral("DisplayBrightnessController"),
+                QStringLiteral("DBus backend not yet implemented, using software fallback"));
             success = applySoftwareBrightness(validated);
             break;
-            
+
         case BackendType::SYSFS:
             success = writeBrightnessToSysfs(validated);
             break;
-            
+
         case BackendType::QT_PLATFORM:
             // TODO: Implement Qt platform brightness control
-            Logger::instance().warningContext(QStringLiteral("DisplayBrightnessController"),
-                                              QStringLiteral("Qt platform backend not yet implemented, using software fallback"));
+            Logger::instance().warningContext(
+                QStringLiteral("DisplayBrightnessController"),
+                QStringLiteral("Qt platform backend not yet implemented, using software fallback"));
             success = applySoftwareBrightness(validated);
             break;
-            
+
         case BackendType::SOFTWARE:
             success = applySoftwareBrightness(validated);
             break;
-            
+
         case BackendType::NONE:
         default:
             Logger::instance().errorContext(QStringLiteral("DisplayBrightnessController"),
@@ -128,8 +131,9 @@ auto DisplayBrightnessController::setBrightness(int percentage) -> bool {
                                        QStringLiteral("Brightness set to %1%").arg(validated));
         emit brightnessChanged(validated);
     } else {
-        Logger::instance().errorContext(QStringLiteral("DisplayBrightnessController"),
-                                        QStringLiteral("Failed to set brightness to %1%").arg(validated));
+        Logger::instance().errorContext(
+            QStringLiteral("DisplayBrightnessController"),
+            QStringLiteral("Failed to set brightness to %1%").arg(validated));
     }
 
     return success;
@@ -145,7 +149,7 @@ auto DisplayBrightnessController::isAvailable() const -> bool {
 
 auto DisplayBrightnessController::detectBackend() -> BackendType {
     // Try backends in order of preference
-    
+
     // 1. Try sysfs (most reliable for embedded systems)
     if (trySysfsBackend()) {
         Logger::instance().infoContext(QStringLiteral("DisplayBrightnessController"),
@@ -188,14 +192,14 @@ auto DisplayBrightnessController::trySysfsBackend() -> bool {
     for (const QString& path : BACKLIGHT_PATHS) {
         QString brightnessPath = path + QStringLiteral("/") + BRIGHTNESS_FILE;
         QString maxBrightnessPath = path + QStringLiteral("/") + MAX_BRIGHTNESS_FILE;
-        
+
         QFile brightnessFile(brightnessPath);
         QFile maxBrightnessFile(maxBrightnessPath);
-        
+
         if (brightnessFile.exists() && maxBrightnessFile.exists()) {
             // Found a valid backlight device
             m_sysfsPath = path;
-            
+
             // Read max brightness
             if (maxBrightnessFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
                 QTextStream in(&maxBrightnessFile);
@@ -207,11 +211,11 @@ auto DisplayBrightnessController::trySysfsBackend() -> bool {
                 }
                 maxBrightnessFile.close();
             }
-            
+
             return true;
         }
     }
-    
+
     return false;
 }
 
@@ -236,10 +240,11 @@ auto DisplayBrightnessController::readBrightnessFromSysfs() const -> int {
 
     QString brightnessPath = m_sysfsPath + QStringLiteral("/") + BRIGHTNESS_FILE;
     QFile file(brightnessPath);
-    
+
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        Logger::instance().errorContext(QStringLiteral("DisplayBrightnessController"),
-                                        QStringLiteral("Failed to read brightness from: %1").arg(brightnessPath));
+        Logger::instance().errorContext(
+            QStringLiteral("DisplayBrightnessController"),
+            QStringLiteral("Failed to read brightness from: %1").arg(brightnessPath));
         return -1;
     }
 
@@ -249,7 +254,7 @@ auto DisplayBrightnessController::readBrightnessFromSysfs() const -> int {
 
     bool ok = false;
     int brightness = line.toInt(&ok);
-    
+
     if (!ok) {
         Logger::instance().errorContext(QStringLiteral("DisplayBrightnessController"),
                                         QStringLiteral("Invalid brightness value: %1").arg(line));
@@ -271,10 +276,11 @@ auto DisplayBrightnessController::writeBrightnessToSysfs(int percentage) -> bool
 
     QString brightnessPath = m_sysfsPath + QStringLiteral("/") + BRIGHTNESS_FILE;
     QFile file(brightnessPath);
-    
+
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        Logger::instance().errorContext(QStringLiteral("DisplayBrightnessController"),
-                                        QStringLiteral("Failed to open brightness file for writing: %1").arg(brightnessPath));
+        Logger::instance().errorContext(
+            QStringLiteral("DisplayBrightnessController"),
+            QStringLiteral("Failed to open brightness file for writing: %1").arg(brightnessPath));
         return false;
     }
 
@@ -288,7 +294,7 @@ auto DisplayBrightnessController::writeBrightnessToSysfs(int percentage) -> bool
 auto DisplayBrightnessController::applySoftwareBrightness(int percentage) -> bool {
     // Software brightness simulation using screen gamma/color adjustment
     // This doesn't actually change hardware brightness, just adjusts colors
-    
+
     auto screens = QGuiApplication::screens();
     if (screens.isEmpty()) {
         return false;
@@ -296,14 +302,15 @@ auto DisplayBrightnessController::applySoftwareBrightness(int percentage) -> boo
 
     // Calculate brightness factor (0.0 - 1.0)
     qreal factor = percentage / 100.0;
-    
+
     // Apply gamma correction to simulate brightness
     // Note: This is a simplified implementation
     // Full implementation would use QScreen::setGamma() if available
-    
-    Logger::instance().infoContext(QStringLiteral("DisplayBrightnessController"),
-                                   QStringLiteral("Applied software brightness: %1%").arg(percentage));
-    
+
+    Logger::instance().infoContext(
+        QStringLiteral("DisplayBrightnessController"),
+        QStringLiteral("Applied software brightness: %1%").arg(percentage));
+
     return true;
 }
 

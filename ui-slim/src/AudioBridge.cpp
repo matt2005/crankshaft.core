@@ -15,26 +15,26 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "AudioBridge.h"
-#include "ServiceProvider.h"
-#include "../../core/services/logging/Logger.h"
-#include "../../core/services/audio/AudioRouter.h"
-#include "../../core/services/eventbus/EventBus.h"
 
 #include <QFile>
 
+#include "../../core/services/audio/AudioRouter.h"
+#include "../../core/services/eventbus/EventBus.h"
+#include "../../core/services/logging/Logger.h"
+#include "ServiceProvider.h"
+
 AudioBridge::AudioBridge(ServiceProvider* serviceProvider, QObject* parent)
-    : QObject(parent)
-    , m_serviceProvider(serviceProvider)
-    , m_audioBackend(AudioBackend::None)
-    , m_isAudioAvailable(false)
-    , m_bufferSize(4096)
-    , m_sampleRate(48000)
-    , m_channels(2)
-    , m_bitsPerSample(16) {
-    
+    : QObject(parent),
+      m_serviceProvider(serviceProvider),
+      m_audioBackend(AudioBackend::None),
+      m_isAudioAvailable(false),
+      m_bufferSize(4096),
+      m_sampleRate(48000),
+      m_channels(2),
+      m_bitsPerSample(16) {
     if (!m_serviceProvider) {
         Logger::instance().errorContext("AudioBridge", "ServiceProvider is null");
         return;
@@ -42,7 +42,7 @@ AudioBridge::AudioBridge(ServiceProvider* serviceProvider, QObject* parent)
 
     // Detect available audio backend
     detectAudioBackend();
-    
+
     Logger::instance().infoContext("AudioBridge", "Initialized");
 }
 
@@ -52,9 +52,7 @@ AudioBridge::~AudioBridge() {
 }
 
 // Property getters
-auto AudioBridge::isAudioAvailable() const -> bool {
-    return m_isAudioAvailable;
-}
+auto AudioBridge::isAudioAvailable() const -> bool { return m_isAudioAvailable; }
 
 auto AudioBridge::audioBackend() const -> QString {
     switch (m_audioBackend) {
@@ -68,29 +66,24 @@ auto AudioBridge::audioBackend() const -> QString {
     }
 }
 
-auto AudioBridge::bufferSize() const -> int {
-    return m_bufferSize;
-}
+auto AudioBridge::bufferSize() const -> int { return m_bufferSize; }
 
-auto AudioBridge::sampleRate() const -> int {
-    return m_sampleRate;
-}
+auto AudioBridge::sampleRate() const -> int { return m_sampleRate; }
 
 // Q_INVOKABLE methods
 auto AudioBridge::initialize() -> bool {
     Logger::instance().infoContext("AudioBridge", "Initializing audio system");
 
     if (m_audioBackend == AudioBackend::None) {
-        Logger::instance().warningContext("AudioBridge", 
-                    "No audio backend detected, running in silent mode");
+        Logger::instance().warningContext("AudioBridge",
+                                          "No audio backend detected, running in silent mode");
         emit audioError("No audio backend available");
         return false;
     }
 
     // Initialize AudioRouter via ServiceProvider
     if (!initializeAudioRouter()) {
-        Logger::instance().errorContext("AudioBridge", 
-                    "Failed to initialize AudioRouter");
+        Logger::instance().errorContext("AudioBridge", "Failed to initialize AudioRouter");
         reportError("Audio initialization failed");
         return false;
     }
@@ -102,11 +95,12 @@ auto AudioBridge::initialize() -> bool {
     emit audioAvailabilityChanged(true);
     emit audioInitialized(audioBackend());
 
-    Logger::instance().infoContext("AudioBridge", 
-                QString("Audio system initialized with backend: %1, sample rate: %2 Hz, buffer: %3 bytes")
-                    .arg(audioBackend())
-                    .arg(m_sampleRate)
-                    .arg(m_bufferSize));
+    Logger::instance().infoContext(
+        "AudioBridge",
+        QString("Audio system initialized with backend: %1, sample rate: %2 Hz, buffer: %3 bytes")
+            .arg(audioBackend())
+            .arg(m_sampleRate)
+            .arg(m_bufferSize));
 
     return true;
 }
@@ -130,23 +124,22 @@ auto AudioBridge::shutdown() -> void {
 
 auto AudioBridge::setVolume(int volume) -> bool {
     if (volume < 0 || volume > 100) {
-        Logger::instance().warningContext("AudioBridge", 
-                    QString("Invalid volume level: %1 (must be 0-100)").arg(volume));
+        Logger::instance().warningContext(
+            "AudioBridge", QString("Invalid volume level: %1 (must be 0-100)").arg(volume));
         return false;
     }
 
     auto* audioRouter = m_serviceProvider->audioRouter();
     if (!audioRouter) {
-        Logger::instance().warningContext("AudioBridge", 
-                    "AudioRouter not available, cannot set volume");
+        Logger::instance().warningContext("AudioBridge",
+                                          "AudioRouter not available, cannot set volume");
         return false;
     }
 
     // TODO: Set volume via AudioRouter once API is confirmed
     // audioRouter->setVolume(volume / 100.0f); // Convert to 0.0-1.0
 
-    Logger::instance().debugContext("AudioBridge", 
-                QString("Volume set to: %1%").arg(volume));
+    Logger::instance().debugContext("AudioBridge", QString("Volume set to: %1%").arg(volume));
 
     return true;
 }
@@ -161,12 +154,13 @@ auto AudioBridge::onCoreAudioDataAvailable(const QByteArray& data) -> void {
     emit audioDataReceived(data.size());
 }
 
-auto AudioBridge::onCoreAudioFormatChanged(int sampleRate, int channels, int bitsPerSample) -> void {
-    Logger::instance().infoContext("AudioBridge", 
-                QString("Audio format changed: %1 Hz, %2 channels, %3 bits")
-                    .arg(sampleRate)
-                    .arg(channels)
-                    .arg(bitsPerSample));
+auto AudioBridge::onCoreAudioFormatChanged(int sampleRate, int channels, int bitsPerSample)
+    -> void {
+    Logger::instance().infoContext("AudioBridge",
+                                   QString("Audio format changed: %1 Hz, %2 channels, %3 bits")
+                                       .arg(sampleRate)
+                                       .arg(channels)
+                                       .arg(bitsPerSample));
 
     m_sampleRate = sampleRate;
     m_channels = channels;
@@ -176,17 +170,15 @@ auto AudioBridge::onCoreAudioFormatChanged(int sampleRate, int channels, int bit
 }
 
 auto AudioBridge::onCoreAudioError(const QString& error) -> void {
-    Logger::instance().errorContext("AudioBridge", 
-                QString("Core audio error: %1").arg(error));
-    
+    Logger::instance().errorContext("AudioBridge", QString("Core audio error: %1").arg(error));
+
     reportError(error);
 }
 
 // Private methods
 auto AudioBridge::detectAudioBackend() -> void {
     // Check for PulseAudio first (preferred on modern Linux)
-    if (QFile::exists("/usr/bin/pulseaudio") || 
-        QFile::exists("/usr/bin/pactl") ||
+    if (QFile::exists("/usr/bin/pulseaudio") || QFile::exists("/usr/bin/pactl") ||
         qEnvironmentVariableIsSet("PULSE_SERVER")) {
         m_audioBackend = AudioBackend::PulseAudio;
         Logger::instance().infoContext("AudioBridge", "Detected PulseAudio backend");
@@ -194,8 +186,7 @@ auto AudioBridge::detectAudioBackend() -> void {
     }
 
     // Check for ALSA
-    if (QFile::exists("/proc/asound/version") || 
-        QFile::exists("/dev/snd") ||
+    if (QFile::exists("/proc/asound/version") || QFile::exists("/dev/snd") ||
         QFile::exists("/usr/share/alsa")) {
         m_audioBackend = AudioBackend::ALSA;
         Logger::instance().infoContext("AudioBridge", "Detected ALSA backend");
@@ -204,28 +195,27 @@ auto AudioBridge::detectAudioBackend() -> void {
 
     // No audio backend detected
     m_audioBackend = AudioBackend::None;
-    Logger::instance().warningContext("AudioBridge", 
-                "No audio backend detected (checked PulseAudio and ALSA)");
+    Logger::instance().warningContext("AudioBridge",
+                                      "No audio backend detected (checked PulseAudio and ALSA)");
 }
 
 auto AudioBridge::initializeAudioRouter() -> bool {
     auto* audioRouter = m_serviceProvider->audioRouter();
     if (!audioRouter) {
-        Logger::instance().errorContext("AudioBridge", 
-                    "AudioRouter service not available");
+        Logger::instance().errorContext("AudioBridge", "AudioRouter service not available");
         return false;
     }
 
     // TODO: Initialize AudioRouter with detected backend once API is confirmed
     // bool success = audioRouter->initialize(audioBackend());
     // if (!success) {
-    //     Logger::instance().errorContext("AudioBridge", 
+    //     Logger::instance().errorContext("AudioBridge",
     //                 "AudioRouter initialization failed");
     //     return false;
     // }
 
-    Logger::instance().infoContext("AudioBridge", 
-                QString("AudioRouter initialized with %1 backend").arg(audioBackend()));
+    Logger::instance().infoContext(
+        "AudioBridge", QString("AudioRouter initialized with %1 backend").arg(audioBackend()));
 
     return true;
 }
@@ -233,17 +223,16 @@ auto AudioBridge::initializeAudioRouter() -> bool {
 auto AudioBridge::setupEventBusConnections() -> void {
     auto* eventBus = m_serviceProvider->eventBus();
     if (!eventBus) {
-        Logger::instance().warningContext("AudioBridge", 
-                    "EventBus not available for audio events");
+        Logger::instance().warningContext("AudioBridge", "EventBus not available for audio events");
         return;
     }
 
     // TODO: Subscribe to audio events from core once EventBus API is confirmed
-    // eventBus->subscribe("androidauto.audio_data", 
+    // eventBus->subscribe("androidauto.audio_data",
     //                    this, &AudioBridge::onCoreAudioDataAvailable);
-    // eventBus->subscribe("androidauto.audio_format_changed", 
+    // eventBus->subscribe("androidauto.audio_format_changed",
     //                    this, &AudioBridge::onCoreAudioFormatChanged);
-    // eventBus->subscribe("androidauto.audio_error", 
+    // eventBus->subscribe("androidauto.audio_error",
     //                    this, &AudioBridge::onCoreAudioError);
 
     Logger::instance().debugContext("AudioBridge", "EventBus connections set up");
@@ -258,8 +247,8 @@ auto AudioBridge::handleAudioData(const QByteArray& data) -> void {
     // TODO: Route audio data to output via AudioRouter once API is confirmed
     // audioRouter->writeAudioData(data);
 
-    Logger::instance().debugContext("AudioBridge", 
-                QString("Processed %1 bytes of audio data").arg(data.size()));
+    Logger::instance().debugContext("AudioBridge",
+                                    QString("Processed %1 bytes of audio data").arg(data.size()));
 }
 
 auto AudioBridge::reportError(const QString& errorMessage) -> void {

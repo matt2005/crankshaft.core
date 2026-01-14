@@ -26,7 +26,7 @@ class PreferencesService;
 
 /**
  * @brief Handles settings file format versioning and migration
- * 
+ *
  * This class manages settings schema versioning and provides migration
  * capabilities for future format changes. It detects corrupt or outdated
  * settings and can automatically recover to factory defaults.
@@ -38,7 +38,7 @@ public:
      */
     static constexpr int CURRENT_SCHEMA_VERSION = 1;
     static constexpr const char* SCHEMA_VERSION_KEY = "slim_ui.schema.version";
-    
+
     /**
      * @brief Factory default settings
      */
@@ -48,104 +48,104 @@ public:
         static constexpr const char* CONNECTION_PREFERENCE = "USB";
         static constexpr const char* THEME_MODE = "DARK";
     };
-    
+
     /**
      * @brief Construct a new Settings Migration object
-     * 
+     *
      * @param preferencesService Pointer to the preferences service
      */
     explicit SettingsMigration(PreferencesService* preferencesService);
-    
+
     /**
      * @brief Detect and return the current schema version
-     * 
+     *
      * @return int The detected schema version, or 0 if not found
      */
     [[nodiscard]] auto detectSchemaVersion() const -> int;
-    
+
     /**
      * @brief Check if settings need migration
-     * 
+     *
      * @return true if migration is needed
      * @return false if settings are current
      */
     [[nodiscard]] auto needsMigration() const -> bool;
-    
+
     /**
      * @brief Perform migration from old version to current
-     * 
+     *
      * @param fromVersion The version to migrate from
      * @return true if migration succeeded
      * @return false if migration failed
      */
     [[nodiscard]] auto migrate(int fromVersion) -> bool;
-    
+
     /**
      * @brief Check if settings are corrupted
-     * 
+     *
      * Validates all required settings exist and have valid values
-     * 
+     *
      * @return true if corruption detected
      * @return false if settings are valid
      */
     [[nodiscard]] auto detectCorruption() const -> bool;
-    
+
     /**
      * @brief Recover settings by resetting to factory defaults
-     * 
+     *
      * @return true if recovery succeeded
      * @return false if recovery failed
      */
     [[nodiscard]] auto recoverToDefaults() -> bool;
-    
+
     /**
      * @brief Initialize settings with factory defaults if not present
-     * 
+     *
      * @return true if initialization succeeded
      * @return false if initialization failed
      */
     [[nodiscard]] auto initializeDefaults() -> bool;
-    
+
     /**
      * @brief Validate a specific setting value
-     * 
+     *
      * @param key The setting key to validate
      * @param value The value to validate
      * @return true if valid
      * @return false if invalid
      */
     [[nodiscard]] auto validateSetting(const QString& key, const QVariant& value) const -> bool;
-    
+
     /**
      * @brief Get all setting keys that should exist
-     * 
+     *
      * @return QStringList List of required setting keys
      */
     static auto getRequiredSettingKeys() -> QStringList;
 
 private:
     PreferencesService* m_preferencesService;
-    
+
     /**
      * @brief Migrate from version 0 (unversioned) to version 1
-     * 
+     *
      * @return true if migration succeeded
      * @return false if migration failed
      */
     auto migrateV0ToV1() -> bool;
-    
+
     /**
      * @brief Validate percentage value (0-100)
-     * 
+     *
      * @param value The value to validate
      * @return true if valid
      * @return false if invalid
      */
     auto validatePercentage(const QVariant& value) const -> bool;
-    
+
     /**
      * @brief Validate enum value against allowed values
-     * 
+     *
      * @param value The value to validate
      * @param allowedValues List of allowed values
      * @return true if valid

@@ -15,15 +15,16 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef CONNECTIONSTATEMACHINE_H
 #define CONNECTIONSTATEMACHINE_H
 
-#include <QObject>
-#include <QTimer>
-#include <QString>
 #include <QDateTime>
+#include <QObject>
+#include <QString>
+
+#include <QTimer>
 
 class AndroidAutoFacade;
 
@@ -35,19 +36,15 @@ class ConnectionStateMachine : public QObject {
     Q_PROPERTY(int nextRetryDelay READ nextRetryDelay NOTIFY nextRetryDelayChanged)
     Q_PROPERTY(bool isRetrying READ isRetrying NOTIFY retryingChanged)
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
-    Q_PROPERTY(QDateTime lastTransitionTime READ lastTransitionTime NOTIFY lastTransitionTimeChanged)
+    Q_PROPERTY(
+        QDateTime lastTransitionTime READ lastTransitionTime NOTIFY lastTransitionTimeChanged)
 
-  public:
-    enum State {
-        Disconnected = 0,
-        Searching = 1,
-        Connecting = 2,
-        Connected = 3,
-        Error = 4
-    };
+public:
+    enum State { Disconnected = 0, Searching = 1, Connecting = 2, Connected = 3, Error = 4 };
     Q_ENUM(State)
 
-    explicit ConnectionStateMachine(AndroidAutoFacade* androidAutoFacade, QObject* parent = nullptr);
+    explicit ConnectionStateMachine(AndroidAutoFacade* androidAutoFacade,
+                                    QObject* parent = nullptr);
     ~ConnectionStateMachine() override;
 
     // Property getters
@@ -64,27 +61,27 @@ class ConnectionStateMachine : public QObject {
     Q_INVOKABLE auto resetRetryCount() -> void;
     Q_INVOKABLE auto handleError(const QString& error) -> void;
 
-  signals:
+signals:
     void currentStateChanged(int state);
     void retryCountChanged(int count);
     void nextRetryDelayChanged(int delayMs);
     void retryingChanged(bool isRetrying);
     void lastErrorChanged(const QString& error);
     void lastTransitionTimeChanged(const QDateTime& time);
-    
+
     void stateTransitioned(int fromState, int toState);
     void retryAttemptStarted(int retryCount, int delayMs);
     void maxRetriesReached();
     void connectionRecovered();
 
-  private slots:
+private slots:
     void onFacadeConnectionStateChanged(int state);
     void onFacadeConnectionFailed(const QString& reason);
     void onFacadeConnectionEstablished(const QString& deviceName);
     void onRetryTimerTimeout();
     void onConnectionTimeout();
 
-  private:
+private:
     auto transitionToState(State newState) -> void;
     auto startRetryTimer() -> void;
     auto stopRetryTimer() -> void;
@@ -98,10 +95,10 @@ class ConnectionStateMachine : public QObject {
     int m_nextRetryDelay;
     QString m_lastError;
     QDateTime m_lastTransitionTime;
-    
+
     QTimer* m_retryTimer;
     QTimer* m_connectionTimeout;
-    
+
     // Retry configuration
     static constexpr int INITIAL_RETRY_DELAY_MS = 1000;  // 1 second
     static constexpr int MAX_RETRY_DELAY_MS = 30000;     // 30 seconds
@@ -109,4 +106,4 @@ class ConnectionStateMachine : public QObject {
     static constexpr int CONNECTION_TIMEOUT_MS = 15000;  // 15 seconds
 };
 
-#endif // CONNECTIONSTATEMACHINE_H
+#endif  // CONNECTIONSTATEMACHINE_H

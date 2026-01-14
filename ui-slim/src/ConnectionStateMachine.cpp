@@ -15,26 +15,26 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "ConnectionStateMachine.h"
-#include "AndroidAutoFacade.h"
-#include "../../core/services/logging/Logger.h"
 
 #include <QtMath>
 
-ConnectionStateMachine::ConnectionStateMachine(AndroidAutoFacade* androidAutoFacade, 
+#include "../../core/services/logging/Logger.h"
+#include "AndroidAutoFacade.h"
+
+ConnectionStateMachine::ConnectionStateMachine(AndroidAutoFacade* androidAutoFacade,
                                                QObject* parent)
-    : QObject(parent)
-    , m_androidAutoFacade(androidAutoFacade)
-    , m_currentState(State::Disconnected)
-    , m_retryCount(0)
-    , m_nextRetryDelay(INITIAL_RETRY_DELAY_MS)
-    , m_lastError()
-    , m_lastTransitionTime(QDateTime::currentDateTime())
-    , m_retryTimer(new QTimer(this))
-    , m_connectionTimeout(new QTimer(this)) {
-    
+    : QObject(parent),
+      m_androidAutoFacade(androidAutoFacade),
+      m_currentState(State::Disconnected),
+      m_retryCount(0),
+      m_nextRetryDelay(INITIAL_RETRY_DELAY_MS),
+      m_lastError(),
+      m_lastTransitionTime(QDateTime::currentDateTime()),
+      m_retryTimer(new QTimer(this)),
+      m_connectionTimeout(new QTimer(this)) {
     if (!m_androidAutoFacade) {
         Logger::instance().errorContext("ConnectionStateMachine", "AndroidAutoFacade is null");
         return;
@@ -46,15 +46,16 @@ ConnectionStateMachine::ConnectionStateMachine(AndroidAutoFacade* androidAutoFac
 
     // Setup connection timeout timer
     m_connectionTimeout->setSingleShot(true);
-    connect(m_connectionTimeout, &QTimer::timeout, this, &ConnectionStateMachine::onConnectionTimeout);
+    connect(m_connectionTimeout, &QTimer::timeout, this,
+            &ConnectionStateMachine::onConnectionTimeout);
 
     // Connect to facade signals
-    connect(m_androidAutoFacade, &AndroidAutoFacade::connectionStateChanged,
-            this, &ConnectionStateMachine::onFacadeConnectionStateChanged);
-    connect(m_androidAutoFacade, &AndroidAutoFacade::connectionFailed,
-            this, &ConnectionStateMachine::onFacadeConnectionFailed);
-    connect(m_androidAutoFacade, &AndroidAutoFacade::connectionEstablished,
-            this, &ConnectionStateMachine::onFacadeConnectionEstablished);
+    connect(m_androidAutoFacade, &AndroidAutoFacade::connectionStateChanged, this,
+            &ConnectionStateMachine::onFacadeConnectionStateChanged);
+    connect(m_androidAutoFacade, &AndroidAutoFacade::connectionFailed, this,
+            &ConnectionStateMachine::onFacadeConnectionFailed);
+    connect(m_androidAutoFacade, &AndroidAutoFacade::connectionEstablished, this,
+            &ConnectionStateMachine::onFacadeConnectionEstablished);
 
     Logger::instance().infoContext("ConnectionStateMachine", "Initialized");
 }
@@ -70,25 +71,15 @@ auto ConnectionStateMachine::currentState() const -> int {
     return static_cast<int>(m_currentState);
 }
 
-auto ConnectionStateMachine::retryCount() const -> int {
-    return m_retryCount;
-}
+auto ConnectionStateMachine::retryCount() const -> int { return m_retryCount; }
 
-auto ConnectionStateMachine::nextRetryDelay() const -> int {
-    return m_nextRetryDelay;
-}
+auto ConnectionStateMachine::nextRetryDelay() const -> int { return m_nextRetryDelay; }
 
-auto ConnectionStateMachine::isRetrying() const -> bool {
-    return m_retryTimer->isActive();
-}
+auto ConnectionStateMachine::isRetrying() const -> bool { return m_retryTimer->isActive(); }
 
-auto ConnectionStateMachine::lastError() const -> QString {
-    return m_lastError;
-}
+auto ConnectionStateMachine::lastError() const -> QString { return m_lastError; }
 
-QDateTime ConnectionStateMachine::lastTransitionTime() const {
-    return m_lastTransitionTime;
-}
+QDateTime ConnectionStateMachine::lastTransitionTime() const { return m_lastTransitionTime; }
 
 // Q_INVOKABLE methods
 auto ConnectionStateMachine::startConnection() -> void {
@@ -104,7 +95,7 @@ auto ConnectionStateMachine::startConnection() -> void {
     emit retryCountChanged(m_retryCount);
 
     transitionToState(State::Searching);
-    
+
     if (m_androidAutoFacade) {
         m_androidAutoFacade->startDiscovery();
     }
@@ -125,17 +116,17 @@ auto ConnectionStateMachine::stopConnection() -> void {
 
 auto ConnectionStateMachine::resetRetryCount() -> void {
     Logger::instance().infoContext("ConnectionStateMachine", "Resetting retry count");
-    
+
     m_retryCount = 0;
     m_nextRetryDelay = INITIAL_RETRY_DELAY_MS;
-    
+
     emit retryCountChanged(m_retryCount);
     emit nextRetryDelayChanged(m_nextRetryDelay);
 }
 
 auto ConnectionStateMachine::handleError(const QString& error) -> void {
-    Logger::instance().errorContext("ConnectionStateMachine", 
-                QString("Handling error: %1").arg(error));
+    Logger::instance().errorContext("ConnectionStateMachine",
+                                    QString("Handling error: %1").arg(error));
 
     m_lastError = error;
     emit lastErrorChanged(m_lastError);
@@ -146,31 +137,31 @@ auto ConnectionStateMachine::handleError(const QString& error) -> void {
     if (m_retryCount < MAX_RETRY_COUNT) {
         startRetryTimer();
     } else {
-        Logger::instance().warningContext("ConnectionStateMachine", 
-                    QString("Max retry count (%1) reached").arg(MAX_RETRY_COUNT));
+        Logger::instance().warningContext(
+            "ConnectionStateMachine", QString("Max retry count (%1) reached").arg(MAX_RETRY_COUNT));
         emit maxRetriesReached();
     }
 }
 
 // Private slots
 auto ConnectionStateMachine::onFacadeConnectionStateChanged(int state) -> void {
-    Logger::instance().debugContext("ConnectionStateMachine", 
-                QString("Facade state changed: %1").arg(state));
+    Logger::instance().debugContext("ConnectionStateMachine",
+                                    QString("Facade state changed: %1").arg(state));
 
     State newState = static_cast<State>(state);
     transitionToState(newState);
 }
 
 auto ConnectionStateMachine::onFacadeConnectionFailed(const QString& reason) -> void {
-    Logger::instance().errorContext("ConnectionStateMachine", 
-                QString("Connection failed: %1").arg(reason));
+    Logger::instance().errorContext("ConnectionStateMachine",
+                                    QString("Connection failed: %1").arg(reason));
 
     handleError(reason);
 }
 
 auto ConnectionStateMachine::onFacadeConnectionEstablished(const QString& deviceName) -> void {
-    Logger::instance().infoContext("ConnectionStateMachine", 
-                QString("Connection established to: %1").arg(deviceName));
+    Logger::instance().infoContext("ConnectionStateMachine",
+                                   QString("Connection established to: %1").arg(deviceName));
 
     stopRetryTimer();
     m_connectionTimeout->stop();
@@ -184,10 +175,9 @@ auto ConnectionStateMachine::onFacadeConnectionEstablished(const QString& device
 }
 
 auto ConnectionStateMachine::onRetryTimerTimeout() -> void {
-    Logger::instance().infoContext("ConnectionStateMachine", 
-                QString("Retry attempt %1 after %2ms delay")
-                    .arg(m_retryCount + 1)
-                    .arg(m_nextRetryDelay));
+    Logger::instance().infoContext(
+        "ConnectionStateMachine",
+        QString("Retry attempt %1 after %2ms delay").arg(m_retryCount + 1).arg(m_nextRetryDelay));
 
     m_retryCount++;
     emit retryCountChanged(m_retryCount);
@@ -202,15 +192,16 @@ auto ConnectionStateMachine::onRetryTimerTimeout() -> void {
     emit lastErrorChanged(m_lastError);
 
     transitionToState(State::Searching);
-    
+
     if (m_androidAutoFacade) {
         m_androidAutoFacade->retryConnection();
     }
 }
 
 auto ConnectionStateMachine::onConnectionTimeout() -> void {
-    Logger::instance().warningContext("ConnectionStateMachine", 
-                QString("Connection timeout after %1ms").arg(CONNECTION_TIMEOUT_MS));
+    Logger::instance().warningContext(
+        "ConnectionStateMachine",
+        QString("Connection timeout after %1ms").arg(CONNECTION_TIMEOUT_MS));
 
     handleError("Connection timed out");
 }
@@ -222,9 +213,9 @@ auto ConnectionStateMachine::transitionToState(State newState) -> void {
     }
 
     if (!isValidTransition(m_currentState, newState)) {
-        Logger::instance().warningContext("ConnectionStateMachine", 
-                    QString("Invalid state transition: %1 -> %2")
-                        .arg(m_currentState).arg(newState));
+        Logger::instance().warningContext(
+            "ConnectionStateMachine",
+            QString("Invalid state transition: %1 -> %2").arg(m_currentState).arg(newState));
         return;
     }
 
@@ -244,22 +235,22 @@ auto ConnectionStateMachine::transitionToState(State newState) -> void {
             // Start connection timeout
             m_connectionTimeout->start(CONNECTION_TIMEOUT_MS);
             break;
-            
+
         case State::Connected:
             // Stop all timers on successful connection
             stopRetryTimer();
             m_connectionTimeout->stop();
             break;
-            
+
         case State::Disconnected:
             stopRetryTimer();
             m_connectionTimeout->stop();
             break;
-            
+
         case State::Error:
             m_connectionTimeout->stop();
             break;
-            
+
         case State::Searching:
             // Stop retry timer when actively searching
             stopRetryTimer();
@@ -272,8 +263,8 @@ auto ConnectionStateMachine::startRetryTimer() -> void {
         stopRetryTimer();
     }
 
-    Logger::instance().infoContext("ConnectionStateMachine", 
-                QString("Starting retry timer: %1ms").arg(m_nextRetryDelay));
+    Logger::instance().infoContext("ConnectionStateMachine",
+                                   QString("Starting retry timer: %1ms").arg(m_nextRetryDelay));
 
     m_retryTimer->start(m_nextRetryDelay);
     emit retryingChanged(true);
@@ -283,7 +274,7 @@ auto ConnectionStateMachine::stopRetryTimer() -> void {
     if (m_retryTimer->isActive()) {
         m_retryTimer->stop();
         emit retryingChanged(false);
-        
+
         Logger::instance().debugContext("ConnectionStateMachine", "Stopped retry timer");
     }
 }
@@ -291,7 +282,7 @@ auto ConnectionStateMachine::stopRetryTimer() -> void {
 auto ConnectionStateMachine::calculateRetryDelay() const -> int {
     // Exponential backoff: delay = INITIAL_RETRY_DELAY * 2^retryCount
     int delay = INITIAL_RETRY_DELAY_MS * qPow(2, m_retryCount);
-    
+
     // Cap at maximum delay
     return qMin(delay, MAX_RETRY_DELAY_MS);
 }
@@ -306,19 +297,19 @@ auto ConnectionStateMachine::isValidTransition(State from, State to) const -> bo
     switch (from) {
         case State::Disconnected:
             return to == State::Searching || to == State::Error;
-            
+
         case State::Searching:
             return to == State::Connecting || to == State::Disconnected || to == State::Error;
-            
+
         case State::Connecting:
             return to == State::Connected || to == State::Disconnected || to == State::Error;
-            
+
         case State::Connected:
             return to == State::Disconnected || to == State::Error;
-            
+
         case State::Error:
             return to == State::Searching || to == State::Disconnected;
-            
+
         default:
             return false;
     }
@@ -326,10 +317,10 @@ auto ConnectionStateMachine::isValidTransition(State from, State to) const -> bo
 
 auto ConnectionStateMachine::logTransition(State from, State to) -> void {
     const char* stateNames[] = {"Disconnected", "Searching", "Connecting", "Connected", "Error"};
-    
-    Logger::instance().infoContext("ConnectionStateMachine", 
-                QString("State transition: %1 -> %2 (retry count: %3)")
-                    .arg(stateNames[static_cast<int>(from)])
-                    .arg(stateNames[static_cast<int>(to)])
-                    .arg(m_retryCount));
+
+    Logger::instance().infoContext("ConnectionStateMachine",
+                                   QString("State transition: %1 -> %2 (retry count: %3)")
+                                       .arg(stateNames[static_cast<int>(from)])
+                                       .arg(stateNames[static_cast<int>(to)])
+                                       .arg(m_retryCount));
 }

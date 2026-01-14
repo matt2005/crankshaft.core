@@ -18,10 +18,10 @@
  */
 
 #include "PreferencesFacade.h"
-#include "ServiceProvider.h"
-#include "Logger.h"
 
 #include "../../core/services/preferences/PreferencesService.h"
+#include "Logger.h"
+#include "ServiceProvider.h"
 
 namespace {
 const char* KEY_DISPLAY_BRIGHTNESS = "slim_ui.display.brightness";
@@ -34,7 +34,7 @@ const int DEFAULT_BRIGHTNESS = 50;
 const int DEFAULT_VOLUME = 50;
 const int MIN_PERCENTAGE = 0;
 const int MAX_PERCENTAGE = 100;
-}
+}  // namespace
 
 PreferencesFacade::PreferencesFacade(ServiceProvider* serviceProvider, QObject* parent)
     : QObject(parent), m_serviceProvider(serviceProvider) {
@@ -42,25 +42,15 @@ PreferencesFacade::PreferencesFacade(ServiceProvider* serviceProvider, QObject* 
     loadSettings();
 }
 
-auto PreferencesFacade::displayBrightness() const -> int {
-    return m_displayBrightness;
-}
+auto PreferencesFacade::displayBrightness() const -> int { return m_displayBrightness; }
 
-auto PreferencesFacade::audioVolume() const -> int {
-    return m_audioVolume;
-}
+auto PreferencesFacade::audioVolume() const -> int { return m_audioVolume; }
 
-auto PreferencesFacade::connectionPreference() const -> QString {
-    return m_connectionPreference;
-}
+auto PreferencesFacade::connectionPreference() const -> QString { return m_connectionPreference; }
 
-auto PreferencesFacade::themeMode() const -> QString {
-    return m_themeMode;
-}
+auto PreferencesFacade::themeMode() const -> QString { return m_themeMode; }
 
-auto PreferencesFacade::lastConnectedDeviceId() const -> QString {
-    return m_lastConnectedDeviceId;
-}
+auto PreferencesFacade::lastConnectedDeviceId() const -> QString { return m_lastConnectedDeviceId; }
 
 auto PreferencesFacade::setDisplayBrightness(int value) -> void {
     int validated = validatePercentage(value);
@@ -70,8 +60,9 @@ auto PreferencesFacade::setDisplayBrightness(int value) -> void {
 
     m_displayBrightness = validated;
     saveSetting(KEY_DISPLAY_BRIGHTNESS, m_displayBrightness);
-    Logger::instance().infoContext(QStringLiteral("PreferencesFacade"), 
-                                    QStringLiteral("Display brightness changed to %1%").arg(m_displayBrightness));
+    Logger::instance().infoContext(
+        QStringLiteral("PreferencesFacade"),
+        QStringLiteral("Display brightness changed to %1%").arg(m_displayBrightness));
     emit displayBrightnessChanged(m_displayBrightness);
 }
 
@@ -83,8 +74,9 @@ auto PreferencesFacade::setAudioVolume(int value) -> void {
 
     m_audioVolume = validated;
     saveSetting(KEY_AUDIO_VOLUME, m_audioVolume);
-    Logger::instance().infoContext(QStringLiteral("PreferencesFacade"), 
-                                    QStringLiteral("Audio volume changed to %1%").arg(m_audioVolume));
+    Logger::instance().infoContext(
+        QStringLiteral("PreferencesFacade"),
+        QStringLiteral("Audio volume changed to %1%").arg(m_audioVolume));
     emit audioVolumeChanged(m_audioVolume);
 }
 
@@ -95,15 +87,17 @@ auto PreferencesFacade::setConnectionPreference(const QString& mode) -> void {
 
     // Validate mode is USB or WIRELESS
     if (mode != QStringLiteral("USB") && mode != QStringLiteral("WIRELESS")) {
-        Logger::instance().warningContext(QStringLiteral("PreferencesFacade"), 
-                                          QStringLiteral("Invalid connection preference: %1").arg(mode));
+        Logger::instance().warningContext(
+            QStringLiteral("PreferencesFacade"),
+            QStringLiteral("Invalid connection preference: %1").arg(mode));
         return;
     }
 
     m_connectionPreference = mode;
     saveSetting(KEY_CONNECTION_PREFERENCE, m_connectionPreference);
-    Logger::instance().infoContext(QStringLiteral("PreferencesFacade"), 
-                                    QStringLiteral("Connection preference changed to %1").arg(m_connectionPreference));
+    Logger::instance().infoContext(
+        QStringLiteral("PreferencesFacade"),
+        QStringLiteral("Connection preference changed to %1").arg(m_connectionPreference));
     emit connectionPreferenceChanged(m_connectionPreference);
 }
 
@@ -114,15 +108,15 @@ auto PreferencesFacade::setThemeMode(const QString& mode) -> void {
 
     // Validate mode is LIGHT or DARK
     if (mode != QStringLiteral("LIGHT") && mode != QStringLiteral("DARK")) {
-        Logger::instance().warningContext(QStringLiteral("PreferencesFacade"), 
+        Logger::instance().warningContext(QStringLiteral("PreferencesFacade"),
                                           QStringLiteral("Invalid theme mode: %1").arg(mode));
         return;
     }
 
     m_themeMode = mode;
     saveSetting(KEY_THEME_MODE, m_themeMode);
-    Logger::instance().infoContext(QStringLiteral("PreferencesFacade"), 
-                                    QStringLiteral("Theme mode changed to %1").arg(m_themeMode));
+    Logger::instance().infoContext(QStringLiteral("PreferencesFacade"),
+                                   QStringLiteral("Theme mode changed to %1").arg(m_themeMode));
     emit themeModeChanged(m_themeMode);
 }
 
@@ -133,56 +127,67 @@ auto PreferencesFacade::setLastConnectedDeviceId(const QString& deviceId) -> voi
 
     m_lastConnectedDeviceId = deviceId;
     saveSetting(KEY_LAST_CONNECTED_DEVICE_ID, m_lastConnectedDeviceId);
-    Logger::instance().infoContext(QStringLiteral("PreferencesFacade"), QStringLiteral("Last connected device changed to %1").arg(m_lastConnectedDeviceId));
+    Logger::instance().infoContext(
+        QStringLiteral("PreferencesFacade"),
+        QStringLiteral("Last connected device changed to %1").arg(m_lastConnectedDeviceId));
     emit lastConnectedDeviceIdChanged(m_lastConnectedDeviceId);
 }
 
 auto PreferencesFacade::loadSettings() -> void {
     if (!m_serviceProvider) {
-        Logger::instance().errorContext(QStringLiteral("PreferencesFacade"), 
-                                         QStringLiteral("ServiceProvider not available, using defaults"));
+        Logger::instance().errorContext(
+            QStringLiteral("PreferencesFacade"),
+            QStringLiteral("ServiceProvider not available, using defaults"));
         return;
     }
 
     auto* prefsService = m_serviceProvider->preferencesService();
     if (!prefsService) {
-        Logger::instance().errorContext(QStringLiteral("PreferencesFacade"), 
-                                         QStringLiteral("PreferencesService not available, using defaults"));
+        Logger::instance().errorContext(
+            QStringLiteral("PreferencesFacade"),
+            QStringLiteral("PreferencesService not available, using defaults"));
         return;
     }
 
     // Load each setting with validation
-    m_displayBrightness = validatePercentage(loadSetting(KEY_DISPLAY_BRIGHTNESS, DEFAULT_BRIGHTNESS).toInt());
+    m_displayBrightness =
+        validatePercentage(loadSetting(KEY_DISPLAY_BRIGHTNESS, DEFAULT_BRIGHTNESS).toInt());
     m_audioVolume = validatePercentage(loadSetting(KEY_AUDIO_VOLUME, DEFAULT_VOLUME).toInt());
-    m_connectionPreference = loadSetting(KEY_CONNECTION_PREFERENCE, QStringLiteral("USB")).toString();
+    m_connectionPreference =
+        loadSetting(KEY_CONNECTION_PREFERENCE, QStringLiteral("USB")).toString();
     m_themeMode = loadSetting(KEY_THEME_MODE, QStringLiteral("DARK")).toString();
     m_lastConnectedDeviceId = loadSetting(KEY_LAST_CONNECTED_DEVICE_ID, QString()).toString();
 
     // Detect and recover from any corruption
     QString recovered = detectAndRecoverCorruption();
     if (!recovered.isEmpty()) {
-        Logger::instance().warningContext(QStringLiteral("PreferencesFacade"), QStringLiteral("Settings recovered from corruption: %1").arg(recovered));
+        Logger::instance().warningContext(
+            QStringLiteral("PreferencesFacade"),
+            QStringLiteral("Settings recovered from corruption: %1").arg(recovered));
         emit settingsRecovered(recovered);
         // Persist recovered settings
         saveSettings();
     }
 
     m_isInitialized = true;
-    Logger::instance().infoContext(QStringLiteral("PreferencesFacade"), QStringLiteral("Settings loaded successfully"));
+    Logger::instance().infoContext(QStringLiteral("PreferencesFacade"),
+                                   QStringLiteral("Settings loaded successfully"));
     emit settingsLoaded();
 }
 
 auto PreferencesFacade::saveSettings() -> void {
     if (!m_serviceProvider) {
-        Logger::instance().errorContext(QStringLiteral("PreferencesFacade"), 
-                                         QStringLiteral("ServiceProvider not available, cannot save"));
+        Logger::instance().errorContext(
+            QStringLiteral("PreferencesFacade"),
+            QStringLiteral("ServiceProvider not available, cannot save"));
         return;
     }
 
     auto* prefsService = m_serviceProvider->preferencesService();
     if (!prefsService) {
-        Logger::instance().errorContext(QStringLiteral("PreferencesFacade"), 
-                                         QStringLiteral("PreferencesService not available, cannot save"));
+        Logger::instance().errorContext(
+            QStringLiteral("PreferencesFacade"),
+            QStringLiteral("PreferencesService not available, cannot save"));
         return;
     }
 
@@ -193,12 +198,14 @@ auto PreferencesFacade::saveSettings() -> void {
     saveSetting(KEY_THEME_MODE, m_themeMode);
     saveSetting(KEY_LAST_CONNECTED_DEVICE_ID, m_lastConnectedDeviceId);
 
-    Logger::instance().infoContext(QStringLiteral("PreferencesFacade"), QStringLiteral("Settings saved successfully"));
+    Logger::instance().infoContext(QStringLiteral("PreferencesFacade"),
+                                   QStringLiteral("Settings saved successfully"));
     emit settingsSaved();
 }
 
 auto PreferencesFacade::resetToDefaults() -> void {
-    Logger::instance().infoContext(QStringLiteral("PreferencesFacade"), QStringLiteral("Resetting settings to factory defaults"));
+    Logger::instance().infoContext(QStringLiteral("PreferencesFacade"),
+                                   QStringLiteral("Resetting settings to factory defaults"));
 
     m_displayBrightness = DEFAULT_BRIGHTNESS;
     m_audioVolume = DEFAULT_VOLUME;
@@ -257,25 +264,36 @@ auto PreferencesFacade::detectAndRecoverCorruption() -> QString {
 
     // Validate each setting and reset if invalid
     if (m_displayBrightness < MIN_PERCENTAGE || m_displayBrightness > MAX_PERCENTAGE) {
-        Logger::instance().warningContext(QStringLiteral("PreferencesFacade"), QStringLiteral("Corrupted brightness: %1, resetting to default").arg(m_displayBrightness));
+        Logger::instance().warningContext(
+            QStringLiteral("PreferencesFacade"),
+            QStringLiteral("Corrupted brightness: %1, resetting to default")
+                .arg(m_displayBrightness));
         m_displayBrightness = DEFAULT_BRIGHTNESS;
         recoveredFields << QStringLiteral("brightness");
     }
 
     if (m_audioVolume < MIN_PERCENTAGE || m_audioVolume > MAX_PERCENTAGE) {
-        Logger::instance().warningContext(QStringLiteral("PreferencesFacade"), QStringLiteral("Corrupted volume: %1, resetting to default").arg(m_audioVolume));
+        Logger::instance().warningContext(
+            QStringLiteral("PreferencesFacade"),
+            QStringLiteral("Corrupted volume: %1, resetting to default").arg(m_audioVolume));
         m_audioVolume = DEFAULT_VOLUME;
         recoveredFields << QStringLiteral("volume");
     }
 
-    if (m_connectionPreference != QStringLiteral("USB") && m_connectionPreference != QStringLiteral("WIRELESS")) {
-        Logger::instance().warningContext(QStringLiteral("PreferencesFacade"), QStringLiteral("Corrupted connection preference: %1, resetting to default").arg(m_connectionPreference));
+    if (m_connectionPreference != QStringLiteral("USB") &&
+        m_connectionPreference != QStringLiteral("WIRELESS")) {
+        Logger::instance().warningContext(
+            QStringLiteral("PreferencesFacade"),
+            QStringLiteral("Corrupted connection preference: %1, resetting to default")
+                .arg(m_connectionPreference));
         m_connectionPreference = QStringLiteral("USB");
         recoveredFields << QStringLiteral("connectionPreference");
     }
 
     if (m_themeMode != QStringLiteral("LIGHT") && m_themeMode != QStringLiteral("DARK")) {
-        Logger::instance().warningContext(QStringLiteral("PreferencesFacade"), QStringLiteral("Corrupted theme mode: %1, resetting to default").arg(m_themeMode));
+        Logger::instance().warningContext(
+            QStringLiteral("PreferencesFacade"),
+            QStringLiteral("Corrupted theme mode: %1, resetting to default").arg(m_themeMode));
         m_themeMode = QStringLiteral("DARK");
         recoveredFields << QStringLiteral("themeMode");
     }

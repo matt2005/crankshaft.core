@@ -42,24 +42,27 @@ class PreferencesFacade : public QObject {
     Q_OBJECT
 
     // Display settings
-    Q_PROPERTY(int displayBrightness READ displayBrightness WRITE setDisplayBrightness NOTIFY displayBrightnessChanged)
+    Q_PROPERTY(int displayBrightness READ displayBrightness WRITE setDisplayBrightness NOTIFY
+                   displayBrightnessChanged)
     Q_PROPERTY(QString themeMode READ themeMode WRITE setThemeMode NOTIFY themeModeChanged)
 
     // Audio settings
     Q_PROPERTY(int audioVolume READ audioVolume WRITE setAudioVolume NOTIFY audioVolumeChanged)
 
     // Connection settings
-    Q_PROPERTY(QString connectionPreference READ connectionPreference WRITE setConnectionPreference NOTIFY connectionPreferenceChanged)
-    Q_PROPERTY(QString lastConnectedDeviceId READ lastConnectedDeviceId WRITE setLastConnectedDeviceId NOTIFY lastConnectedDeviceIdChanged)
+    Q_PROPERTY(QString connectionPreference READ connectionPreference WRITE setConnectionPreference
+                   NOTIFY connectionPreferenceChanged)
+    Q_PROPERTY(QString lastConnectedDeviceId READ lastConnectedDeviceId WRITE
+                   setLastConnectedDeviceId NOTIFY lastConnectedDeviceIdChanged)
 
-  public:
+public:
     /**
      * @brief Connection preference mode.
      * @note Enum values must match core AndroidAutoService enums.
      */
     enum ConnectionMode {
-        USB = 0,       ///< USB connection (default)
-        Wireless = 1   ///< Wireless connection
+        USB = 0,      ///< USB connection (default)
+        Wireless = 1  ///< Wireless connection
     };
     Q_ENUM(ConnectionMode)
 
@@ -94,7 +97,7 @@ class PreferencesFacade : public QObject {
     Q_INVOKABLE [[nodiscard]] auto saveSettings() -> void;
     Q_INVOKABLE auto resetToDefaults() -> void;
 
-  signals:
+signals:
     void displayBrightnessChanged(int value);
     void audioVolumeChanged(int value);
     void connectionPreferenceChanged(const QString& mode);
@@ -102,9 +105,10 @@ class PreferencesFacade : public QObject {
     void lastConnectedDeviceIdChanged(const QString& deviceId);
     void settingsLoaded();
     void settingsSaved();
-    void settingsRecovered(const QString& recoveredFields); ///< Emitted when corrupted settings are reset.
+    void settingsRecovered(
+        const QString& recoveredFields);  ///< Emitted when corrupted settings are reset.
 
-  private:
+private:
     /**
      * @brief Load setting with validation and default fallback.
      * @param key Setting key (without slim_ui prefix).
@@ -136,8 +140,8 @@ class PreferencesFacade : public QObject {
 
     // Member variables
     ServiceProvider* m_serviceProvider = nullptr;
-    int m_displayBrightness = 50;        ///< Default 50%
-    int m_audioVolume = 50;              ///< Default 50%
+    int m_displayBrightness = 50;                            ///< Default 50%
+    int m_audioVolume = 50;                                  ///< Default 50%
     QString m_connectionPreference = QStringLiteral("USB");  ///< Default USB
     QString m_themeMode = QStringLiteral("DARK");            ///< Default dark
     QString m_lastConnectedDeviceId;

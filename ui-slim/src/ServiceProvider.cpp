@@ -20,6 +20,9 @@
 #include "ServiceProvider.h"
 
 // Core service includes
+#include <QStandardPaths>
+
+#include "../../core/hal/multimedia/MediaPipeline.h"
 #include "../../core/services/android_auto/AndroidAutoService.h"
 #include "../../core/services/audio/AudioRouter.h"
 #include "../../core/services/eventbus/EventBus.h"
@@ -28,18 +31,12 @@
 #include "../../core/services/preferences/PreferencesService.h"
 #include "../../core/services/profile/ProfileManager.h"
 #include "../../core/services/service_manager/ServiceManager.h"
-#include "../../core/hal/multimedia/MediaPipeline.h"
 
-#include <QStandardPaths>
-
-ServiceProvider::ServiceProvider()
-    : QObject(nullptr) {
+ServiceProvider::ServiceProvider() : QObject(nullptr) {
     // Constructor - services initialized via initialize()
 }
 
-ServiceProvider::~ServiceProvider() {
-    shutdown();
-}
+ServiceProvider::~ServiceProvider() { shutdown(); }
 
 ServiceProvider& ServiceProvider::instance() {
     static ServiceProvider instance;
@@ -109,13 +106,9 @@ auto ServiceProvider::shutdown() -> void {
     m_initialized = false;
 }
 
-EventBus* ServiceProvider::eventBus() const {
-    return &EventBus::instance();
-}
+EventBus* ServiceProvider::eventBus() const { return &EventBus::instance(); }
 
-Logger* ServiceProvider::logger() const {
-    return &Logger::instance();
-}
+Logger* ServiceProvider::logger() const { return &Logger::instance(); }
 
 auto ServiceProvider::initializePreferences() -> bool {
     QString dbPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) +
@@ -124,9 +117,8 @@ auto ServiceProvider::initializePreferences() -> bool {
     m_preferencesService = std::make_unique<PreferencesService>(dbPath);
 
     if (!m_preferencesService->initialize()) {
-        Logger::instance().errorContext("ServiceProvider",
-                                        "Failed to initialize preferences database",
-                                        {{"dbPath", dbPath}});
+        Logger::instance().errorContext(
+            "ServiceProvider", "Failed to initialize preferences database", {{"dbPath", dbPath}});
         return false;
     }
 
@@ -146,11 +138,13 @@ auto ServiceProvider::initializeMediaPipeline() -> bool {
 
 auto ServiceProvider::initializeProfileManager() -> bool {
     // ProfileManager needs a config directory, use standard app data location
-    QString configDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/profiles";
+    QString configDir =
+        QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/profiles";
     m_profileManager = std::make_unique<ProfileManager>(configDir);
 
     // ProfileManager will initialize profiles internally as needed
-    Logger::instance().infoContext("ServiceProvider", "ProfileManager initialized with config dir: " + configDir);
+    Logger::instance().infoContext("ServiceProvider",
+                                   "ProfileManager initialized with config dir: " + configDir);
     return true;
 }
 
@@ -178,8 +172,8 @@ auto ServiceProvider::initializeAudioRouter() -> bool {
     m_audioRouter = std::make_unique<AudioRouter>(m_mediaPipeline.get(), this);
 
     if (!m_audioRouter->initialize()) {
-        Logger::instance().warningContext("ServiceProvider",
-                                          "AudioRouter initialization failed - continuing in silent mode");
+        Logger::instance().warningContext(
+            "ServiceProvider", "AudioRouter initialization failed - continuing in silent mode");
         // Don't fail initialization - allow graceful degradation
     } else {
         Logger::instance().infoContext("ServiceProvider", "AudioRouter initialized");
@@ -194,4 +188,3 @@ auto ServiceProvider::initializeServiceManager() -> bool {
     Logger::instance().infoContext("ServiceProvider", "ServiceManager initialized");
     return true;
 }
-

@@ -65,8 +65,12 @@ public:
     [[nodiscard]] auto isInitialized() const -> bool { return m_initialized; }
 
     // Service accessors
-    [[nodiscard]] auto androidAutoService() const -> AndroidAutoService* { return m_androidAutoService.get(); }
-    [[nodiscard]] auto preferencesService() const -> PreferencesService* { return m_preferencesService.get(); }
+    [[nodiscard]] auto androidAutoService() const -> AndroidAutoService* {
+        return m_androidAutoService.get();
+    }
+    [[nodiscard]] auto preferencesService() const -> PreferencesService* {
+        return m_preferencesService.get();
+    }
     [[nodiscard]] auto eventBus() const -> EventBus*;  // Returns singleton
     [[nodiscard]] auto audioRouter() const -> AudioRouter* { return m_audioRouter.get(); }
     [[nodiscard]] auto logger() const -> Logger*;  // Returns singleton
@@ -94,4 +98,3 @@ private:
 
     bool m_initialized{false};
 };
-

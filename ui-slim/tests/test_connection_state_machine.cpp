@@ -17,12 +17,13 @@
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtTest/QtTest>
 #include <QObject>
+
+#include <QtTest/QtTest>
 
 /**
  * @brief Minimal unit test for ConnectionStateMachine
- * 
+ *
  * NOTE: Full FSM testing requires AndroidAutoFacade with ServiceProvider mocks.
  * This minimal test validates the test framework setup.
  * TODO: Expand with proper mocking infrastructure when available.
@@ -30,7 +31,7 @@
 class ConnectionStateMachineTest : public QObject {
     Q_OBJECT
 
-  private slots:
+private slots:
     void initTestCase() {
         qDebug() << "ConnectionStateMachine test suite initialized";
         qDebug() << "Note: Full testing requires AndroidAutoFacade mock infrastructure";
@@ -42,9 +43,7 @@ class ConnectionStateMachineTest : public QObject {
         QCOMPARE(2 * 2, 4);
     }
 
-    void cleanupTestCase() {
-        qDebug() << "ConnectionStateMachine test suite completed";
-    }
+    void cleanupTestCase() { qDebug() << "ConnectionStateMachine test suite completed"; }
 };
 
 QTEST_MAIN(ConnectionStateMachineTest)

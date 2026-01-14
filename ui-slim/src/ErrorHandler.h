@@ -151,7 +151,7 @@ private:
     /**
      * @brief Log error with context
      */
-    auto logError(ErrorCode code, const QString& message, const QString& context,
-                  Severity severity) -> void;
+    auto logError(ErrorCode code, const QString& message, const QString& context, Severity severity)
+        -> void;
     static ErrorHandler* s_instance;
 };
