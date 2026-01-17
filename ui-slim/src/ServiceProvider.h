@@ -94,6 +94,12 @@ private:
     auto initializeAndroidAuto() -> bool;
     auto initializeAudioRouter() -> bool;
     auto initializeServiceManager() -> bool;
+
+    std::unique_ptr<AndroidAutoService> m_androidAutoService;
+    std::unique_ptr<PreferencesService> m_preferencesService;
+    std::unique_ptr<AudioRouter> m_audioRouter;
+    std::unique_ptr<MediaPipeline> m_mediaPipeline;
+    std::unique_ptr<ProfileManager> m_profileManager;
     std::unique_ptr<ServiceManager> m_serviceManager;
 
     bool m_initialized{false};
