@@ -15,28 +15,28 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef TOUCHEVENTFORWARDER_H
 #define TOUCHEVENTFORWARDER_H
 
+#include <QElapsedTimer>
 #include <QObject>
 #include <QPointF>
 #include <QSize>
-#include <QVariantMap>
 #include <QVariantList>
-#include <QElapsedTimer>
+#include <QVariantMap>
 
 class AndroidAutoFacade;
 class ServiceProvider;
 
 struct TouchPoint {
     int id;
-    QPointF position;      // Original position in QML coordinates
-    QPointF scaledPosition; // Scaled position for AndroidAuto
+    QPointF position;        // Original position in QML coordinates
+    QPointF scaledPosition;  // Scaled position for AndroidAuto
     float pressure;
     QSize area;
-    
+
     QVariantMap toVariantMap() const {
         QVariantMap map;
         map["id"] = id;
@@ -53,33 +53,34 @@ class TouchEventForwarder : public QObject {
     Q_OBJECT
 
     Q_PROPERTY(QSize displaySize READ displaySize WRITE setDisplaySize NOTIFY displaySizeChanged)
-    Q_PROPERTY(QSize androidAutoSize READ androidAutoSize WRITE setAndroidAutoSize NOTIFY androidAutoSizeChanged)
+    Q_PROPERTY(QSize androidAutoSize READ androidAutoSize WRITE setAndroidAutoSize NOTIFY
+                   androidAutoSizeChanged)
     Q_PROPERTY(bool isEnabled READ isEnabled WRITE setEnabled NOTIFY enabledChanged)
     Q_PROPERTY(int averageLatency READ averageLatency NOTIFY averageLatencyChanged)
 
-  public:
+public:
     explicit TouchEventForwarder(AndroidAutoFacade* androidAutoFacade,
-                                ServiceProvider* serviceProvider,
-                                QObject* parent = nullptr);
+                                 ServiceProvider* serviceProvider, QObject* parent = nullptr);
     ~TouchEventForwarder() override;
 
     // Property getters/setters
-    QSize displaySize() const;
-    void setDisplaySize(const QSize& size);
-    
-    QSize androidAutoSize() const;
-    void setAndroidAutoSize(const QSize& size);
-    
-    bool isEnabled() const;
-    void setEnabled(bool enabled);
-    
-    int averageLatency() const;
+    [[nodiscard]] auto displaySize() const -> QSize;
+    auto setDisplaySize(const QSize& size) -> void;
+
+    [[nodiscard]] auto androidAutoSize() const -> QSize;
+    auto setAndroidAutoSize(const QSize& size) -> void;
+
+    [[nodiscard]] auto isEnabled() const -> bool;
+    auto setEnabled(bool enabled) -> void;
+
+    [[nodiscard]] auto averageLatency() const -> int;
 
     // Q_INVOKABLE methods for QML
-    Q_INVOKABLE void forwardTouchEvent(const QString& eventType, const QVariantList& touchPoints);
-    Q_INVOKABLE void forwardMouseEvent(const QString& eventType, qreal x, qreal y);
+    Q_INVOKABLE auto forwardTouchEvent(const QString& eventType, const QVariantList& touchPoints)
+        -> void;
+    Q_INVOKABLE auto forwardMouseEvent(const QString& eventType, qreal x, qreal y) -> void;
 
-  signals:
+signals:
     void displaySizeChanged(const QSize& size);
     void androidAutoSizeChanged(const QSize& size);
     void enabledChanged(bool enabled);
@@ -87,19 +88,20 @@ class TouchEventForwarder : public QObject {
     void touchEventForwarded(const QString& eventType, int pointCount);
     void forwardingError(const QString& error);
 
-  private:
-    TouchPoint createTouchPoint(int id, qreal x, qreal y, float pressure, const QSize& area);
-    QList<TouchPoint> convertTouchPoints(const QVariantList& qmlTouchPoints);
-    void sendToAndroidAuto(const QString& eventType, const QList<TouchPoint>& points);
-    void updateLatencyStats(qint64 latencyMs);
-    QPointF scaleCoordinates(const QPointF& point) const;
+private:
+    auto createTouchPoint(int id, qreal x, qreal y, float pressure, const QSize& area)
+        -> TouchPoint;
+    auto convertTouchPoints(const QVariantList& qmlTouchPoints) -> QList<TouchPoint>;
+    auto sendToAndroidAuto(const QString& eventType, const QList<TouchPoint>& points) -> void;
+    auto updateLatencyStats(qint64 latencyMs) -> void;
+    auto scaleCoordinates(const QPointF& point) const -> QPointF;
 
     AndroidAutoFacade* m_androidAutoFacade;
     ServiceProvider* m_serviceProvider;
     QSize m_displaySize;
     QSize m_androidAutoSize;
     bool m_isEnabled;
-    
+
     // Latency tracking
     QElapsedTimer m_latencyTimer;
     QList<qint64> m_latencyHistory;
@@ -107,4 +109,4 @@ class TouchEventForwarder : public QObject {
     static constexpr int MAX_LATENCY_SAMPLES = 50;
 };
 
-#endif // TOUCHEVENTFORWARDER_H
+#endif  // TOUCHEVENTFORWARDER_H

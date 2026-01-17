@@ -40,26 +40,26 @@ class SessionStore : public QObject {
   ~SessionStore() override;
 
   // Initialize database and schema
-  [[nodiscard]] bool initialize();
+  [[nodiscard]] auto initialize() -> bool;
 
   // AndroidDevice operations
-  [[nodiscard]] bool createDevice(const QString& deviceId, const QVariantMap& deviceInfo);
+  [[nodiscard]] auto createDevice(const QString& deviceId, const QVariantMap& deviceInfo) -> bool;
   [[nodiscard]] QVariantMap getDevice(const QString& deviceId) const;
   [[nodiscard]] QList<QVariantMap> getAllDevices() const;
-  [[nodiscard]] bool updateDeviceLastSeen(const QString& deviceId);
-  [[nodiscard]] bool deleteDevice(const QString& deviceId);
+  [[nodiscard]] auto updateDeviceLastSeen(const QString& deviceId) -> bool;
+  [[nodiscard]] auto deleteDevice(const QString& deviceId) -> bool;
 
   // Session operations
-  [[nodiscard]] bool createSession(const QString& sessionId, const QString& deviceId,
-                                   const QString& initialState);
+  [[nodiscard]] auto createSession(const QString& sessionId, const QString& deviceId,
+                                   const QString& initialState) -> bool;
   [[nodiscard]] QVariantMap getSession(const QString& sessionId) const;
   [[nodiscard]] QVariantMap getSessionByDevice(const QString& deviceId) const;
-  [[nodiscard]] bool updateSessionState(const QString& sessionId, const QString& newState);
-  [[nodiscard]] bool updateSessionHeartbeat(const QString& sessionId);
-  [[nodiscard]] bool endSession(const QString& sessionId);
+  [[nodiscard]] auto updateSessionState(const QString& sessionId, const QString& newState) -> bool;
+  [[nodiscard]] auto updateSessionHeartbeat(const QString& sessionId) -> bool;
+  [[nodiscard]] auto endSession(const QString& sessionId) -> bool;
 
  private:
-  [[nodiscard]] bool createSchema();
+  [[nodiscard]] auto createSchema() -> bool;
 
   std::unique_ptr<QSqlDatabase> m_db;
   QString m_dbPath;

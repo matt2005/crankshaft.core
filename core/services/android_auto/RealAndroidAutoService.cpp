@@ -95,9 +95,10 @@ static void logError(const std::string& msg) {
 }
 
 RealAndroidAutoService::RealAndroidAutoService(MediaPipeline* mediaPipeline, QObject* parent)
-    : AndroidAutoService(parent), m_mediaPipeline(mediaPipeline) {
-  // Create AASDK thread
-  m_aasdkThread = std::make_unique<QThread>();
+    : AndroidAutoService(parent),
+      m_mediaPipeline(mediaPipeline),
+      m_aasdkThread(std::make_unique<QThread>()) {
+  // Configure AASDK thread
   m_aasdkThread->setObjectName("AASDKThread");
 
   // Initialize SessionStore
@@ -121,13 +122,18 @@ RealAndroidAutoService::RealAndroidAutoService(MediaPipeline* mediaPipeline, QOb
 }
 
 RealAndroidAutoService::~RealAndroidAutoService() {
-  endCurrentSession();
-  deinitialise();
-
-  if (m_aasdkThread && m_aasdkThread->isRunning()) {
-    m_aasdkThread->quit();
-    m_aasdkThread->wait();
+  // Call cleanup directly to avoid virtual function call in destructor
+  if (m_isInitialised) {
+    endCurrentSession();
+    stopSearching();
+    if (isConnected()) {
+      disconnect();
+    }
+    cleanupAASDK();
+    m_isInitialised = false;
   }
+
+  // m_aasdkThread is already initialized in constructor initialization list
 }
 
 void RealAndroidAutoService::configureTransport(const QMap<QString, QVariant>& settings) {

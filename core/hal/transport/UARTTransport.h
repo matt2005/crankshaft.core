@@ -61,11 +61,11 @@ class UARTTransport : public Transport {
   QVariant getConfiguration(const QString& key) const override;
 
   // UART-specific configuration helpers
-  bool setBaudRate(qint32 baudRate);
-  bool setDataBits(quint8 dataBits);
-  bool setParity(const QString& parity);
-  bool setStopBits(quint8 stopBits);
-  bool setFlowControl(const QString& flowControl);
+  auto setBaudRate(qint32 baudRate) -> bool;
+  auto setDataBits(quint8 dataBits) -> bool;
+  auto setParity(const QString& parity) -> bool;
+  auto setStopBits(quint8 stopBits) -> bool;
+  auto setFlowControl(const QString& flowControl) -> bool;
 
  private:
   QString m_portName;

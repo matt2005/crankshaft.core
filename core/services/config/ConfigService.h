@@ -29,8 +29,8 @@ class ConfigService : public QObject {
  public:
   [[nodiscard]] static ConfigService& instance();
 
-  bool load(const QString& filePath);
-  bool save(const QString& filePath);
+  auto load(const QString& filePath) -> bool;
+  auto save(const QString& filePath) -> bool;
 
   [[nodiscard]] QVariant get(const QString& key, const QVariant& defaultValue = QVariant()) const;
   void set(const QString& key, const QVariant& value);

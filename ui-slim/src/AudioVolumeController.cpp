@@ -18,25 +18,26 @@
  */
 
 #include "AudioVolumeController.h"
+
+#include <QFile>
+#include <QProcess>
+
 #include "Logger.h"
 
-#include <QProcess>
-#include <QFile>
-
 AudioVolumeController::AudioVolumeController(AudioRouter* audioRouter, QObject* parent)
-    : QObject(parent), m_audioRouter(audioRouter) {
-}
+    : QObject(parent), m_audioRouter(audioRouter) {}
 
-bool AudioVolumeController::initialize() {
+auto AudioVolumeController::initialize() -> bool {
     Logger::instance().infoContext(QStringLiteral("AudioVolumeController"),
                                    QStringLiteral("Initializing audio volume controller"));
 
     // Detect the best available backend
     m_backendType = detectBackend();
-    
+
     if (m_backendType == BackendType::NONE) {
         // FR-025: Audio unavailable - log error, emit signal, but don't fail
-        QString errorMsg = QStringLiteral("No audio backend available - projection will continue without audio");
+        QString errorMsg =
+            QStringLiteral("No audio backend available - projection will continue without audio");
         handleAudioError(QStringLiteral("initialize"), errorMsg);
         emit audioUnavailable(errorMsg);
         return false;
@@ -46,76 +47,81 @@ bool AudioVolumeController::initialize() {
 
     // Read initial volume
     m_currentVolume = getCurrentVolume();
-    
+
     if (m_currentVolume < 0) {
-        Logger::instance().warningContext(QStringLiteral("AudioVolumeController"),
-                                          QStringLiteral("Could not read initial volume, using default 50%"));
+        Logger::instance().warningContext(
+            QStringLiteral("AudioVolumeController"),
+            QStringLiteral("Could not read initial volume, using default 50%"));
         m_currentVolume = 50;
     }
 
-    Logger::instance().infoContext(QStringLiteral("AudioVolumeController"),
-                                   QStringLiteral("Initialized with backend type %1, current volume: %2%")
-                                   .arg(static_cast<int>(m_backendType))
-                                   .arg(m_currentVolume));
+    Logger::instance().infoContext(
+        QStringLiteral("AudioVolumeController"),
+        QStringLiteral("Initialized with backend type %1, current volume: %2%")
+            .arg(static_cast<int>(m_backendType))
+            .arg(m_currentVolume));
 
     emit backendDetected(m_backendType);
     return true;
 }
 
-int AudioVolumeController::getCurrentVolume() const {
+auto AudioVolumeController::getCurrentVolume() const -> int {
     if (m_backendType == BackendType::AUDIO_ROUTER) {
         return readVolumeFromAudioRouter();
     }
-    
+
     // For other backends, return cached value
     // TODO: Implement actual volume reading for other backends
     return m_currentVolume;
 }
 
-bool AudioVolumeController::setVolume(int percentage) {
+auto AudioVolumeController::setVolume(int percentage) -> bool {
     if (!m_audioAvailable) {
-        Logger::instance().warningContext(QStringLiteral("AudioVolumeController"),
-                                          QStringLiteral("Cannot set volume - audio unavailable (FR-025)"));
+        Logger::instance().warningContext(
+            QStringLiteral("AudioVolumeController"),
+            QStringLiteral("Cannot set volume - audio unavailable (FR-025)"));
         return false;
     }
 
     int validated = validatePercentage(percentage);
-    
+
     if (validated == m_currentVolume) {
-        return true; // No change needed
+        return true;  // No change needed
     }
 
     bool success = false;
-    
+
     switch (m_backendType) {
         case BackendType::AUDIO_ROUTER:
             success = setVolumeViaAudioRouter(validated);
             break;
-            
+
         case BackendType::PULSEAUDIO:
             // TODO: Implement PulseAudio volume control
-            Logger::instance().warningContext(QStringLiteral("AudioVolumeController"),
-                                              QStringLiteral("PulseAudio backend not yet implemented"));
+            Logger::instance().warningContext(
+                QStringLiteral("AudioVolumeController"),
+                QStringLiteral("PulseAudio backend not yet implemented"));
             success = false;
             break;
-            
+
         case BackendType::ALSA:
             // TODO: Implement ALSA volume control
             Logger::instance().warningContext(QStringLiteral("AudioVolumeController"),
                                               QStringLiteral("ALSA backend not yet implemented"));
             success = false;
             break;
-            
+
         case BackendType::QT_MULTIMEDIA:
             // TODO: Implement Qt Multimedia volume control
-            Logger::instance().warningContext(QStringLiteral("AudioVolumeController"),
-                                              QStringLiteral("Qt Multimedia backend not yet implemented"));
+            Logger::instance().warningContext(
+                QStringLiteral("AudioVolumeController"),
+                QStringLiteral("Qt Multimedia backend not yet implemented"));
             success = false;
             break;
-            
+
         case BackendType::NONE:
         default:
-            handleAudioError(QStringLiteral("setVolume"), 
+            handleAudioError(QStringLiteral("setVolume"),
                              QStringLiteral("No audio backend available"));
             return false;
     }
@@ -133,27 +139,27 @@ bool AudioVolumeController::setVolume(int percentage) {
     return success;
 }
 
-bool AudioVolumeController::isMuted() const {
-    return m_isMuted;
-}
+auto AudioVolumeController::isMuted() const -> bool { return m_isMuted; }
 
-bool AudioVolumeController::setMuted(bool muted) {
+auto AudioVolumeController::setMuted(bool muted) -> bool {
     if (!m_audioAvailable) {
-        Logger::instance().warningContext(QStringLiteral("AudioVolumeController"),
-                                          QStringLiteral("Cannot set mute - audio unavailable (FR-025)"));
+        Logger::instance().warningContext(
+            QStringLiteral("AudioVolumeController"),
+            QStringLiteral("Cannot set mute - audio unavailable (FR-025)"));
         return false;
     }
 
     if (muted == m_isMuted) {
-        return true; // No change needed
+        return true;  // No change needed
     }
 
     // TODO: Implement actual mute control for different backends
     m_isMuted = muted;
-    
-    Logger::instance().infoContext(QStringLiteral("AudioVolumeController"),
-                                   QStringLiteral("Mute state changed to: %1").arg(muted ? "muted" : "unmuted"));
-    
+
+    Logger::instance().infoContext(
+        QStringLiteral("AudioVolumeController"),
+        QStringLiteral("Mute state changed to: %1").arg(muted ? "muted" : "unmuted"));
+
     emit muteChanged(muted);
     return true;
 }
@@ -162,17 +168,15 @@ AudioVolumeController::BackendType AudioVolumeController::getBackendType() const
     return m_backendType;
 }
 
-bool AudioVolumeController::isAvailable() const {
+auto AudioVolumeController::isAvailable() const -> bool {
     return m_audioAvailable && m_backendType != BackendType::NONE;
 }
 
-QString AudioVolumeController::getLastError() const {
-    return m_lastError;
-}
+auto AudioVolumeController::getLastError() const -> QString { return m_lastError; }
 
-AudioVolumeController::BackendType AudioVolumeController::detectBackend() {
+auto AudioVolumeController::detectBackend() -> BackendType {
     // Try backends in order of preference
-    
+
     // 1. Try AudioRouter (best integration with AndroidAuto)
     if (tryAudioRouterBackend()) {
         Logger::instance().infoContext(QStringLiteral("AudioVolumeController"),
@@ -202,13 +206,14 @@ AudioVolumeController::BackendType AudioVolumeController::detectBackend() {
     }
 
     // FR-025: No audio backend available
-    Logger::instance().errorContext(QStringLiteral("AudioVolumeController"),
-                                    QStringLiteral("No audio backend available - continuing without audio"));
-    
+    Logger::instance().errorContext(
+        QStringLiteral("AudioVolumeController"),
+        QStringLiteral("No audio backend available - continuing without audio"));
+
     return BackendType::NONE;
 }
 
-bool AudioVolumeController::tryAudioRouterBackend() {
+auto AudioVolumeController::tryAudioRouterBackend() -> bool {
     if (!m_audioRouter) {
         return false;
     }
@@ -218,11 +223,11 @@ bool AudioVolumeController::tryAudioRouterBackend() {
     return true;
 }
 
-bool AudioVolumeController::tryPulseAudioBackend() {
+auto AudioVolumeController::tryPulseAudioBackend() -> bool {
     // Check if PulseAudio is available by trying to run pactl
     QProcess process;
     process.start(QStringLiteral("pactl"), QStringList{QStringLiteral("info")});
-    
+
     if (!process.waitForFinished(1000)) {
         Logger::instance().warningContext(QStringLiteral("AudioVolumeController"),
                                           QStringLiteral("PulseAudio check timed out"));
@@ -238,20 +243,21 @@ bool AudioVolumeController::tryPulseAudioBackend() {
     return true;
 }
 
-bool AudioVolumeController::tryAlsaBackend() {
+auto AudioVolumeController::tryAlsaBackend() -> bool {
     // Check if ALSA devices are available
     QFile devicesFile(QStringLiteral("/proc/asound/devices"));
-    
+
     if (!devicesFile.exists()) {
-        Logger::instance().infoContext(QStringLiteral("AudioVolumeController"),
-                                       QStringLiteral("ALSA not available (/proc/asound/devices not found)"));
+        Logger::instance().infoContext(
+            QStringLiteral("AudioVolumeController"),
+            QStringLiteral("ALSA not available (/proc/asound/devices not found)"));
         return false;
     }
 
     // Check if amixer command is available
     QProcess process;
     process.start(QStringLiteral("which"), QStringList{QStringLiteral("amixer")});
-    
+
     if (!process.waitForFinished(1000)) {
         return false;
     }
@@ -259,13 +265,13 @@ bool AudioVolumeController::tryAlsaBackend() {
     return process.exitCode() == 0;
 }
 
-bool AudioVolumeController::tryQtMultimediaBackend() {
+auto AudioVolumeController::tryQtMultimediaBackend() -> bool {
     // TODO: Implement Qt Multimedia detection
     // Would check if QAudioOutput is available
     return false;
 }
 
-int AudioVolumeController::readVolumeFromAudioRouter() const {
+auto AudioVolumeController::readVolumeFromAudioRouter() const -> int {
     if (!m_audioRouter) {
         return -1;
     }
@@ -275,24 +281,26 @@ int AudioVolumeController::readVolumeFromAudioRouter() const {
     return m_currentVolume;
 }
 
-bool AudioVolumeController::setVolumeViaAudioRouter(int percentage) {
+auto AudioVolumeController::setVolumeViaAudioRouter(int percentage) -> bool {
     if (!m_audioRouter) {
         return false;
     }
 
     // TODO: Implement actual volume control via AudioRouter
     // For now, just update cached value and return success
-    Logger::instance().infoContext(QStringLiteral("AudioVolumeController"),
-                                   QStringLiteral("Setting volume via AudioRouter: %1%").arg(percentage));
-    
+    Logger::instance().infoContext(
+        QStringLiteral("AudioVolumeController"),
+        QStringLiteral("Setting volume via AudioRouter: %1%").arg(percentage));
+
     return true;
 }
 
-void AudioVolumeController::handleAudioError(const QString& context, const QString& message) {
+auto AudioVolumeController::handleAudioError(const QString& context, const QString& message)
+    -> void {
     m_lastError = QStringLiteral("%1: %2").arg(context, message);
-    
+
     Logger::instance().errorContext(QStringLiteral("AudioVolumeController"), m_lastError);
-    
+
     // FR-025: Log but don't crash - projection continues without audio
     if (m_audioAvailable) {
         m_audioAvailable = false;
@@ -300,7 +308,7 @@ void AudioVolumeController::handleAudioError(const QString& context, const QStri
     }
 }
 
-int AudioVolumeController::validatePercentage(int percentage) const {
+auto AudioVolumeController::validatePercentage(int percentage) const -> int {
     if (percentage < 0) return 0;
     if (percentage > 100) return 100;
     return percentage;

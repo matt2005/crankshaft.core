@@ -17,12 +17,13 @@
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtTest/QtTest>
 #include <QObject>
+
+#include <QtTest/QtTest>
 
 /**
  * @brief Minimal unit test for AndroidAutoFacade
- * 
+ *
  * NOTE: Full facade testing requires ServiceProvider and core service mocks.
  * This minimal test validates the test framework setup.
  * TODO: Expand with proper mocking infrastructure when available.
@@ -30,7 +31,7 @@
 class AndroidAutoFacadeTest : public QObject {
     Q_OBJECT
 
-  private slots:
+private slots:
     void initTestCase() {
         qDebug() << "AndroidAutoFacade test suite initialized";
         qDebug() << "Note: Full testing requires ServiceProvider mock infrastructure";
@@ -42,9 +43,7 @@ class AndroidAutoFacadeTest : public QObject {
         QCOMPARE(1 + 1, 2);
     }
 
-    void cleanupTestCase() {
-        qDebug() << "AndroidAutoFacade test suite completed";
-    }
+    void cleanupTestCase() { qDebug() << "AndroidAutoFacade test suite completed"; }
 };
 
 QTEST_MAIN(AndroidAutoFacadeTest)

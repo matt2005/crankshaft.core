@@ -15,17 +15,17 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef DEVICEMANAGER_H
 #define DEVICEMANAGER_H
 
+#include <QDateTime>
+#include <QList>
 #include <QObject>
 #include <QString>
 #include <QVariantList>
 #include <QVariantMap>
-#include <QList>
-#include <QDateTime>
 
 class ServiceProvider;
 class AndroidAutoFacade;
@@ -33,12 +33,12 @@ class AndroidAutoFacade;
 struct DetectedDevice {
     QString deviceId;
     QString name;
-    QString type;           // "phone", "tablet", etc.
-    int signalStrength;     // 0-100
+    QString type;        // "phone", "tablet", etc.
+    int signalStrength;  // 0-100
     QDateTime lastSeen;
     bool wasConnectedBefore;
-    int priority;           // Higher = higher priority (last-connected device = highest)
-    
+    int priority;  // Higher = higher priority (last-connected device = highest)
+
     QVariantMap toVariantMap() const {
         QVariantMap map;
         map["deviceId"] = deviceId;
@@ -50,7 +50,7 @@ struct DetectedDevice {
         map["priority"] = priority;
         return map;
     }
-    
+
     static DetectedDevice fromVariantMap(const QVariantMap& map) {
         DetectedDevice device;
         device.deviceId = map.value("deviceId").toString();
@@ -66,51 +66,51 @@ struct DetectedDevice {
 
 class DeviceManager : public QObject {
     Q_OBJECT
-    
+
     Q_PROPERTY(QVariantList detectedDevices READ detectedDevices NOTIFY detectedDevicesChanged)
     Q_PROPERTY(int deviceCount READ deviceCount NOTIFY deviceCountChanged)
     Q_PROPERTY(bool hasMultipleDevices READ hasMultipleDevices NOTIFY hasMultipleDevicesChanged)
-    Q_PROPERTY(QVariantMap lastConnectedDevice READ lastConnectedDevice NOTIFY lastConnectedDeviceChanged)
+    Q_PROPERTY(
+        QVariantMap lastConnectedDevice READ lastConnectedDevice NOTIFY lastConnectedDeviceChanged)
 
-  public:
-    explicit DeviceManager(ServiceProvider* serviceProvider, 
-                          AndroidAutoFacade* androidAutoFacade,
-                          QObject* parent = nullptr);
+public:
+    explicit DeviceManager(ServiceProvider* serviceProvider, AndroidAutoFacade* androidAutoFacade,
+                           QObject* parent = nullptr);
     ~DeviceManager() override;
 
     // Property getters
-    QVariantList detectedDevices() const;
-    int deviceCount() const;
-    bool hasMultipleDevices() const;
-    QVariantMap lastConnectedDevice() const;
+    [[nodiscard]] auto detectedDevices() const -> QVariantList;
+    [[nodiscard]] auto deviceCount() const -> int;
+    [[nodiscard]] auto hasMultipleDevices() const -> bool;
+    [[nodiscard]] auto lastConnectedDevice() const -> QVariantMap;
 
     // Q_INVOKABLE methods for QML
-    Q_INVOKABLE void clearDevices();
-    Q_INVOKABLE QVariantMap getDevice(const QString& deviceId) const;
-    Q_INVOKABLE QString getTopPriorityDeviceId() const;
+    Q_INVOKABLE auto clearDevices() -> void;
+    Q_INVOKABLE [[nodiscard]] auto getDevice(const QString& deviceId) const -> QVariantMap;
+    Q_INVOKABLE [[nodiscard]] auto getTopPriorityDeviceId() const -> QString;
 
-  signals:
+signals:
     void detectedDevicesChanged();
     void deviceCountChanged(int count);
     void hasMultipleDevicesChanged(bool hasMultiple);
     void lastConnectedDeviceChanged();
-    
+
     void deviceDiscovered(const QVariantMap& device);
     void deviceRemoved(const QString& deviceId);
     void devicesUpdated(const QVariantList& devices);
 
-  private slots:
+private slots:
     void onDeviceAdded(const QVariantMap& device);
     void onDeviceRemoved(const QString& deviceId);
     void onConnectionEstablished(const QString& deviceName);
 
-  private:
-    void addOrUpdateDevice(const DetectedDevice& device);
-    void removeDevice(const QString& deviceId);
-    void sortDevicesByPriority();
-    void loadLastConnectedDevice();
-    void saveLastConnectedDevice(const QString& deviceId);
-    int calculatePriority(const DetectedDevice& device) const;
+private:
+    auto addOrUpdateDevice(const DetectedDevice& device) -> void;
+    auto removeDevice(const QString& deviceId) -> void;
+    auto sortDevicesByPriority() -> void;
+    auto loadLastConnectedDevice() -> void;
+    auto saveLastConnectedDevice(const QString& deviceId) -> void;
+    auto calculatePriority(const DetectedDevice& device) const -> int;
 
     ServiceProvider* m_serviceProvider;
     AndroidAutoFacade* m_androidAutoFacade;
@@ -118,4 +118,4 @@ class DeviceManager : public QObject {
     QString m_lastConnectedDeviceId;
 };
 
-#endif // DEVICEMANAGER_H
+#endif  // DEVICEMANAGER_H

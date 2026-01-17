@@ -24,13 +24,13 @@
 
 #include "../../core/services/logging/Logger.h"
 #include "AndroidAutoFacade.h"
-#include "PreferencesFacade.h"
 #include "AudioBridge.h"
 #include "ConnectionStateMachine.h"
 #include "DeviceManager.h"
+#include "ErrorHandler.h"
+#include "PreferencesFacade.h"
 #include "ServiceProvider.h"
 #include "TouchEventForwarder.h"
-#include "ErrorHandler.h"
 
 int main(int argc, char* argv[]) {
     // Create application
@@ -50,16 +50,15 @@ int main(int argc, char* argv[]) {
                                    "Enable debug logging (same as SLIM_UI_DEBUG=1)");
     parser.addOption(debugOption);
 
-    QCommandLineOption platformOption(
-        QStringList() << "p" << "platform",
-        "Qt platform plugin (e.g., eglfs, vnc:port=5900, xcb)", "platform");
+    QCommandLineOption platformOption(QStringList() << "p" << "platform",
+                                      "Qt platform plugin (e.g., eglfs, vnc:port=5900, xcb)",
+                                      "platform");
     parser.addOption(platformOption);
 
     parser.process(app);
 
     // Configure logging
-    bool debugMode = parser.isSet(debugOption) ||
-                     qEnvironmentVariableIsSet("SLIM_UI_DEBUG");
+    bool debugMode = parser.isSet(debugOption) || qEnvironmentVariableIsSet("SLIM_UI_DEBUG");
 
     if (debugMode) {
         Logger::instance().setLevel(Logger::Level::Debug);
@@ -68,9 +67,9 @@ int main(int argc, char* argv[]) {
         Logger::instance().setLevel(Logger::Level::Info);
     }
 
-    Logger::instance().infoContext("Main", "Starting Crankshaft Slim UI",
-                                   {{"version", "1.0.0"},
-                                    {"platform", QGuiApplication::platformName()}});
+    Logger::instance().infoContext(
+        "Main", "Starting Crankshaft Slim UI",
+        {{"version", "1.0.0"}, {"platform", QGuiApplication::platformName()}});
 
     // Initialize core services
     ServiceProvider& services = ServiceProvider::instance();
@@ -88,15 +87,16 @@ int main(int argc, char* argv[]) {
 
     // Create facades (Phase 4)
     PreferencesFacade preferencesFacade(&services);
-    
+
     // Create error handler (Phase 5)
     ErrorHandler errorHandler;
 
     // Initialize audio system
     if (!audioBridge.initialize()) {
-        Logger::instance().warningContext("Main", "Audio initialization failed, continuing without audio");
-        errorHandler.reportError(ErrorHandler::ErrorCode::AudioBackendUnavailable, 
-                                 "Audio system initialization failed", 
+        Logger::instance().warningContext("Main",
+                                          "Audio initialization failed, continuing without audio");
+        errorHandler.reportError(ErrorHandler::ErrorCode::AudioBackendUnavailable,
+                                 "Audio system initialization failed",
                                  ErrorHandler::Severity::Warning);
     }
 
@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
 
     // Load main QML
     const QUrl url(QStringLiteral("qrc:/qml/main.qml"));
-    
+
     QObject::connect(
         &engine, &QQmlApplicationEngine::objectCreated, &app,
         [url](QObject* obj, const QUrl& objUrl) {
@@ -145,4 +145,3 @@ int main(int argc, char* argv[]) {
 
     return exitCode;
 }
-

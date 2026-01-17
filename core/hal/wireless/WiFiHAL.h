@@ -59,21 +59,22 @@ class WiFiHAL : public QObject {
   explicit WiFiHAL(QObject* parent = nullptr);
   ~WiFiHAL() override;
 
-  bool isEnabled() const;
-  bool setEnabled(bool enabled);
+  auto isEnabled() const -> bool;
+  auto setEnabled(bool enabled) -> bool;
 
-  bool isScanning() const;
-  bool startScan();
+  auto isScanning() const -> bool;
+  auto startScan() -> bool;
   QList<WiFiNetwork> getAvailableNetworks() const;
 
   ConnectionState getConnectionState() const;
-  QString getConnectedSSID() const;
-  int getSignalStrength() const;
-  QString getIPAddress() const;
+  auto getConnectedSSID() const -> QString;
+  auto getSignalStrength() const -> int;
+  auto getIPAddress() const -> QString;
 
-  bool connectToNetwork(const QString& ssid, const QString& password, WiFiSecurity security);
-  bool disconnect();
-  bool forgetNetwork(const QString& ssid);
+  auto connectToNetwork(const QString& ssid, const QString& password, WiFiSecurity security)
+      -> bool;
+  auto disconnect() -> bool;
+  auto forgetNetwork(const QString& ssid) -> bool;
   QStringList getSavedNetworks() const;
 
  signals:

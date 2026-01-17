@@ -77,10 +77,10 @@ class WiFiHAL::WiFiHALPrivate {
 
   WiFiHALPrivate() : dbusConnection(QDBusConnection::systemBus()) {}
 
-  bool findWirelessDevice();
+  auto findWirelessDevice() -> bool;
   QList<WiFiNetwork> parseAccessPoints(const QList<QDBusObjectPath>& apPaths);
   WiFiNetwork parseAccessPoint(const QString& apPath);
-  int getSignalQuality(int signalStrength);
+  auto getSignalQuality(int signalStrength) -> int;
 };
 
 bool WiFiHAL::WiFiHALPrivate::findWirelessDevice() {

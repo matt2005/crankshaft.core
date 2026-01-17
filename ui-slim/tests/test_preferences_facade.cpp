@@ -17,12 +17,13 @@
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtTest/QtTest>
 #include <QObject>
+
+#include <QtTest/QtTest>
 
 /**
  * @brief Minimal unit test for PreferencesFacade
- * 
+ *
  * NOTE: Full facade testing requires ServiceProvider and PreferencesService mocks.
  * This minimal test validates the test framework setup for settings.
  * TODO: Expand with proper mocking infrastructure when available.
@@ -30,7 +31,7 @@
 class PreferencesFacadeTest : public QObject {
     Q_OBJECT
 
-  private slots:
+private slots:
     void initTestCase() {
         qDebug() << "PreferencesFacade test suite initialized";
         qDebug() << "Note: Full testing requires ServiceProvider and PreferencesService mocks";
@@ -48,16 +49,14 @@ class PreferencesFacadeTest : public QObject {
         // - setDisplayBrightness(150) clamps to 100
         // - setAudioVolume(-10) clamps to 0
         // - setDisplayBrightness(75) saves and returns 75
-        
+
         // For now, verify the test framework supports assertions
         QVERIFY(50 >= 0 && 50 <= 100);
         QVERIFY(0 >= 0 && 0 <= 100);
         QVERIFY(100 >= 0 && 100 <= 100);
     }
 
-    void cleanupTestCase() {
-        qDebug() << "PreferencesFacade test suite completed";
-    }
+    void cleanupTestCase() { qDebug() << "PreferencesFacade test suite completed"; }
 };
 
 QTEST_MAIN(PreferencesFacadeTest)

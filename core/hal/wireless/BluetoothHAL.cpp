@@ -50,7 +50,7 @@ class BluetoothHAL::BluetoothHALPrivate {
     qDBusRegisterMetaType<QMap<QString, QVariantMap>>();
   }
 
-  bool findAdapter();
+  auto findAdapter() -> bool;
   QList<BluetoothDevice> parseDevices();
   BluetoothDevice parseDevice(const QString& devicePath, const QVariantMap& properties);
   BluetoothDevice::DeviceType guessDeviceType(const QStringList& uuids);

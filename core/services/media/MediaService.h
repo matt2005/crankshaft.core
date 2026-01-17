@@ -50,14 +50,14 @@ class MediaService : public QObject {
    * Initialize MediaService and detect available audio devices.
    * @return true if successfully initialised, false if critical error
    */
-  bool initialize();
+  auto initialize() -> bool;
 
   /**
    * Load and start playback of media file.
    * @param filePath Absolute path to media file (mp3, wav, flac, m4a, etc.)
    * @return true if playback started, false if file not found or unsupported
    */
-  bool play(const QString& filePath);
+  auto play(const QString& filePath) -> bool;
 
   /**
    * Pause current playback without stopping.
@@ -92,7 +92,7 @@ class MediaService : public QObject {
    * Get current playback volume level.
    * @return Current volume (0-100)
    */
-  int volume() const;
+  auto volume() const -> int;
 
   /**
    * Get current media information.
@@ -104,7 +104,7 @@ class MediaService : public QObject {
    * Get playback state.
    * @return "playing", "paused", "stopped", "error"
    */
-  [[nodiscard]] QString state() const;
+  [[nodiscard]] auto state() const -> QString;
 
   /**
    * Get list of available audio output devices.
@@ -117,7 +117,7 @@ class MediaService : public QObject {
    * @param deviceId Device identifier (from availableAudioDevices)
    * @return true if device set successfully
    */
-  bool setAudioDevice(const QString& deviceId);
+  auto setAudioDevice(const QString& deviceId) -> bool;
 
   /**
    * Shutdown MediaService and release resources.

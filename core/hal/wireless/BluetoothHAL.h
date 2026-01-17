@@ -76,27 +76,27 @@ class BluetoothHAL : public QObject {
   explicit BluetoothHAL(QObject* parent = nullptr);
   ~BluetoothHAL() override;
 
-  bool isEnabled() const;
-  bool setEnabled(bool enabled);
+  auto isEnabled() const -> bool;
+  auto setEnabled(bool enabled) -> bool;
 
   State getState() const;
-  QString getLocalAddress() const;
-  QString getLocalName() const;
-  bool setLocalName(const QString& name);
+  auto getLocalAddress() const -> QString;
+  auto getLocalName() const -> QString;
+  auto setLocalName(const QString& name) -> bool;
 
-  bool isDiscovering() const;
-  bool startDiscovery();
-  bool stopDiscovery();
+  auto isDiscovering() const -> bool;
+  auto startDiscovery() -> bool;
+  auto stopDiscovery() -> bool;
   QList<BluetoothDevice> getDevices() const;
   QList<BluetoothDevice> getPairedDevices() const;
 
-  bool pairDevice(const QString& address);
-  bool connectDevice(const QString& address);
-  bool disconnectDevice(const QString& address);
-  bool removeDevice(const QString& address);
+  auto pairDevice(const QString& address) -> bool;
+  auto connectDevice(const QString& address) -> bool;
+  auto disconnectDevice(const QString& address) -> bool;
+  auto removeDevice(const QString& address) -> bool;
 
-  QString getConnectedDevice() const;
-  bool isConnected(const QString& address) const;
+  auto getConnectedDevice() const -> QString;
+  auto isConnected(const QString& address) const -> bool;
 
  signals:
   void enabledChanged(bool enabled);
@@ -118,7 +118,7 @@ class BluetoothHAL : public QObject {
   void onInterfacesRemoved(const QDBusObjectPath& objectPath, const QStringList& interfaces);
 
  private:
-  QString findDevicePath(const QString& deviceAddress) const;
+  auto findDevicePath(const QString& deviceAddress) const -> QString;
 
   class BluetoothHALPrivate;
   BluetoothHALPrivate* d;

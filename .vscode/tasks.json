@@ -116,7 +116,8 @@
       "args": [
         "bash",
         "-lc",
-        "./scripts/format.sh"
+        "./.github/scripts/quality/check-format.sh",
+        "--fix"
       ],
       "options": { "cwd": "${workspaceFolder}" },
       "presentation": { "reveal": "always", "panel": "shared" }
@@ -125,19 +126,15 @@
       "label": "Lint C++ Code (clang-tidy)",
       "type": "shell",
       "command": "wsl",
-      "args": ["bash", "-lc", "./scripts/lint_cpp.sh clang-tidy"],
+      "args": [
+        "bash", 
+        "-lc", 
+        "./.github/scripts/quality/check-tidy.sh",
+        "--fix"],
       "options": { "cwd": "${workspaceFolder}" },
       "presentation": { "reveal": "always", "panel": "shared" },
       "problemMatcher": ["$gcc"],
       "dependsOn": ["Build (Debug)"]
-    },
-    {
-      "label": "Check C++ Code (cppcheck)",
-      "type": "shell",
-      "command": "wsl",
-      "args": ["bash", "-lc", "./scripts/lint_cpp.sh cppcheck"],
-      "options": { "cwd": "${workspaceFolder}" },
-      "presentation": { "reveal": "always", "panel": "shared" }
     },
     {
       "label": "Check CMake Files",

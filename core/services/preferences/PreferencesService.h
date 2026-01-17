@@ -40,22 +40,22 @@ class PreferencesService : public QObject {
   ~PreferencesService() override;
 
   // Initialize database and schema
-  [[nodiscard]] bool initialize();
+  [[nodiscard]] auto initialize() -> bool;
 
   // Get preference value (cached)
   [[nodiscard]] QVariant get(const QString& key, const QVariant& defaultValue = QVariant()) const;
 
   // Set preference value (updates cache and database)
-  [[nodiscard]] bool set(const QString& key, const QVariant& value);
+  [[nodiscard]] auto set(const QString& key, const QVariant& value) -> bool;
 
   // Check if preference exists
-  [[nodiscard]] bool contains(const QString& key) const;
+  [[nodiscard]] auto contains(const QString& key) const -> bool;
 
   // Remove preference
-  [[nodiscard]] bool remove(const QString& key);
+  [[nodiscard]] auto remove(const QString& key) -> bool;
 
   // Clear all preferences
-  [[nodiscard]] bool clear();
+  [[nodiscard]] auto clear() -> bool;
 
   // Get all preference keys
   [[nodiscard]] QStringList allKeys() const;
@@ -64,8 +64,8 @@ class PreferencesService : public QObject {
   void preferenceChanged(const QString& key, const QVariant& newValue);
 
  private:
-  [[nodiscard]] bool createSchema();
-  [[nodiscard]] bool loadPreferences();
+  [[nodiscard]] auto createSchema() -> bool;
+  [[nodiscard]] auto loadPreferences() -> bool;
 
   std::unique_ptr<QSqlDatabase> m_db;
   QString m_dbPath;

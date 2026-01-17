@@ -52,7 +52,7 @@ NetworkService::NetworkService(QObject* parent)
   qDebug() << "NetworkService initialized";
 }
 
-NetworkService::~NetworkService() {}
+NetworkService::~NetworkService() = default;
 
 WiFiHAL* NetworkService::wifiHAL() const {
   return m_wifiHAL;

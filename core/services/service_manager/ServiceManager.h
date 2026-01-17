@@ -48,7 +48,7 @@ class ServiceManager : public QObject {
    * @brief Start all services based on active profile
    * @return true if at least one service started successfully
    */
-  bool startAllServices();
+  auto startAllServices() -> bool;
 
   /**
    * @brief Stop all running services
@@ -66,28 +66,28 @@ class ServiceManager : public QObject {
    * @param deviceName Device name from profile (e.g., "AndroidAuto", "WiFi")
    * @return true if service started successfully
    */
-  bool startService(const QString& deviceName);
+  auto startService(const QString& deviceName) -> bool;
 
   /**
    * @brief Stop a specific service by device name
    * @param deviceName Device name from profile
    * @return true if service stopped successfully
    */
-  bool stopService(const QString& deviceName);
+  auto stopService(const QString& deviceName) -> bool;
 
   /**
    * @brief Restart a specific service
    * @param deviceName Device name from profile
    * @return true if service restarted successfully
    */
-  bool restartService(const QString& deviceName);
+  auto restartService(const QString& deviceName) -> bool;
 
   /**
    * @brief Check if a service is currently running
    * @param deviceName Device name from profile
    * @return true if service is running
    */
-  bool isServiceRunning(const QString& deviceName) const;
+  auto isServiceRunning(const QString& deviceName) const -> bool;
 
   /**
    * @brief Get list of running service names
@@ -141,9 +141,9 @@ class ServiceManager : public QObject {
   void onDeviceConfigChanged(const QString& profileId, const QString& deviceName);
 
  private:
-  bool startAndroidAutoService(const DeviceConfig& device);
-  bool startWiFiService(const DeviceConfig& device);
-  bool startBluetoothService(const DeviceConfig& device);
+  auto startAndroidAutoService(const DeviceConfig& device) -> bool;
+  auto startWiFiService(const DeviceConfig& device) -> bool;
+  auto startBluetoothService(const DeviceConfig& device) -> bool;
 
   void stopAndroidAutoService();
   void stopWiFiService();

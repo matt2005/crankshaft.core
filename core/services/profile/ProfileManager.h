@@ -59,7 +59,7 @@ struct HostProfile {
   QString osVersion;
   QMap<QString, QVariant> properties;
 
-  QString toJson() const;
+  auto toJson() const -> QString;
   static HostProfile fromJson(const QString& json);
 };
 
@@ -94,7 +94,7 @@ struct VehicleProfile {
   QMap<QString, QVariant> properties;
   QMap<QString, QVariant> mockDefaults;
 
-  QString toJson() const;
+  auto toJson() const -> QString;
   static VehicleProfile fromJson(const QString& json);
 };
 
@@ -112,33 +112,33 @@ class ProfileManager : public QObject {
   ~ProfileManager();
 
   // Host profile management
-  bool createHostProfile(const HostProfile& profile);
-  bool updateHostProfile(const HostProfile& profile);
-  bool deleteHostProfile(const QString& profileId);
+  auto createHostProfile(const HostProfile& profile) -> bool;
+  auto updateHostProfile(const HostProfile& profile) -> bool;
+  auto deleteHostProfile(const QString& profileId) -> bool;
   HostProfile getHostProfile(const QString& profileId) const;
   QList<HostProfile> getAllHostProfiles() const;
-  bool setActiveHostProfile(const QString& profileId);
+  auto setActiveHostProfile(const QString& profileId) -> bool;
   HostProfile getActiveHostProfile() const;
 
   // Vehicle profile management
-  bool createVehicleProfile(const VehicleProfile& profile);
-  bool updateVehicleProfile(const VehicleProfile& profile);
-  bool deleteVehicleProfile(const QString& profileId);
+  auto createVehicleProfile(const VehicleProfile& profile) -> bool;
+  auto updateVehicleProfile(const VehicleProfile& profile) -> bool;
+  auto deleteVehicleProfile(const QString& profileId) -> bool;
   VehicleProfile getVehicleProfile(const QString& profileId) const;
   QList<VehicleProfile> getAllVehicleProfiles() const;
-  bool setActiveVehicleProfile(const QString& profileId);
+  auto setActiveVehicleProfile(const QString& profileId) -> bool;
   VehicleProfile getActiveVehicleProfile() const;
 
   // Device management within profiles
-  bool addDeviceToHostProfile(const QString& profileId, const DeviceConfig& device);
-  bool removeDeviceFromHostProfile(const QString& profileId, const QString& deviceName);
-  bool setDeviceEnabled(const QString& profileId, const QString& deviceName, bool enabled);
-  bool setDeviceUseMock(const QString& profileId, const QString& deviceName, bool useMock);
+  auto addDeviceToHostProfile(const QString& profileId, const DeviceConfig& device) -> bool;
+  auto removeDeviceFromHostProfile(const QString& profileId, const QString& deviceName) -> bool;
+  auto setDeviceEnabled(const QString& profileId, const QString& deviceName, bool enabled) -> bool;
+  auto setDeviceUseMock(const QString& profileId, const QString& deviceName, bool useMock) -> bool;
   QList<DeviceConfig> getProfileDevices(const QString& profileId) const;
 
   // Persistence
-  bool loadProfiles();
-  bool saveProfiles();
+  auto loadProfiles() -> bool;
+  auto saveProfiles() -> bool;
 
  signals:
   void hostProfileChanged(const QString& profileId);

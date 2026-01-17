@@ -59,9 +59,9 @@ class GStreamerVideoDecoder : public IVideoDecoder {
   }
 
  private:
-  bool createPipeline();
+  auto createPipeline() -> bool;
   void destroyPipeline();
-  QString getDecoderElement() const;
+  auto getDecoderElement() const -> QString;
   static GstFlowReturn onNewSample(GstAppSink* appsink, gpointer user_data);
   static void onPadAdded(GstElement* element, GstPad* pad, gpointer data);
   static gboolean onBusMessage(GstBus* bus, GstMessage* message, gpointer user_data);

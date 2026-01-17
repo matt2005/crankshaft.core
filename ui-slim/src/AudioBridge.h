@@ -15,7 +15,7 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #ifndef AUDIOBRIDGE_H
 #define AUDIOBRIDGE_H
@@ -33,29 +33,25 @@ class AudioBridge : public QObject {
     Q_PROPERTY(int bufferSize READ bufferSize NOTIFY bufferSizeChanged)
     Q_PROPERTY(int sampleRate READ sampleRate NOTIFY sampleRateChanged)
 
-  public:
-    enum AudioBackend {
-        None = 0,
-        ALSA = 1,
-        PulseAudio = 2
-    };
+public:
+    enum AudioBackend { None = 0, ALSA = 1, PulseAudio = 2 };
     Q_ENUM(AudioBackend)
 
     explicit AudioBridge(ServiceProvider* serviceProvider, QObject* parent = nullptr);
     ~AudioBridge() override;
 
     // Property getters
-    bool isAudioAvailable() const;
-    QString audioBackend() const;
-    int bufferSize() const;
-    int sampleRate() const;
+    [[nodiscard]] auto isAudioAvailable() const -> bool;
+    [[nodiscard]] auto audioBackend() const -> QString;
+    [[nodiscard]] auto bufferSize() const -> int;
+    [[nodiscard]] auto sampleRate() const -> int;
 
     // Q_INVOKABLE methods for QML
-    Q_INVOKABLE bool initialize();
-    Q_INVOKABLE void shutdown();
-    Q_INVOKABLE bool setVolume(int volume); // 0-100
+    Q_INVOKABLE [[nodiscard]] auto initialize() -> bool;
+    Q_INVOKABLE auto shutdown() -> void;
+    Q_INVOKABLE [[nodiscard]] auto setVolume(int volume) -> bool;  // 0-100
 
-  signals:
+signals:
     void audioAvailabilityChanged(bool available);
     void audioBackendChanged(const QString& backend);
     void bufferSizeChanged(int size);
@@ -64,17 +60,17 @@ class AudioBridge : public QObject {
     void audioInitialized(const QString& backend);
     void audioDataReceived(int bytesReceived);
 
-  private slots:
+private slots:
     void onCoreAudioDataAvailable(const QByteArray& data);
     void onCoreAudioFormatChanged(int sampleRate, int channels, int bitsPerSample);
     void onCoreAudioError(const QString& error);
 
-  private:
-    void detectAudioBackend();
-    bool initializeAudioRouter();
-    void setupEventBusConnections();
-    void handleAudioData(const QByteArray& data);
-    void reportError(const QString& errorMessage);
+private:
+    auto detectAudioBackend() -> void;
+    auto initializeAudioRouter() -> bool;
+    auto setupEventBusConnections() -> void;
+    auto handleAudioData(const QByteArray& data) -> void;
+    auto reportError(const QString& errorMessage) -> void;
 
     ServiceProvider* m_serviceProvider;
     AudioBackend m_audioBackend;
@@ -85,4 +81,4 @@ class AudioBridge : public QObject {
     int m_bitsPerSample;
 };
 
-#endif // AUDIOBRIDGE_H
+#endif  // AUDIOBRIDGE_H

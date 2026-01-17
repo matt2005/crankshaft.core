@@ -20,6 +20,9 @@
 #include "ServiceProvider.h"
 
 // Core service includes
+#include <QStandardPaths>
+
+#include "../../core/hal/multimedia/MediaPipeline.h"
 #include "../../core/services/android_auto/AndroidAutoService.h"
 #include "../../core/services/audio/AudioRouter.h"
 #include "../../core/services/eventbus/EventBus.h"
@@ -28,25 +31,19 @@
 #include "../../core/services/preferences/PreferencesService.h"
 #include "../../core/services/profile/ProfileManager.h"
 #include "../../core/services/service_manager/ServiceManager.h"
-#include "../../core/hal/multimedia/MediaPipeline.h"
 
-#include <QStandardPaths>
-
-ServiceProvider::ServiceProvider()
-    : QObject(nullptr) {
+ServiceProvider::ServiceProvider() : QObject(nullptr) {
     // Constructor - services initialized via initialize()
 }
 
-ServiceProvider::~ServiceProvider() {
-    shutdown();
-}
+ServiceProvider::~ServiceProvider() { shutdown(); }
 
 ServiceProvider& ServiceProvider::instance() {
     static ServiceProvider instance;
     return instance;
 }
 
-bool ServiceProvider::initialize() {
+auto ServiceProvider::initialize() -> bool {
     if (m_initialized) {
         return true;
     }
@@ -91,7 +88,7 @@ bool ServiceProvider::initialize() {
     return true;
 }
 
-void ServiceProvider::shutdown() {
+auto ServiceProvider::shutdown() -> void {
     if (!m_initialized) {
         return;
     }
@@ -109,24 +106,19 @@ void ServiceProvider::shutdown() {
     m_initialized = false;
 }
 
-EventBus* ServiceProvider::eventBus() const {
-    return &EventBus::instance();
-}
+EventBus* ServiceProvider::eventBus() const { return &EventBus::instance(); }
 
-Logger* ServiceProvider::logger() const {
-    return &Logger::instance();
-}
+Logger* ServiceProvider::logger() const { return &Logger::instance(); }
 
-bool ServiceProvider::initializePreferences() {
+auto ServiceProvider::initializePreferences() -> bool {
     QString dbPath = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) +
                      "/slim-ui-preferences.db";
 
     m_preferencesService = std::make_unique<PreferencesService>(dbPath);
 
     if (!m_preferencesService->initialize()) {
-        Logger::instance().errorContext("ServiceProvider",
-                                        "Failed to initialize preferences database",
-                                        {{"dbPath", dbPath}});
+        Logger::instance().errorContext(
+            "ServiceProvider", "Failed to initialize preferences database", {{"dbPath", dbPath}});
         return false;
     }
 
@@ -135,7 +127,7 @@ bool ServiceProvider::initializePreferences() {
     return true;
 }
 
-bool ServiceProvider::initializeMediaPipeline() {
+auto ServiceProvider::initializeMediaPipeline() -> bool {
     // MediaPipeline construction - actual implementation depends on core structure
     // For now, create a basic instance
     m_mediaPipeline = std::make_unique<MediaPipeline>();
@@ -144,17 +136,19 @@ bool ServiceProvider::initializeMediaPipeline() {
     return true;
 }
 
-bool ServiceProvider::initializeProfileManager() {
+auto ServiceProvider::initializeProfileManager() -> bool {
     // ProfileManager needs a config directory, use standard app data location
-    QString configDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/profiles";
+    QString configDir =
+        QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/profiles";
     m_profileManager = std::make_unique<ProfileManager>(configDir);
 
     // ProfileManager will initialize profiles internally as needed
-    Logger::instance().infoContext("ServiceProvider", "ProfileManager initialized with config dir: " + configDir);
+    Logger::instance().infoContext("ServiceProvider",
+                                   "ProfileManager initialized with config dir: " + configDir);
     return true;
 }
 
-bool ServiceProvider::initializeAndroidAuto() {
+auto ServiceProvider::initializeAndroidAuto() -> bool {
     m_androidAutoService = std::unique_ptr<AndroidAutoService>(
         AndroidAutoService::create(m_mediaPipeline.get(), m_profileManager.get(), this));
 
@@ -174,12 +168,12 @@ bool ServiceProvider::initializeAndroidAuto() {
     return true;
 }
 
-bool ServiceProvider::initializeAudioRouter() {
+auto ServiceProvider::initializeAudioRouter() -> bool {
     m_audioRouter = std::make_unique<AudioRouter>(m_mediaPipeline.get(), this);
 
     if (!m_audioRouter->initialize()) {
-        Logger::instance().warningContext("ServiceProvider",
-                                          "AudioRouter initialization failed - continuing in silent mode");
+        Logger::instance().warningContext(
+            "ServiceProvider", "AudioRouter initialization failed - continuing in silent mode");
         // Don't fail initialization - allow graceful degradation
     } else {
         Logger::instance().infoContext("ServiceProvider", "AudioRouter initialized");
@@ -188,10 +182,9 @@ bool ServiceProvider::initializeAudioRouter() {
     return true;
 }
 
-bool ServiceProvider::initializeServiceManager() {
+auto ServiceProvider::initializeServiceManager() -> bool {
     m_serviceManager = std::make_unique<ServiceManager>(m_profileManager.get(), this);
 
     Logger::instance().infoContext("ServiceProvider", "ServiceManager initialized");
     return true;
 }
-

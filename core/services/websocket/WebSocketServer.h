@@ -38,11 +38,11 @@ class WebSocketServer : public QObject {
   ~WebSocketServer() override;
 
   void broadcastEvent(const QString& topic, const QVariantMap& payload);
-  [[nodiscard]] bool isListening() const;
+  [[nodiscard]] auto isListening() const -> bool;
 
   // SSL/TLS support for secure wss:// connections
   void enableSecureMode(const QString& certificatePath, const QString& keyPath);
-  [[nodiscard]] bool isSecureModeEnabled() const;
+  [[nodiscard]] auto isSecureModeEnabled() const -> bool;
 
   // ServiceManager integration
   void setServiceManager(ServiceManager* serviceManager);
@@ -61,15 +61,15 @@ class WebSocketServer : public QObject {
 
  private:
   // Message validation helpers
-  [[nodiscard]] bool validateMessage(const QJsonObject& obj, QString& error) const;
-  [[nodiscard]] bool validateServiceCommand(const QString& command, QString& error) const;
+  [[nodiscard]] auto validateMessage(const QJsonObject& obj, QString& error) const -> bool;
+  [[nodiscard]] auto validateServiceCommand(const QString& command, QString& error) const -> bool;
   void sendError(QWebSocket* client, const QString& message) const;
 
   void handleSubscribe(QWebSocket* client, const QString& topic);
   void handleUnsubscribe(QWebSocket* client, const QString& topic);
   void handlePublish(const QString& topic, const QVariantMap& payload);
   void handleServiceCommand(QWebSocket* client, const QString& command, const QVariantMap& params);
-  [[nodiscard]] bool topicMatches(const QString& topic, const QString& pattern) const;
+  [[nodiscard]] auto topicMatches(const QString& topic, const QString& pattern) const -> bool;
   void setupAndroidAutoConnections();
 
   QWebSocketServer* m_server;

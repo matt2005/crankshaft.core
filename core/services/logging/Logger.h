@@ -66,7 +66,7 @@ class Logger : public QObject {
 
   void log(Level level, const QString& message);
   void rotateLogIfNeeded();
-  [[nodiscard]] QString levelToString(Level level) const;
+  [[nodiscard]] auto levelToString(Level level) const -> QString;
   [[nodiscard]] QJsonObject createLogEntry(Level level, const QString& component,
                                            const QString& message,
                                            const QJsonObject& context) const;

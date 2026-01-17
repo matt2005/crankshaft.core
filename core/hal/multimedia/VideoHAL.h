@@ -39,21 +39,21 @@ class VideoHAL : public QObject {
   explicit VideoHAL(QObject* parent = nullptr);
   ~VideoHAL() override;
 
-  bool setResolution(VideoResolution resolution);
+  auto setResolution(VideoResolution resolution) -> bool;
   VideoResolution getResolution() const;
 
-  bool setBrightness(int brightness);
-  int getBrightness() const;
+  auto setBrightness(int brightness) -> bool;
+  auto getBrightness() const -> int;
 
-  bool setContrast(int contrast);
-  int getContrast() const;
+  auto setContrast(int contrast) -> bool;
+  auto getContrast() const -> int;
 
-  bool startVideoStream(const QString& streamName, const QString& codec);
-  bool stopVideoStream(const QString& streamName);
-  bool pushVideoFrame(const QByteArray& frameData);
+  auto startVideoStream(const QString& streamName, const QString& codec) -> bool;
+  auto stopVideoStream(const QString& streamName) -> bool;
+  auto pushVideoFrame(const QByteArray& frameData) -> bool;
 
   QStringList getSupportedCodecs() const;
-  bool setVideoSink(const QString& sinkName);
+  auto setVideoSink(const QString& sinkName) -> bool;
 
  signals:
   void errorOccurred(const QString& message);
@@ -65,7 +65,7 @@ class VideoHAL : public QObject {
   void contrastChanged(int contrast);
 
  private:
-  bool initializePipeline();
+  auto initializePipeline() -> bool;
   void cleanup();
 
   class VideoHALPrivate;

@@ -18,11 +18,11 @@
  */
 
 #include "Logger.h"
+
 #include "../../core/services/logging/Logger.h"
 
 // Thin wrapper - delegates to core Logger singleton
-void Logger::log(LogLevel level, const QString& category, const QString& message) {
+auto Logger::log(LogLevel level, const QString& category, const QString& message) -> void {
     auto coreLevel = static_cast<::Logger::Level>(level);
     ::Logger::instance().logStructured(coreLevel, category, message);
 }
-

@@ -199,7 +199,7 @@ class RealAndroidAutoService : public AndroidAutoService {
 
   // Session state management
   void transitionToSessionState(SessionState newState);
-  QString sessionStateToString(SessionState state) const;
+  auto sessionStateToString(SessionState state) const -> QString;
   void createSessionForDevice(const QString& deviceId);
   void endCurrentSession();
   void updateSessionHeartbeat();
@@ -227,8 +227,8 @@ class RealAndroidAutoService : public AndroidAutoService {
   // Transport mode configuration
   enum class TransportMode { Auto, USB, Wireless };
   TransportMode getTransportMode() const;
-  bool setupUSBTransport();
-  bool setupTCPTransport(const QString& host, quint16 port);
+  auto setupUSBTransport() -> bool;
+  auto setupTCPTransport(const QString& host, quint16 port) -> bool;
 
   ConnectionState m_state{ConnectionState::DISCONNECTED};
   AndroidDevice m_device;

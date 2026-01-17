@@ -53,12 +53,12 @@ class NetworkService : public QObject {
   /**
    * @brief Check if system is online (has network connectivity)
    */
-  bool isOnline() const;
+  auto isOnline() const -> bool;
 
   /**
    * @brief Get current connection type
    */
-  QString getConnectionType() const;
+  auto getConnectionType() const -> QString;
 
  signals:
   /**

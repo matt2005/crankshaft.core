@@ -15,9 +15,10 @@
  *
  *  You should have received a copy of the GNU General Public License
  *  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 #include "SettingsModel.h"
+
 #include "SettingsRegistry.h"
 
 namespace Crankshaft {
@@ -32,8 +33,10 @@ SettingsModel::SettingsModel(SettingsRegistry* registry, QObject* parent)
       m_currentAaConsent(false) {
   if (m_registry) {
     // Connect to registry signals for reactive updates
-    connect(m_registry, &SettingsRegistry::themeChanged, this, &SettingsModel::onRegistryThemeChanged);
-    connect(m_registry, &SettingsRegistry::languageChanged, this, &SettingsModel::onRegistryLanguageChanged);
+    connect(m_registry, &SettingsRegistry::themeChanged, this,
+            &SettingsModel::onRegistryThemeChanged);
+    connect(m_registry, &SettingsRegistry::languageChanged, this,
+            &SettingsModel::onRegistryLanguageChanged);
 
     // Initialize from registry values
     initializeFromRegistry();
