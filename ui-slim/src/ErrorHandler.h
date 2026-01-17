@@ -153,5 +153,8 @@ private:
      */
     auto logError(ErrorCode code, const QString& message, const QString& context, Severity severity)
         -> void;
+
+    QString m_lastErrorCode;
+    QString m_lastErrorMessage;
     static ErrorHandler* s_instance;
 };
