@@ -170,7 +170,7 @@ TouchPoint TouchEventForwarder::createTouchPoint(int id, qreal x, qreal y, float
     return point;
 }
 
-auto TouchEventForwarder::convertTouchPoints(const QVariantList& qmlTouchPoints) -> QList {
+auto TouchEventForwarder::convertTouchPoints(const QVariantList& qmlTouchPoints) -> QList<TouchPoint> {
     QList<TouchPoint> points;
 
     for (const QVariant& var : qmlTouchPoints) {
