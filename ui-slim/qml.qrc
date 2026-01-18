@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <RCC>
     <qresource prefix="/qml">
-        <file>qml/main.qml</file>
-        <file>qml/ApplicationController.qml</file>
-        <file>qml/Theme.qml</file>
-        <file>qml/ThemeManager.qml</file>
-        <file>qml/qmldir</file>
-        <file>qml/DeviceSelectionDialog.qml</file>
-        <file>qml/AAProjectionView.qml</file>
-        <file>qml/ConnectionStatusView.qml</file>
-        <file>qml/ReconnectionPrompt.qml</file>
-        <file>qml/SettingsPanel.qml</file>
-        <file>qml/components/SettingsSlider.qml</file>
-        <file>qml/components/ThemeToggle.qml</file>
-        <file>qml/components/ConnectionPreferenceToggle.qml</file>
-        <file>qml/components/FactoryResetButton.qml</file>
-        <file>qml/ErrorDialog.qml</file>
-        <file>qml/ViewNavigationController.qml</file>
+        <file alias="main.qml">qml/main.qml</file>
+        <file alias="ApplicationController.qml">qml/ApplicationController.qml</file>
+        <file alias="Theme.qml">qml/Theme.qml</file>
+        <file alias="ThemeManager.qml">qml/ThemeManager.qml</file>
+        <file alias="qmldir">qml/qmldir</file>
+        <file alias="DeviceSelectionDialog.qml">qml/DeviceSelectionDialog.qml</file>
+        <file alias="AAProjectionView.qml">qml/AAProjectionView.qml</file>
+        <file alias="ConnectionStatusView.qml">qml/ConnectionStatusView.qml</file>
+        <file alias="ReconnectionPrompt.qml">qml/ReconnectionPrompt.qml</file>
+        <file alias="SettingsPanel.qml">qml/SettingsPanel.qml</file>
+        <file alias="SettingsSlider.qml">qml/components/SettingsSlider.qml</file>
+        <file alias="ThemeToggle.qml">qml/components/ThemeToggle.qml</file>
+        <file alias="ConnectionPreferenceToggle.qml">qml/components/ConnectionPreferenceToggle.qml</file>
+        <file alias="FactoryResetButton.qml">qml/components/FactoryResetButton.qml</file>
+        <file alias="ErrorDialog.qml">qml/ErrorDialog.qml</file>
+        <file alias="ViewNavigationController.qml">qml/ViewNavigationController.qml</file>
     </qresource>
 </RCC>
