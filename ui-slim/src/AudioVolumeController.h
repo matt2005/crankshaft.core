@@ -236,5 +236,11 @@ private:
      * @return int Clamped percentage (0-100)
      */
     auto validatePercentage(int percentage) const -> int;
-    bool m_audioAvailable = false;
+
+    AudioRouter* m_audioRouter{nullptr};
+    BackendType m_backendType{BackendType::NONE};
+    int m_currentVolume{0};
+    bool m_isMuted{false};
+    QString m_lastError;
+    bool m_audioAvailable{false};
 };
