@@ -175,6 +175,8 @@ qt_add_resources(crankshaft-slim-ui "qml"
 # Add resource files (icons, etc)
 qt_add_resources(crankshaft-slim-ui "resources"
     PREFIX "/resources"
+    FILES
+        # Add resource files here if needed (icons, images, etc.)
 )
 
 # Translation support
