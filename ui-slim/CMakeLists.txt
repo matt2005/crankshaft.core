@@ -102,9 +102,6 @@ qt_add_executable(crankshaft-slim-ui
     ${CMAKE_SOURCE_DIR}/core/hal/multimedia/VideoHAL.cpp
     ${CMAKE_SOURCE_DIR}/core/hal/multimedia/IVideoDecoder.cpp
     ${CMAKE_SOURCE_DIR}/core/hal/multimedia/IAudioMixer.cpp
-    
-    # QML resources
-    qml.qrc
 )
 
 # Set runtime output directory
@@ -153,6 +150,28 @@ target_include_directories(crankshaft-slim-ui PRIVATE
     ${LIBUSB_INCLUDE_DIRS}
     ${PROTOBUF_INCLUDE_DIRS}
     ${OPENSSL_INCLUDE_DIR}
+)
+
+# Add QML resources (QML files)
+qt_add_resources(crankshaft-slim-ui "qml"
+    PREFIX "/qml"
+    FILES
+        qml/main.qml
+        qml/ApplicationController.qml
+        qml/Theme.qml
+        qml/ThemeManager.qml
+        qml/qmldir
+        qml/DeviceSelectionDialog.qml
+        qml/AAProjectionView.qml
+        qml/ConnectionStatusView.qml
+        qml/ReconnectionPrompt.qml
+        qml/SettingsPanel.qml
+        qml/ErrorDialog.qml
+        qml/ViewNavigationController.qml
+        qml/components/SettingsSlider.qml
+        qml/components/ThemeToggle.qml
+        qml/components/ConnectionPreferenceToggle.qml
+        qml/components/FactoryResetButton.qml
 )
 
 # Translation support
