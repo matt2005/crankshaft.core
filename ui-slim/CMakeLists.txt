@@ -156,22 +156,7 @@ target_include_directories(crankshaft-slim-ui PRIVATE
 qt_add_resources(crankshaft-slim-ui "qml"
     PREFIX "/qml"
     FILES
-        qml/main.qml
-        qml/ApplicationController.qml
-        qml/Theme.qml
-        qml/ThemeManager.qml
-        qml/qmldir
-        qml/DeviceSelectionDialog.qml
-        qml/AAProjectionView.qml
-        qml/ConnectionStatusView.qml
-        qml/ReconnectionPrompt.qml
-        qml/SettingsPanel.qml
-        qml/components/SettingsSlider.qml
-        qml/components/ThemeToggle.qml
-        qml/components/ConnectionPreferenceToggle.qml
-        qml/components/FactoryResetButton.qml
-        qml/ErrorDialog.qml
-        qml/ViewNavigationController.qml
+        qml.qrc
 )
 
 

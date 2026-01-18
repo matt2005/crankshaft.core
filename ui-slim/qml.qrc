@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<RCC>
+    <qresource prefix="/qml">
+        <file>qml/main.qml</file>
+        <file>qml/ApplicationController.qml</file>
+        <file>qml/Theme.qml</file>
+        <file>qml/ThemeManager.qml</file>
+        <file>qml/qmldir</file>
+        <file>qml/DeviceSelectionDialog.qml</file>
+        <file>qml/AAProjectionView.qml</file>
+        <file>qml/ConnectionStatusView.qml</file>
+        <file>qml/ReconnectionPrompt.qml</file>
+        <file>qml/SettingsPanel.qml</file>
+        <file>qml/components/SettingsSlider.qml</file>
+        <file>qml/components/ThemeToggle.qml</file>
+        <file>qml/components/ConnectionPreferenceToggle.qml</file>
+        <file>qml/components/FactoryResetButton.qml</file>
+        <file>qml/ErrorDialog.qml</file>
+        <file>qml/ViewNavigationController.qml</file>
+    </qresource>
+</RCC>
