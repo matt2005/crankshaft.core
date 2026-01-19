@@ -160,7 +160,6 @@ qt_add_resources(crankshaft-slim-ui "qml"
         qml/ApplicationController.qml
         qml/Theme.qml
         qml/ThemeManager.qml
-        qml/qmldir
         qml/DeviceSelectionDialog.qml
         qml/AAProjectionView.qml
         qml/ConnectionStatusView.qml
