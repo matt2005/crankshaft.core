@@ -160,21 +160,17 @@ qt_add_resources(crankshaft-slim-ui "qml"
         qml/ApplicationController.qml
         qml/Theme.qml
         qml/ThemeManager.qml
-        qml/qmldir
         qml/DeviceSelectionDialog.qml
         qml/AAProjectionView.qml
         qml/ConnectionStatusView.qml
         qml/ReconnectionPrompt.qml
         qml/SettingsPanel.qml
+        qml/ErrorDialog.qml
+        qml/ViewNavigationController.qml
         qml/components/SettingsSlider.qml
         qml/components/ThemeToggle.qml
         qml/components/ConnectionPreferenceToggle.qml
         qml/components/FactoryResetButton.qml
-)
-
-# Add resource files (icons, etc)
-qt_add_resources(crankshaft-slim-ui "resources"
-    PREFIX "/resources"
 )
 
 # Translation support

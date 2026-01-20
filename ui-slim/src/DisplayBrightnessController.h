@@ -192,3 +192,9 @@ private:
      * @return int Clamped percentage (0-100)
      */
     auto validatePercentage(int percentage) const -> int;
+
+    BackendType m_backendType{BackendType::NONE};
+    int m_currentBrightness{0};
+    QString m_sysfsPath;
+    int m_maxBrightness{100};
+};

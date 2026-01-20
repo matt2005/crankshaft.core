@@ -142,16 +142,6 @@ auto SettingsMigration::detectCorruption() const -> bool {
         }
       }
       return true;
-
-        // Validate each setting value
-        QVariant value = m_preferencesService->get(key);
-        if (!validateSetting(key, value)) {
-            Logger::instance().warningContext(QStringLiteral("SettingsMigration"),
-                                              QStringLiteral("Invalid value for setting: %1 = %2")
-                                                  .arg(key)
-                                                  .arg(value.toString()));
-            return true;
-        }
     }
 
     return false;

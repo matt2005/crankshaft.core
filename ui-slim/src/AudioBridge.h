@@ -47,9 +47,9 @@ public:
     [[nodiscard]] auto sampleRate() const -> int;
 
     // Q_INVOKABLE methods for QML
-    Q_INVOKABLE [[nodiscard]] auto initialize() -> bool;
-    Q_INVOKABLE auto shutdown() -> void;
-    Q_INVOKABLE [[nodiscard]] auto setVolume(int volume) -> bool;  // 0-100
+    Q_INVOKABLE bool initialize();
+    Q_INVOKABLE void shutdown();
+    Q_INVOKABLE bool setVolume(int volume);  // 0-100
 
 signals:
     void audioAvailabilityChanged(bool available);
