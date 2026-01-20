@@ -94,8 +94,8 @@ public:
      * @param context Additional context information
      * @param severity Error severity level
      */
-    Q_INVOKABLE auto reportError(ErrorCode code, const QString& context = QString(),
-                                 Severity severity = Severity::Error) -> void;
+    Q_INVOKABLE void reportError(ErrorCode code, const QString& context = QString(),
+                                 Severity severity = Severity::Error);
 
     /**
      * @brief Clear the last error
