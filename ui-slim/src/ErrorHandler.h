@@ -93,14 +93,18 @@ public:
      * @param code Error code
      * @param context Additional context information
      * @param severity Error severity level
+     * @note Qt's MOC (Meta-Object Compiler) requires explicit return types for
+     *       Q_INVOKABLE methods; 'auto' keyword is not supported.
      */
-    Q_INVOKABLE auto reportError(ErrorCode code, const QString& context = QString(),
-                                 Severity severity = Severity::Error) -> void;
+    // NOLINTBEGIN(modernize-use-trailing-return-type)
+    Q_INVOKABLE void reportError(ErrorCode code, const QString& context = QString(),
+                                 Severity severity = Severity::Error);
 
     /**
      * @brief Clear the last error
      */
-    Q_INVOKABLE auto clearError() -> void;
+    Q_INVOKABLE void clearError();
+    // NOLINTEND(modernize-use-trailing-return-type)
 
     /**
      * @brief Get the last error code as string

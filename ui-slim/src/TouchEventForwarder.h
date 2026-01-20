@@ -76,9 +76,12 @@ public:
     [[nodiscard]] auto averageLatency() const -> int;
 
     // Q_INVOKABLE methods for QML
-    Q_INVOKABLE auto forwardTouchEvent(const QString& eventType, const QVariantList& touchPoints)
-        -> void;
-    Q_INVOKABLE auto forwardMouseEvent(const QString& eventType, qreal x, qreal y) -> void;
+    // NOTE: Qt's MOC (Meta-Object Compiler) cannot handle 'auto' keyword in method
+    // signatures. Explicit return types are required for Q_INVOKABLE methods.
+    // NOLINTBEGIN(modernize-use-trailing-return-type)
+    Q_INVOKABLE void forwardTouchEvent(const QString& eventType, const QVariantList& touchPoints);
+    Q_INVOKABLE void forwardMouseEvent(const QString& eventType, qreal x, qreal y);
+    // NOLINTEND(modernize-use-trailing-return-type)
 
 signals:
     void displaySizeChanged(const QSize& size);
@@ -89,12 +92,11 @@ signals:
     void forwardingError(const QString& error);
 
 private:
-    auto createTouchPoint(int id, qreal x, qreal y, float pressure, const QSize& area)
-        -> TouchPoint;
-    auto convertTouchPoints(const QVariantList& qmlTouchPoints) -> QList<TouchPoint>;
-    auto sendToAndroidAuto(const QString& eventType, const QList<TouchPoint>& points) -> void;
-    auto updateLatencyStats(qint64 latencyMs) -> void;
-    auto scaleCoordinates(const QPointF& point) const -> QPointF;
+    TouchPoint createTouchPoint(int id, qreal x, qreal y, float pressure, const QSize& area);
+    QList<TouchPoint> convertTouchPoints(const QVariantList& qmlTouchPoints);
+    void sendToAndroidAuto(const QString& eventType, const QList<TouchPoint>& points);
+    void updateLatencyStats(qint64 latencyMs);
+    QPointF scaleCoordinates(const QPointF& point) const;
 
     AndroidAutoFacade* m_androidAutoFacade;
     ServiceProvider* m_serviceProvider;

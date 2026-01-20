@@ -64,11 +64,15 @@ public:
     [[nodiscard]] auto isAudioActive() const -> bool;
 
     // Q_INVOKABLE methods for QML
-    Q_INVOKABLE auto startDiscovery() -> void;
-    Q_INVOKABLE auto stopDiscovery() -> void;
-    Q_INVOKABLE auto connectToDevice(const QString& deviceId) -> void;
-    Q_INVOKABLE auto disconnectDevice() -> void;
-    Q_INVOKABLE auto retryConnection() -> void;
+    // NOTE: Qt's MOC (Meta-Object Compiler) cannot handle 'auto' keyword in method
+    // signatures. Explicit return types are required for Q_INVOKABLE methods.
+    // NOLINTBEGIN(modernize-use-trailing-return-type)
+    Q_INVOKABLE void startDiscovery();
+    Q_INVOKABLE void stopDiscovery();
+    Q_INVOKABLE void connectToDevice(const QString& deviceId);
+    Q_INVOKABLE void disconnectDevice();
+    Q_INVOKABLE void retryConnection();
+    // NOLINTEND(modernize-use-trailing-return-type)
 
 signals:
     // Connection state changes

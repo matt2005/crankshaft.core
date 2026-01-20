@@ -86,16 +86,20 @@ public:
     [[nodiscard]] auto lastConnectedDeviceId() const -> QString;
 
     // Property setters
-    auto setDisplayBrightness(int value) -> void;
-    auto setAudioVolume(int value) -> void;
-    auto setConnectionPreference(const QString& mode) -> void;
+    void setDisplayBrightness(int value);
+    void setAudioVolume(int value);
+    void setConnectionPreference(const QString& mode);
     auto setThemeMode(const QString& mode) -> void;
     auto setLastConnectedDeviceId(const QString& deviceId) -> void;
 
     // Settings management
-    Q_INVOKABLE auto loadSettings() -> void;
-    Q_INVOKABLE [[nodiscard]] auto saveSettings() -> void;
-    Q_INVOKABLE auto resetToDefaults() -> void;
+    // NOTE: Qt's MOC (Meta-Object Compiler) cannot handle 'auto' keyword in method
+    // signatures. Explicit return types are required for Q_INVOKABLE methods.
+    // NOLINTBEGIN(modernize-use-trailing-return-type)
+    Q_INVOKABLE void loadSettings();
+    Q_INVOKABLE void saveSettings();
+    Q_INVOKABLE void resetToDefaults();
+    // NOLINTEND(modernize-use-trailing-return-type)
 
 signals:
     void displayBrightnessChanged(int value);

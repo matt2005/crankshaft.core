@@ -78,7 +78,7 @@ public:
      * @return true if migration succeeded
      * @return false if migration failed
      */
-    [[nodiscard]] auto migrate(int fromVersion) -> bool;
+    [[nodiscard]] bool migrate(int fromVersion);
 
     /**
      * @brief Check if settings are corrupted
@@ -96,7 +96,7 @@ public:
      * @return true if recovery succeeded
      * @return false if recovery failed
      */
-    [[nodiscard]] auto recoverToDefaults() -> bool;
+    [[nodiscard]] bool recoverToDefaults();
 
     /**
      * @brief Initialize settings with factory defaults if not present
@@ -104,7 +104,7 @@ public:
      * @return true if initialization succeeded
      * @return false if initialization failed
      */
-    [[nodiscard]] auto initializeDefaults() -> bool;
+    [[nodiscard]] bool initializeDefaults();
 
     /**
      * @brief Validate a specific setting value
@@ -121,7 +121,7 @@ public:
      *
      * @return QStringList List of required setting keys
      */
-    static auto getRequiredSettingKeys() -> QStringList;
+    static QStringList getRequiredSettingKeys();
 
 private:
     PreferencesService* m_preferencesService;

@@ -57,7 +57,7 @@ public:
     /**
      * @brief Shutdown all core services
      */
-    auto shutdown() -> void;
+    void shutdown();
 
     /**
      * @brief Check if services are initialized
@@ -88,12 +88,12 @@ private:
     ServiceProvider(const ServiceProvider&) = delete;
     ServiceProvider& operator=(const ServiceProvider&) = delete;
 
-    auto initializePreferences() -> bool;
-    auto initializeMediaPipeline() -> bool;
-    auto initializeProfileManager() -> bool;
-    auto initializeAndroidAuto() -> bool;
-    auto initializeAudioRouter() -> bool;
-    auto initializeServiceManager() -> bool;
+    bool initializePreferences();
+    bool initializeMediaPipeline();
+    bool initializeProfileManager();
+    bool initializeAndroidAuto();
+    bool initializeAudioRouter();
+    bool initializeServiceManager();
 
     std::unique_ptr<AndroidAutoService> m_androidAutoService;
     std::unique_ptr<PreferencesService> m_preferencesService;
