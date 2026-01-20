@@ -56,10 +56,10 @@ public:
     [[nodiscard]] auto lastTransitionTime() const -> QDateTime;
 
     // Q_INVOKABLE methods for QML
-    Q_INVOKABLE auto startConnection() -> void;
-    Q_INVOKABLE auto stopConnection() -> void;
-    Q_INVOKABLE auto resetRetryCount() -> void;
-    Q_INVOKABLE auto handleError(const QString& error) -> void;
+    Q_INVOKABLE void startConnection();
+    Q_INVOKABLE void stopConnection();
+    Q_INVOKABLE void resetRetryCount();
+    Q_INVOKABLE void handleError(const QString& error);
 
 signals:
     void currentStateChanged(int state);

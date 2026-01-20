@@ -76,9 +76,8 @@ public:
     [[nodiscard]] auto averageLatency() const -> int;
 
     // Q_INVOKABLE methods for QML
-    Q_INVOKABLE auto forwardTouchEvent(const QString& eventType, const QVariantList& touchPoints)
-        -> void;
-    Q_INVOKABLE auto forwardMouseEvent(const QString& eventType, qreal x, qreal y) -> void;
+    Q_INVOKABLE void forwardTouchEvent(const QString& eventType, const QVariantList& touchPoints);
+    Q_INVOKABLE void forwardMouseEvent(const QString& eventType, qreal x, qreal y);
 
 signals:
     void displaySizeChanged(const QSize& size);

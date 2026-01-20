@@ -100,7 +100,7 @@ public:
     /**
      * @brief Clear the last error
      */
-    Q_INVOKABLE auto clearError() -> void;
+    Q_INVOKABLE void clearError();
 
     /**
      * @brief Get the last error code as string
