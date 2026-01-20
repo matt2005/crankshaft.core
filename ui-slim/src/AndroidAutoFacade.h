@@ -29,18 +29,33 @@ class ServiceProvider;
 class AndroidAutoFacade : public QObject {
     Q_OBJECT
 
-    // Connection state: Maps to core AndroidAutoService::ConnectionState
+    /**
+     * @brief Connection state: Maps to core AndroidAutoService::ConnectionState
+     * Possible values: Disconnected (0), Searching (1), Connecting (2), Connected (3), Error (4)
+     */
     Q_PROPERTY(int connectionState READ connectionState NOTIFY connectionStateChanged)
 
-    // Connected device information
+    /**
+     * @brief Name of the currently connected Android Auto device
+     */
     Q_PROPERTY(
         QString connectedDeviceName READ connectedDeviceName NOTIFY connectedDeviceNameChanged)
 
-    // Last error message
+    /**
+     * @brief Last error message from AndroidAuto subsystem
+     */
     Q_PROPERTY(QString lastError READ lastError NOTIFY lastErrorChanged)
 
-    // Media state
+    /**
+     * @brief Video stream status from connected device
+     * Indicates whether video data is being received and processed
+     */
     Q_PROPERTY(bool isVideoActive READ isVideoActive NOTIFY isVideoActiveChanged)
+
+    /**
+     * @brief Audio stream status from connected device
+     * Indicates whether audio data is being received and processed
+     */
     Q_PROPERTY(bool isAudioActive READ isAudioActive NOTIFY isAudioActiveChanged)
 
 public:
@@ -63,14 +78,41 @@ public:
     [[nodiscard]] auto isVideoActive() const -> bool;
     [[nodiscard]] auto isAudioActive() const -> bool;
 
-    // Q_INVOKABLE methods for QML
-    // NOTE: Qt's MOC (Meta-Object Compiler) cannot handle 'auto' keyword in method
-    // signatures. Explicit return types are required for Q_INVOKABLE methods.
+    /**
+     * @brief Q_INVOKABLE methods for QML interface
+     * @note Qt's MOC (Meta-Object Compiler) cannot handle 'auto' keyword in method
+     *       signatures. Explicit return types are required for Q_INVOKABLE methods.
+     *       See: https://doc.qt.io/qt-6/metaobjects.html for MOC limitations.
+     */
     // NOLINTBEGIN(modernize-use-trailing-return-type)
+    /**
+     * @brief Start discovery of Android Auto compatible devices
+     * Initiates USB and Bluetooth scanning for AndroidAuto-capable devices.
+     */
     Q_INVOKABLE void startDiscovery();
+
+    /**
+     * @brief Stop device discovery
+     * Halts ongoing device scanning operations.
+     */
     Q_INVOKABLE void stopDiscovery();
+
+    /**
+     * @brief Establish connection to specified device
+     * @param deviceId Unique identifier of target device
+     */
     Q_INVOKABLE void connectToDevice(const QString& deviceId);
+
+    /**
+     * @brief Disconnect from currently connected device
+     * Gracefully closes all active connections and cleans up resources.
+     */
     Q_INVOKABLE void disconnectDevice();
+
+    /**
+     * @brief Retry connection to previously connected device
+     * Implements exponential backoff with maximum retry attempts.
+     */
     Q_INVOKABLE void retryConnection();
     // NOLINTEND(modernize-use-trailing-return-type)
 
