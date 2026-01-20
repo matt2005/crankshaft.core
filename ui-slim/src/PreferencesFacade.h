@@ -86,9 +86,9 @@ public:
     [[nodiscard]] auto lastConnectedDeviceId() const -> QString;
 
     // Property setters
-    auto setDisplayBrightness(int value) -> void;
-    auto setAudioVolume(int value) -> void;
-    auto setConnectionPreference(const QString& mode) -> void;
+    void setDisplayBrightness(int value);
+    void setAudioVolume(int value);
+    void setConnectionPreference(const QString& mode);
     auto setThemeMode(const QString& mode) -> void;
     auto setLastConnectedDeviceId(const QString& deviceId) -> void;
 

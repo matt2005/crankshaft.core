@@ -82,12 +82,12 @@ class DrivingModeService : public QObject {
   void setStrictMode(bool strict);
 
   // Public API: Check if specific action is allowed
-  Q_INVOKABLE auto isActionAllowed(const QString &action) -> bool;
+  Q_INVOKABLE bool isActionAllowed(const QString &action);
   Q_INVOKABLE void requestRestrictionExemption(const QString &reason);
   Q_INVOKABLE void acknowledgeRestriction();
 
   // Public API: Get restriction state for UI components
-  Q_INVOKABLE auto getRestrictionMessage() const -> QString;
+  Q_INVOKABLE QString getRestrictionMessage() const;
   Q_INVOKABLE QStringList getRestrictedActions() const;
 
  public slots:
