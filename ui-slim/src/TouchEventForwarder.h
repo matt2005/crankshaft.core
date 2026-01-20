@@ -76,8 +76,12 @@ public:
     [[nodiscard]] auto averageLatency() const -> int;
 
     // Q_INVOKABLE methods for QML
+    // NOTE: Qt's MOC (Meta-Object Compiler) cannot handle 'auto' keyword in method
+    // signatures. Explicit return types are required for Q_INVOKABLE methods.
+    // NOLINTBEGIN(modernize-use-trailing-return-type)
     Q_INVOKABLE void forwardTouchEvent(const QString& eventType, const QVariantList& touchPoints);
     Q_INVOKABLE void forwardMouseEvent(const QString& eventType, qreal x, qreal y);
+    // NOLINTEND(modernize-use-trailing-return-type)
 
 signals:
     void displaySizeChanged(const QSize& size);

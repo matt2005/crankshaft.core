@@ -93,9 +93,13 @@ public:
     auto setLastConnectedDeviceId(const QString& deviceId) -> void;
 
     // Settings management
+    // NOTE: Qt's MOC (Meta-Object Compiler) cannot handle 'auto' keyword in method
+    // signatures. Explicit return types are required for Q_INVOKABLE methods.
+    // NOLINTBEGIN(modernize-use-trailing-return-type)
     Q_INVOKABLE void loadSettings();
     Q_INVOKABLE void saveSettings();
     Q_INVOKABLE void resetToDefaults();
+    // NOLINTEND(modernize-use-trailing-return-type)
 
 signals:
     void displayBrightnessChanged(int value);

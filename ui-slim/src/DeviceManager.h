@@ -85,9 +85,13 @@ public:
     [[nodiscard]] auto lastConnectedDevice() const -> QVariantMap;
 
     // Q_INVOKABLE methods for QML
+    // NOTE: Qt's MOC (Meta-Object Compiler) cannot handle 'auto' keyword in method
+    // signatures. Explicit return types are required for Q_INVOKABLE methods.
+    // NOLINTBEGIN(modernize-use-trailing-return-type)
     Q_INVOKABLE void clearDevices();
     Q_INVOKABLE [[nodiscard]] QVariantMap getDevice(const QString& deviceId) const;
     Q_INVOKABLE [[nodiscard]] QString getTopPriorityDeviceId() const;
+    // NOLINTEND(modernize-use-trailing-return-type)
 
 signals:
     void detectedDevicesChanged();

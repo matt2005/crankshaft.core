@@ -82,12 +82,16 @@ class DrivingModeService : public QObject {
   void setStrictMode(bool strict);
 
   // Public API: Check if specific action is allowed
+  // NOTE: Qt's MOC (Meta-Object Compiler) cannot handle 'auto' keyword in method
+  // signatures. Explicit return types are required for Q_INVOKABLE methods.
+  // NOLINTBEGIN(modernize-use-trailing-return-type)
   Q_INVOKABLE bool isActionAllowed(const QString &action);
   Q_INVOKABLE void requestRestrictionExemption(const QString &reason);
   Q_INVOKABLE void acknowledgeRestriction();
 
   // Public API: Get restriction state for UI components
   Q_INVOKABLE QString getRestrictionMessage() const;
+  // NOLINTEND(modernize-use-trailing-return-type)
   Q_INVOKABLE QStringList getRestrictedActions() const;
 
  public slots:

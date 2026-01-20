@@ -56,10 +56,14 @@ public:
     [[nodiscard]] auto lastTransitionTime() const -> QDateTime;
 
     // Q_INVOKABLE methods for QML
+    // NOTE: Qt's MOC (Meta-Object Compiler) cannot handle 'auto' keyword in method
+    // signatures. Explicit return types are required for Q_INVOKABLE methods.
+    // NOLINTBEGIN(modernize-use-trailing-return-type)
     Q_INVOKABLE void startConnection();
     Q_INVOKABLE void stopConnection();
     Q_INVOKABLE void resetRetryCount();
     Q_INVOKABLE void handleError(const QString& error);
+    // NOLINTEND(modernize-use-trailing-return-type)
 
 signals:
     void currentStateChanged(int state);

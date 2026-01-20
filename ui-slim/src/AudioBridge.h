@@ -47,9 +47,13 @@ public:
     [[nodiscard]] auto sampleRate() const -> int;
 
     // Q_INVOKABLE methods for QML
+    // NOTE: Qt's MOC (Meta-Object Compiler) cannot handle 'auto' keyword in method
+    // signatures. Explicit return types are required for Q_INVOKABLE methods.
+    // NOLINTBEGIN(modernize-use-trailing-return-type)
     Q_INVOKABLE bool initialize();
     Q_INVOKABLE void shutdown();
     Q_INVOKABLE bool setVolume(int volume);  // 0-100
+    // NOLINTEND(modernize-use-trailing-return-type)
 
 signals:
     void audioAvailabilityChanged(bool available);
