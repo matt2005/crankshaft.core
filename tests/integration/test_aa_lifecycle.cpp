@@ -18,9 +18,12 @@
  */
 
 #include <QDateTime>
+#include <QDir>
+#include <QFileInfo>
 #include <QSqlDatabase>
 #include <QSqlError>
 #include <QSqlQuery>
+#include <QStandardPaths>
 #include <QTest>
 #include <QUuid>
 
@@ -41,16 +44,14 @@ class TestAASessionLifecycle : public QObject {
 
  private slots:
   void initTestCase() {
-    // Setup test database
-    QSqlDatabase db = QSqlDatabase::addDatabase("QSQLITE", "test_aa_lifecycle");
-    db.setDatabaseName(":memory:");
+    // Setup test database in a writable temp location
+    const QString dbPath =
+        QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/cs_test_session.db";
+    const QFileInfo dbInfo(dbPath);
+    QDir().mkpath(dbInfo.path());
 
-    if (!db.open()) {
-      QFAIL("Failed to open test database");
-    }
-
-    // Initialize SessionStore with test database
-    m_sessionStore = new SessionStore(QString(), this);
+    // Initialize SessionStore with explicit test database path
+    m_sessionStore = new SessionStore(dbPath, this);
     if (!m_sessionStore->initialize()) {
       QFAIL("Failed to initialize SessionStore");
     }
@@ -61,8 +62,7 @@ class TestAASessionLifecycle : public QObject {
       delete m_sessionStore;
       m_sessionStore = nullptr;
     }
-
-    QSqlDatabase::removeDatabase("test_aa_lifecycle");
+    QSqlDatabase::removeDatabase("session_store");
   }
 
   // Test 1: Create and persist Android device
