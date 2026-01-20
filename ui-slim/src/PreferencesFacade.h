@@ -93,9 +93,9 @@ public:
     auto setLastConnectedDeviceId(const QString& deviceId) -> void;
 
     // Settings management
-    Q_INVOKABLE void loadSettings();
-    Q_INVOKABLE void saveSettings();
-    Q_INVOKABLE void resetToDefaults();
+    Q_INVOKABLE auto loadSettings() -> void;
+    Q_INVOKABLE [[nodiscard]] auto saveSettings() -> void;
+    Q_INVOKABLE auto resetToDefaults() -> void;
 
 signals:
     void displayBrightnessChanged(int value);

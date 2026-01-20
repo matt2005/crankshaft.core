@@ -85,9 +85,9 @@ public:
     [[nodiscard]] auto lastConnectedDevice() const -> QVariantMap;
 
     // Q_INVOKABLE methods for QML
-    Q_INVOKABLE void clearDevices();
-    Q_INVOKABLE QVariantMap getDevice(const QString& deviceId) const;
-    Q_INVOKABLE QString getTopPriorityDeviceId() const;
+    Q_INVOKABLE auto clearDevices() -> void;
+    Q_INVOKABLE [[nodiscard]] auto getDevice(const QString& deviceId) const -> QVariantMap;
+    Q_INVOKABLE [[nodiscard]] auto getTopPriorityDeviceId() const -> QString;
 
 signals:
     void detectedDevicesChanged();
