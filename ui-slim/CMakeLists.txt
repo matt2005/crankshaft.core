@@ -192,7 +192,17 @@ if(CLANG_FORMAT_EXECUTABLE)
         COMMENT "Running clang-format on slim-ui source files"
     )
 endif()
+# Install slim-ui executable
+install(TARGETS crankshaft-slim-ui
+  RUNTIME DESTINATION bin
+  COMPONENT ui-slim
+)
 
+# Install systemd service unit
+install(FILES ${CMAKE_SOURCE_DIR}/packaging/ui-slim/crankshaft-slim-ui.service
+  DESTINATION lib/systemd/system
+  COMPONENT ui-slim
+)
 # Tests
 if(BUILD_TESTS)
     add_subdirectory(tests)

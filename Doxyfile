@@ -1,0 +1,93 @@
+# Project: Crankshaft
+# This file is part of Crankshaft project.
+# Copyright (C) 2025 OpenCarDev Team
+#
+#  Crankshaft is free software: you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 3 of the License, or
+#  (at your option) any later version.
+#
+#  Crankshaft is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
+
+# -------------------------------------------------------------
+# Doxygen configuration for generating XML from code comments.
+# The XML is later converted to Markdown for the GitHub Wiki.
+# -------------------------------------------------------------
+
+PROJECT_NAME           = "Crankshaft"
+PROJECT_NUMBER         = "1.0"
+PROJECT_BRIEF          = "Automotive Infotainment System"
+OUTPUT_DIRECTORY       = build/docs
+CREATE_SUBDIRS         = YES
+
+# We primarily need XML for downstream conversion to Markdown.
+GENERATE_XML           = YES
+XML_OUTPUT             = xml
+GENERATE_HTML          = NO
+GENERATE_LATEX         = NO
+GENERATE_RTF           = NO
+GENERATE_MAN           = NO
+GENERATE_DOCBOOK       = NO
+GENERATE_PERLMOD       = NO
+GENERATE_AUTOGEN_DEF   = NO
+GENERATE_TREEVIEW      = NO
+
+# Input settings
+INPUT                  = core ui include
+FILE_PATTERNS          = *.h *.hpp *.hh *.hxx *.c *.cc *.cxx *.cpp *.qml
+RECURSIVE              = YES
+
+# Exclusions
+EXCLUDE                = build external/_deps tmp* .git .github packaging image_builder run-* run-* logs *.generated
+EXCLUDE_PATTERNS       = */build/* */build-*/* */external/* */tests/resources/*
+EXCLUDE_SYMLINKS       = YES
+
+# Preprocessing
+ENABLE_PREPROCESSING   = YES
+MACRO_EXPANSION        = NO
+EXPAND_ONLY_PREDEF     = NO
+
+# Extraction
+EXTRACT_ALL            = YES
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = YES
+EXTRACT_LOCAL_CLASSES  = YES
+EXTRACT_LOCAL_METHODS  = YES
+HIDE_UNDOC_MEMBERS     = NO
+HIDE_UNDOC_CLASSES     = NO
+
+# Warnings
+WARNINGS               = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_IF_DOC_ERROR      = YES
+WARN_NO_PARAMDOC       = NO
+QUIET                  = YES
+
+# Language & formatting
+OPTIMIZE_OUTPUT_FOR_C  = NO
+OPTIMIZE_OUTPUT_JAVA   = NO
+OPTIMIZE_FOR_FORTRAN   = NO
+OPTIMIZE_OUTPUT_VHDL   = NO
+MARKDOWN_SUPPORT       = YES
+EXTENSION_MAPPING      = qml=C++
+
+# Source browsing (disabled for smaller XML)
+SOURCE_BROWSER         = NO
+INLINE_SOURCES         = NO
+REFERENCED_BY_RELATION = NO
+REFERENCES_RELATION    = NO
+
+# Dot / diagrams (off to keep pipeline light by default)
+HAVE_DOT               = NO
+CALL_GRAPH             = NO
+CALLER_GRAPH           = NO
+
+# Misc
+GENERATE_TAGFILE       = build/docs/crankshaft.tag
+ALIASES                = "qmlonly=\\xrefitem qml \"QML\" \"QML Elements\"" 

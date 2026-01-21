@@ -67,11 +67,26 @@ struct DetectedDevice {
 class DeviceManager : public QObject {
     Q_OBJECT
 
+    /**
+     * @brief List of detected AndroidAuto-compatible devices
+     * Each device is a QVariantMap containing: deviceId, name, type, signalStrength, lastSeen, wasConnectedBefore, priority
+     */
     Q_PROPERTY(QVariantList detectedDevices READ detectedDevices NOTIFY detectedDevicesChanged)
+
+    /**
+     * @brief Number of devices currently detected
+     */
     Q_PROPERTY(int deviceCount READ deviceCount NOTIFY deviceCountChanged)
+
+    /**
+     * @brief True if more than one device is detected
+     */
     Q_PROPERTY(bool hasMultipleDevices READ hasMultipleDevices NOTIFY hasMultipleDevicesChanged)
-    Q_PROPERTY(
-        QVariantMap lastConnectedDevice READ lastConnectedDevice NOTIFY lastConnectedDeviceChanged)
+
+    /**
+     * @brief Information about the last successfully connected device
+     */
+    Q_PROPERTY(QVariantMap lastConnectedDevice READ lastConnectedDevice NOTIFY lastConnectedDeviceChanged)
 
 public:
     explicit DeviceManager(ServiceProvider* serviceProvider, AndroidAutoFacade* androidAutoFacade,
@@ -84,12 +99,31 @@ public:
     [[nodiscard]] auto hasMultipleDevices() const -> bool;
     [[nodiscard]] auto lastConnectedDevice() const -> QVariantMap;
 
-    // Q_INVOKABLE methods for QML
-    // NOTE: Qt's MOC (Meta-Object Compiler) cannot handle 'auto' keyword in method
-    // signatures. Explicit return types are required for Q_INVOKABLE methods.
+    /**
+     * @brief Q_INVOKABLE methods for QML interface
+     * @note Qt's MOC (Meta-Object Compiler) cannot handle 'auto' keyword in method
+     *       signatures. Explicit return types are required for Q_INVOKABLE methods.
+     */
     // NOLINTBEGIN(modernize-use-trailing-return-type)
+
+    /**
+     * @brief Remove all cached device information
+     * Clears the internal device list; does not affect currently connected device.
+     */
     Q_INVOKABLE void clearDevices();
+
+    /**
+     * @brief Retrieve full information for a specific device
+     * @param deviceId Unique device identifier
+     * @return QVariantMap containing device properties, empty map if not found
+     */
     Q_INVOKABLE [[nodiscard]] QVariantMap getDevice(const QString& deviceId) const;
+
+    /**
+     * @brief Get the ID of the highest-priority detected device
+     * @return Device ID of highest priority device, empty string if no devices detected
+     * Priority is based on: last-connected devices (highest), signal strength, recency
+     */
     Q_INVOKABLE [[nodiscard]] QString getTopPriorityDeviceId() const;
     // NOLINTEND(modernize-use-trailing-return-type)
 

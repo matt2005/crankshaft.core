@@ -170,6 +170,6 @@ endif()
 
 # Install systemd service unit
 install(FILES ${CMAKE_SOURCE_DIR}/packaging/ui/crankshaft-ui.service
-  DESTINATION /lib/systemd/system
+  DESTINATION lib/systemd/system
   COMPONENT ui
 )
