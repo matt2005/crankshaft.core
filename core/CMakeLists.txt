@@ -183,24 +183,24 @@ install(TARGETS crankshaft-core
 
 # Install core configuration
 install(FILES ${CMAKE_SOURCE_DIR}/config/crankshaft.json
-  DESTINATION /etc/crankshaft
+  DESTINATION etc/crankshaft
   COMPONENT core
 )
 
 # Install USB action script
 install(PROGRAMS ${CMAKE_SOURCE_DIR}/packaging/core/scripts/usb_action.sh
-  DESTINATION /usr/lib/crankshaft
+  DESTINATION usr/lib/crankshaft
   COMPONENT core
 )
 
 # Install udev rules
 install(FILES ${CMAKE_SOURCE_DIR}/packaging/core/udev/99-crankshaft.rules
-  DESTINATION /lib/udev/rules.d
+  DESTINATION lib/udev/rules.d
   COMPONENT core
 )
 
 # Install systemd service unit
 install(FILES ${CMAKE_SOURCE_DIR}/packaging/core/crankshaft-core.service
-  DESTINATION /lib/systemd/system
+  DESTINATION lib/systemd/system
   COMPONENT core
 )
