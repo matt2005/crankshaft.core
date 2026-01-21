@@ -244,6 +244,15 @@ set(CPACK_DEBIAN_UI_PACKAGE_DEPENDS "crankshaft-core (>= ${NUMERIC_VERSION}), ${
 set(CPACK_DEBIAN_UI_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/packaging/ui/postinst;${CMAKE_SOURCE_DIR}/packaging/ui/prerm;${CMAKE_SOURCE_DIR}/packaging/ui/crankshaft-ui.service")
 set(CPACK_DEBIAN_UI_FILE_NAME DEB-DEFAULT)
 
+# UI Slim package metadata
+set(CPACK_COMPONENT_UI-SLIM_DISPLAY_NAME "Crankshaft UI (Slim)")
+set(CPACK_COMPONENT_UI-SLIM_DESCRIPTION "Crankshaft slim QML-based user interface with integrated AndroidAuto")
+set(CPACK_COMPONENT_UI-SLIM_DEPENDS core)
+set(CPACK_DEBIAN_UI-SLIM_PACKAGE_NAME "crankshaft-slim-ui")
+set(CPACK_DEBIAN_UI-SLIM_PACKAGE_DEPENDS "crankshaft-core (>= ${NUMERIC_VERSION}), ${QT6_CORE_PKG}, ${QT6_GUI_PKG}, ${QT6_QML_PKG}, ${QT6_QUICK_PKG}, ${QT6_WS_PKG}, ${QML_RUNTIME_PKGS}, qt6-qpa-plugins")
+set(CPACK_DEBIAN_UI-SLIM_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/packaging/ui-slim/postinst;${CMAKE_SOURCE_DIR}/packaging/ui-slim/prerm;${CMAKE_SOURCE_DIR}/packaging/ui-slim/crankshaft-slim-ui.service")
+set(CPACK_DEBIAN_UI-SLIM_FILE_NAME DEB-DEFAULT)
+
 # Source package configuration (.tar.gz)
 set(CPACK_SOURCE_GENERATOR "TGZ")
 set(CPACK_SOURCE_PACKAGE_FILE_NAME "crankshaft-mvp-${FULL_VERSION}")
