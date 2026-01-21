@@ -26,9 +26,10 @@ err() { echo "[error] $*" >&2; }
 ROOT_DIR="$(pwd)"
 XML_DIR="${ROOT_DIR}/build/docs/xml"
 MD_OUT_DIR="${ROOT_DIR}/build/docs/wiki-md"
-DOXYBOOK2_VERSION="1.6.8"
+DOXYBOOK2_VERSION="1.5.0"
 DOXYBOOK2_BIN="${ROOT_DIR}/build/tools/doxybook2/doxybook2"
-DOXYBOOK2_URL="https://github.com/matusnovak/doxybook2/releases/download/v${DOXYBOOK2_VERSION}/doxybook2-linux-x64.zip"
+DOXYBOOK2_URL="https://github.com/matusnovak/doxybook2/releases/download/v${DOXYBOOK2_VERSION}/doxybook2-linux-amd64-v${DOXYBOOK2_VERSION}.zip"
+DOXYBOOK2_SHA256="3fb90354b7ab3e8139a5606221865ff6aa0c53f2805e56088dcbd8185ebb5b41"
 
 mkdir -p "${ROOT_DIR}/build/tools/doxybook2"
 mkdir -p "${MD_OUT_DIR}"
@@ -50,6 +51,19 @@ if [ ! -x "${DOXYBOOK2_BIN}" ]; then
   log "Fetching Doxybook2 v${DOXYBOOK2_VERSION}..."
   TMP_ZIP="${ROOT_DIR}/build/tools/doxybook2/doxybook2.zip"
   curl -fsSL -o "${TMP_ZIP}" "${DOXYBOOK2_URL}"
+  
+  # Verify SHA256 checksum to prevent supply-chain attacks
+  log "Verifying SHA256 checksum..."
+  ACTUAL_SHA256=$(sha256sum "${TMP_ZIP}" | cut -d' ' -f1)
+  if [ "${ACTUAL_SHA256}" != "${DOXYBOOK2_SHA256}" ]; then
+    err "SHA256 checksum mismatch for doxybook2!"
+    err "Expected: ${DOXYBOOK2_SHA256}"
+    err "Actual:   ${ACTUAL_SHA256}"
+    rm -f "${TMP_ZIP}"
+    exit 1
+  fi
+  log "Checksum verified successfully"
+  
   unzip -o "${TMP_ZIP}" -d "${ROOT_DIR}/build/tools/doxybook2" >/dev/null
   chmod +x "${DOXYBOOK2_BIN}" || true
 fi
