@@ -53,11 +53,20 @@ pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
 # Find OpenSSL for AASDK
 find_package(OpenSSL REQUIRED)
 
-# Add AASDK submodule (provides protobuf internally)
-if(EXISTS ${CMAKE_SOURCE_DIR}/external/aasdk/CMakeLists.txt)
-  add_subdirectory(${CMAKE_SOURCE_DIR}/external/aasdk ${CMAKE_BINARY_DIR}/external/aasdk)
+# Try to find installed AASDK first, fall back to building submodule
+find_package(aasdk QUIET)
+if(aasdk_FOUND)
+  message(STATUS "Using installed AASDK library")
+  # When using installed AASDK, we need system protobuf
+  find_package(Protobuf REQUIRED)
 else()
-  message(WARNING "AASDK submodule not found. Run: git submodule update --init --recursive")
+  message(STATUS "AASDK not found, building from submodule")
+  # Add AASDK submodule (provides protobuf internally)
+  if(EXISTS ${CMAKE_SOURCE_DIR}/external/aasdk/CMakeLists.txt)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/external/aasdk ${CMAKE_BINARY_DIR}/external/aasdk)
+  else()
+    message(FATAL_ERROR "AASDK submodule not found and no system package available. Run: git submodule update --init --recursive")
+  endif()
 endif()
 
 set(SOURCES

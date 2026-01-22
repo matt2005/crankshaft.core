@@ -29,6 +29,12 @@ string(REGEX REPLACE "^([0-9]+\\.[0-9]+\\.[0-9]+).*" "\\1" NUMERIC_VERSION "${CM
 
 project(crankshaft-mvp VERSION ${NUMERIC_VERSION} LANGUAGES CXX)
 
+# AASDK Dependency Management:
+# Core and ui-slim components will attempt to find installed AASDK via find_package(aasdk).
+# If not found, they fall back to building from external/aasdk submodule.
+# To use system AASDK: sudo apt install libaasdk0 libaasdk-dev
+# To force submodule build: ensure aasdk is not in CMAKE_PREFIX_PATH
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
