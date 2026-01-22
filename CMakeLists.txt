@@ -220,6 +220,7 @@ set(QT6_QML_PKG     "libqt6qml6")
 set(QT6_QUICK_PKG   "libqt6quick6")
 set(QT6_WS_PKG      "libqt6websockets6")
 set(QT6_BT_PKG      "libqt6bluetooth6")
+set(QT6_MULTIMEDIA_PKG "libqt6multimedia6")
 
 # QML runtime module packages (common across suites)
 # Platform plugins are now built-in to libqt6gui6/libqt6core6
@@ -249,7 +250,7 @@ set(CPACK_COMPONENT_UI-SLIM_DISPLAY_NAME "Crankshaft UI (Slim)")
 set(CPACK_COMPONENT_UI-SLIM_DESCRIPTION "Crankshaft slim QML-based user interface with integrated AndroidAuto")
 set(CPACK_COMPONENT_UI-SLIM_DEPENDS core)
 set(CPACK_DEBIAN_UI-SLIM_PACKAGE_NAME "crankshaft-slim-ui")
-set(CPACK_DEBIAN_UI-SLIM_PACKAGE_DEPENDS "crankshaft-core (>= ${NUMERIC_VERSION}), ${QT6_CORE_PKG}, ${QT6_GUI_PKG}, ${QT6_QML_PKG}, ${QT6_QUICK_PKG}, ${QT6_WS_PKG}, ${QML_RUNTIME_PKGS}, qt6-qpa-plugins")
+set(CPACK_DEBIAN_UI-SLIM_PACKAGE_DEPENDS "libaasdk0 (>= ${NUMERIC_VERSION}), crankshaft-core (>= ${NUMERIC_VERSION}), ${QT6_CORE_PKG}, ${QT6_GUI_PKG}, ${QT6_QML_PKG}, ${QT6_QUICK_PKG}, ${QT6_WS_PKG}, ${QT6_MULTIMEDIA_PKG}, ${QML_RUNTIME_PKGS}, qml6-module-qtmultimedia, qt6-qpa-plugins, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav")
 set(CPACK_DEBIAN_UI-SLIM_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/packaging/ui-slim/postinst;${CMAKE_SOURCE_DIR}/packaging/ui-slim/prerm;${CMAKE_SOURCE_DIR}/packaging/ui-slim/crankshaft-slim-ui.service")
 set(CPACK_DEBIAN_UI-SLIM_FILE_NAME DEB-DEFAULT)
 
