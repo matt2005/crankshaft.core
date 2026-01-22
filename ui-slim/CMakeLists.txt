@@ -52,9 +52,8 @@ pkg_check_modules(GSTREAMER_AUDIO REQUIRED gstreamer-audio-1.0)
 pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
 
 find_package(OpenSSL REQUIRED)
-find_package(Protobuf REQUIRED)
 
-# AASDK is built as subdirectory by root CMakeLists
+# AASDK is built as subdirectory by root CMakeLists (provides protobuf internally)
 
 # Add main executable with core service sources
 qt_add_executable(crankshaft-slim-ui

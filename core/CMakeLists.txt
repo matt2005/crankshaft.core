@@ -53,10 +53,7 @@ pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
 # Find OpenSSL for AASDK
 find_package(OpenSSL REQUIRED)
 
-# Find Protobuf for AASDK
-find_package(Protobuf REQUIRED)
-
-# Add AASDK submodule
+# Add AASDK submodule (provides protobuf internally)
 if(EXISTS ${CMAKE_SOURCE_DIR}/external/aasdk/CMakeLists.txt)
   add_subdirectory(${CMAKE_SOURCE_DIR}/external/aasdk ${CMAKE_BINARY_DIR}/external/aasdk)
 else()
