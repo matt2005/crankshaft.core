@@ -179,7 +179,7 @@ set(CPACK_DEBIAN_COMPRESSION_TYPE "xz")
 
 # Enable component-based packaging for separate core and ui DEBs
 set(CPACK_DEB_COMPONENT_INSTALL ON)
-set(CPACK_COMPONENTS_ALL runtime development core ui)
+set(CPACK_COMPONENTS_ALL runtime development core ui ui-slim)
 
 # AASDK Runtime package metadata
 set(CPACK_COMPONENT_RUNTIME_DISPLAY_NAME "AASDK Runtime Libraries")
