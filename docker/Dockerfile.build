@@ -92,6 +92,7 @@ RUN mkdir -p build logs && cd build && \
       -DCMAKE_PROJECT_VERSION=${VERSION} \
       -DDEBIAN_SUITE=${DEBIAN_SUITE} \
       -DENABLE_SLIM_UI=ON \
+      -DBUILD_AASDK=${BUILD_AASDK} \
       -DCMAKE_INSTALL_PREFIX=/usr \
       -DBUILD_TESTS=OFF 2>&1 | tee /build/logs/cmake-configure.log && \
     cmake --build . -j$(nproc) --target crankshaft-core crankshaft-ui crankshaft-ui-slim 2>&1 | tee /build/logs/cmake-build.log && \
