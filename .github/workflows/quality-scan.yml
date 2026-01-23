@@ -125,7 +125,7 @@ jobs:
             file \
             dpkg-dev
 
-      - name: Build project for SAST (parallel: core, ui, ui-slim - skip aasdk)
+      - name: "Build project for SAST (parallel: core, ui, ui-slim - skip aasdk)"
         id: build
         run: |
           mkdir -p build
