@@ -48,7 +48,7 @@ on:
       build-aasdk:
         description: 'Build AASDK from submodule (true) or use system packages (false)'
         required: false
-        default: true
+        default: false
         type: boolean
   workflow_dispatch:
     inputs:
@@ -80,7 +80,7 @@ on:
       build-aasdk:
         description: 'Build AASDK from submodule (true) or use system packages (false)'
         required: false
-        default: true
+        default: false
         type: boolean
 
 env:
@@ -210,7 +210,7 @@ jobs:
           --platform ${{ matrix.platform }} \
           --build-arg VERSION=${{ needs.prepare.outputs.version }} \
           --build-arg ARCH=${{ matrix.arch }} \
-          --build-arg BUILD_AASDK=${{ inputs.build-aasdk || 'true' }} \
+          --build-arg BUILD_AASDK=${{ inputs.build-aasdk || 'false' }} \
           --output type=local,dest=./build-output \
           --cache-from type=local,src=/tmp/.buildx-cache \
           --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
