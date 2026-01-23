@@ -23,10 +23,11 @@ FROM debian:${DEBIAN_VERSION} AS builder
 ARG VERSION=0.0.0+dev
 ARG ARCH=amd64
 # BUILD_AASDK: true=build from submodule, false=install system packages
-ARG BUILD_AASDK=true
+ARG BUILD_AASDK=false
 
 # Set up environment variables
 ENV DEBIAN_FRONTEND=noninteractive
+ENV BUILD_AASDK=${BUILD_AASDK}
 # Set locale to avoid encoding issues
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
