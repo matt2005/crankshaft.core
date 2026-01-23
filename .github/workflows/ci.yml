@@ -156,7 +156,7 @@ jobs:
             }
 
   build-packages:
-    needs: code-quality
+    needs: [check-skip, code-quality]
     if: needs.check-skip.outputs.skip != 'true' && (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped')
     uses: ./.github/workflows/build.yml
     with:
