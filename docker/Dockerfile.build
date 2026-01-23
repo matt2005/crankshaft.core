@@ -83,7 +83,7 @@ RUN set -e; \
     fi; \
     apt-get install -y $PKGS; \
     rm -rf /var/lib/apt/lists/*
-    
+
 # Set work directory
 WORKDIR /build
 
@@ -91,7 +91,7 @@ WORKDIR /build
 COPY . .
 
 # Build project (parallel build: core, ui, ui-slim)
-RUN mkdir -p build logs && cd build && \
+RUN mkdir -p build /build/logs && cd build && \
     cmake .. \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_PROJECT_VERSION=${VERSION} \
