@@ -37,47 +37,51 @@ RUN ./install_opencardev_repo.sh
 # Install build dependencies
 # Cache bust: 2025-12-18 - Added qt6-connectivity-dev, multimedia-dev, QML6 modules for UI support
 # If BUILD_AASDK=false, install libaasdk packages; otherwise build from submodule
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    cmake \
-    git \
-    pkg-config \
-    lsb-release \
-    python3 \
-    python3-requests \
-    $(if [ "${BUILD_AASDK}" = "false" ]; then echo "libaasdk0 libaasdk-dev"; fi) \
-    qt6-base-dev \
-    qt6-declarative-dev \
-    qt6-tools-dev \
-    qt6-websockets-dev \
-    qt6-connectivity-dev \
-    qt6-multimedia-dev \
-    qt6-qpa-plugins \
-    qml6-module-qtquick \
-    qml6-module-qtquick-controls \
-    qml6-module-qtquick-layouts \
-    qml6-module-qtquick-window \
-    qml6-module-qtmultimedia \
-    libboost-all-dev \
-    libprotobuf-dev \
-    protobuf-compiler \
-    libssl-dev \
-    libusb-1.0-0-dev \
-    libasound2-dev \
-    libpulse-dev \
-    libgstreamer1.0-dev \
-    libgstreamer-plugins-base1.0-dev \
-    gstreamer1.0-plugins-base \
-    gstreamer1.0-plugins-good \
-    gstreamer1.0-plugins-bad \
-    gstreamer1.0-plugins-ugly \
-    gstreamer1.0-libav \
-    gstreamer1.0-tools \
-    libdbus-1-dev \
-    # Packaging tools
-    file \
-    dpkg-dev \
-    && rm -rf /var/lib/apt/lists/*
+RUN set -e; \
+        apt-get update; \
+        PKGS="\
+        build-essential \
+        cmake \
+        git \
+        pkg-config \
+        lsb-release \
+        python3 \
+        python3-requests \
+        qt6-base-dev \
+        qt6-declarative-dev \
+        qt6-tools-dev \
+        qt6-websockets-dev \
+        qt6-connectivity-dev \
+        qt6-multimedia-dev \
+        qt6-qpa-plugins \
+        qml6-module-qtquick \
+        qml6-module-qtquick-controls \
+        qml6-module-qtquick-layouts \
+        qml6-module-qtquick-window \
+        qml6-module-qtmultimedia \
+        libboost-all-dev \
+        libprotobuf-dev \
+        protobuf-compiler \
+        libssl-dev \
+        libusb-1.0-0-dev \
+        libasound2-dev \
+        libpulse-dev \
+        libgstreamer1.0-dev \
+        libgstreamer-plugins-base1.0-dev \
+        gstreamer1.0-plugins-base \
+        gstreamer1.0-plugins-good \
+        gstreamer1.0-plugins-bad \
+        gstreamer1.0-plugins-ugly \
+        gstreamer1.0-libav \
+        gstreamer1.0-tools \
+        libdbus-1-dev \
+        file \
+        dpkg-dev"; \
+        if [ "${BUILD_AASDK}" = "false" ]; then \
+            PKGS="$PKGS libaasdk0 libaasdk-dev"; \
+        fi; \
+        apt-get install -y ${PKGS}; \
+        rm -rf /var/lib/apt/lists/*
 
 # Set work directory
 WORKDIR /build
