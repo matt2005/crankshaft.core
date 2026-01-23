@@ -22,6 +22,11 @@ set -eu
 # Add OpenCarDev repository GPG key and repository configuration
 echo "Adding OpenCarDev repository..."
 
+# install pre-reqs
+echo "Installing prerequisites..."
+apt update
+apt install curl gpg -y
+
 # Create directory for GPG keys if it doesn't exist
 mkdir -p "/usr/share/keyrings"
 chmod 755 "/usr/share/keyrings"
