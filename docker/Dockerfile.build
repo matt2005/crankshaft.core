@@ -116,16 +116,16 @@ WORKDIR /build
 # Copy source code
 COPY . .
 
-# Build project
+# Build project (parallel build: core, ui, ui-slim)
 RUN mkdir -p build logs && cd build && \
     cmake .. \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_PROJECT_VERSION=${VERSION} \
       -DDEBIAN_SUITE=${DEBIAN_SUITE} \
-            -DENABLE_SLIM_UI=ON \
+      -DENABLE_SLIM_UI=ON \
       -DCMAKE_INSTALL_PREFIX=/usr \
       -DBUILD_TESTS=OFF 2>&1 | tee /build/logs/cmake-configure.log && \
-    cmake --build . -j$(nproc) 2>&1 | tee /build/logs/cmake-build.log && \
+    cmake --build . -j$(nproc) --target crankshaft-core crankshaft-ui crankshaft-ui-slim 2>&1 | tee /build/logs/cmake-build.log && \
     cmake --install . --prefix /staging/usr 2>&1 | tee /build/logs/cmake-install.log
 
 # Build DEB packages via CPack (component install produces core/ui)
