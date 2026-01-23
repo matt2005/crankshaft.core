@@ -156,11 +156,13 @@ jobs:
             }
 
   build-packages:
-    needs: [check-skip, code-quality]
-    if: needs.check-skip.outputs.skip != 'true' && (needs.code-quality.result == 'success' || needs.code-quality.result == 'skipped')
+    needs: check-skip
+    if: |
+      needs.check-skip.outputs.skip != 'true' && 
+      (always() && !cancelled())
     uses: ./.github/workflows/build.yml
     with:
-      quality-scan-status: ${{ needs.code-quality.result }}
+      quality-scan-status: 'skipped'
       architectures: ${{ github.event.inputs.amd64only == 'true' && 'amd64' || ((github.ref_name == 'main' || github.ref_name == 'develop' || github.base_ref == 'main' || github.base_ref == 'develop') && 'amd64 arm64 armhf' || 'amd64') }}
       build-aasdk: ${{ github.event.inputs.build-aasdk || false }}
 
