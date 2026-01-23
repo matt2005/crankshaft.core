@@ -137,7 +137,6 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             ..
-          # Build core, ui, and ui-slim in parallel (skip aasdk dependencies)
           ninja -j$(nproc) crankshaft-core crankshaft-ui crankshaft-ui-slim 2>&1 | tail -20
         continue-on-error: true
         env:
