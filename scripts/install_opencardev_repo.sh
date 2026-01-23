@@ -25,7 +25,7 @@ echo "Adding OpenCarDev repository..."
 # install pre-reqs
 echo "Installing prerequisites..."
 apt update
-apt install curl gpg -y
+apt install curl gpg lsb-release -y
 
 # Create directory for GPG keys if it doesn't exist
 mkdir -p "/usr/share/keyrings"
