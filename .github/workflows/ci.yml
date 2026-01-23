@@ -63,7 +63,7 @@ on:
       build-aasdk:
         description: 'Build AASDK from submodule (true) or use system packages (false)'
         required: false
-        default: true
+        default: false
         type: boolean
 
 jobs:
@@ -162,7 +162,7 @@ jobs:
     with:
       quality-scan-status: ${{ needs.code-quality.result }}
       architectures: ${{ github.event.inputs.amd64only == 'true' && 'amd64' || ((github.ref_name == 'main' || github.ref_name == 'develop' || github.base_ref == 'main' || github.base_ref == 'develop') && 'amd64 arm64 armhf' || 'amd64') }}
-      build-aasdk: ${{ github.event.inputs.build-aasdk || true }}
+      build-aasdk: ${{ github.event.inputs.build-aasdk || false }}
 
   dispatch-cd-fastpath:
     needs: build-packages
