@@ -52,9 +52,17 @@ pkg_check_modules(GSTREAMER_AUDIO REQUIRED gstreamer-audio-1.0)
 pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
 
 find_package(OpenSSL REQUIRED)
-find_package(Protobuf REQUIRED)
 
-# AASDK is built as subdirectory by root CMakeLists
+# Try to find installed AASDK first, fall back to using core's build
+find_package(aasdk QUIET)
+if(aasdk_FOUND)
+  message(STATUS \"UI-Slim: Using installed AASDK library\")
+  # When using installed AASDK, we need system protobuf
+  find_package(Protobuf REQUIRED)
+else()
+  message(STATUS \"UI-Slim: Using AASDK from core submodule build\")
+  # AASDK is built as subdirectory by core CMakeLists (provides protobuf internally)
+endif()
 
 # Add main executable with core service sources
 qt_add_executable(crankshaft-slim-ui

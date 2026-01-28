@@ -53,14 +53,50 @@ pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
 # Find OpenSSL for AASDK
 find_package(OpenSSL REQUIRED)
 
-# Find Protobuf for AASDK
-find_package(Protobuf REQUIRED)
+# Configure AASDK build option
+set(BUILD_AASDK OFF CACHE BOOL "Build AASDK from submodule (OFF = use system packages)")
 
-# Add AASDK submodule
-if(EXISTS ${CMAKE_SOURCE_DIR}/external/aasdk/CMakeLists.txt)
-  add_subdirectory(${CMAKE_SOURCE_DIR}/external/aasdk ${CMAKE_BINARY_DIR}/external/aasdk)
+if(BUILD_AASDK)
+  # Force build from submodule
+  message(STATUS "BUILD_AASDK is ON, building AASDK from submodule")
+  if(EXISTS ${CMAKE_SOURCE_DIR}/external/aasdk/CMakeLists.txt)
+    add_subdirectory(${CMAKE_SOURCE_DIR}/external/aasdk ${CMAKE_BINARY_DIR}/external/aasdk)
+  else()
+    message(FATAL_ERROR "AASDK submodule not found. Run: git submodule update --init --recursive")
+  endif()
 else()
-  message(WARNING "AASDK submodule not found. Run: git submodule update --init --recursive")
+  # Try to find installed AASDK package
+  message(STATUS "BUILD_AASDK is OFF, looking for system AASDK package")
+  
+  # Try find_package first (for CMake-aware installations)
+  find_package(aasdk QUIET)
+  if(aasdk_FOUND)
+    message(STATUS "Using installed AASDK library (via CMake)")
+    # When using installed AASDK, we need system protobuf
+    find_package(Protobuf REQUIRED)
+  else()
+    # Fall back to pkg-config
+    find_package(PkgConfig QUIET)
+    if(PkgConfig_FOUND)
+      pkg_check_modules(AASDK QUIET aasdk)
+      if(AASDK_FOUND)
+        message(STATUS "Using installed AASDK library (via pkg-config)")
+        # When using installed AASDK, we need system protobuf
+        find_package(Protobuf REQUIRED)
+        # Create an imported target for AASDK
+        add_library(aasdk::aasdk INTERFACE IMPORTED)
+        set_target_properties(aasdk::aasdk PROPERTIES
+          INTERFACE_INCLUDE_DIRECTORIES "${AASDK_INCLUDE_DIRS}"
+          INTERFACE_LINK_LIBRARIES "${AASDK_LIBRARIES}"
+          INTERFACE_LINK_DIRECTORIES "${AASDK_LIBRARY_DIRS}"
+        )
+      else()
+        message(FATAL_ERROR "AASDK not found in system packages and BUILD_AASDK is OFF. Either: 1) install AASDK package, or 2) use -DBUILD_AASDK=ON")
+      endif()
+    else()
+      message(FATAL_ERROR "AASDK not found in system packages and BUILD_AASDK is OFF. Either: 1) install AASDK package, or 2) use -DBUILD_AASDK=ON")
+    endif()
+  endif()
 endif()
 
 set(SOURCES

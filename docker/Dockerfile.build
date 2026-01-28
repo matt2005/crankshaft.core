@@ -22,55 +22,67 @@ FROM debian:${DEBIAN_VERSION} AS builder
 
 ARG VERSION=0.0.0+dev
 ARG ARCH=amd64
+# BUILD_AASDK: true=build from submodule, false=install system packages
+ARG BUILD_AASDK=false
 
 # Set up environment variables
 ENV DEBIAN_FRONTEND=noninteractive
+ENV BUILD_AASDK=${BUILD_AASDK}
 # Set locale to avoid encoding issues
 ENV LANG=C.UTF-8
 ENV LC_ALL=C.UTF-8
 
+COPY scripts/install_opencardev_repo.sh .
+RUN ./install_opencardev_repo.sh
+
 # Install build dependencies
 # Cache bust: 2025-12-18 - Added qt6-connectivity-dev, multimedia-dev, QML6 modules for UI support
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    cmake \
-    git \
-    pkg-config \
-    lsb-release \
-    python3 \
-    python3-requests \
-    qt6-base-dev \
-    qt6-declarative-dev \
-    qt6-tools-dev \
-    qt6-websockets-dev \
-    qt6-connectivity-dev \
-    qt6-multimedia-dev \
-    qt6-qpa-plugins \
-    qml6-module-qtquick \
-    qml6-module-qtquick-controls \
-    qml6-module-qtquick-layouts \
-    qml6-module-qtquick-window \
-    qml6-module-qtmultimedia \
-    libboost-all-dev \
-    libprotobuf-dev \
-    protobuf-compiler \
-    libssl-dev \
-    libusb-1.0-0-dev \
-    libasound2-dev \
-    libpulse-dev \
-    libgstreamer1.0-dev \
-    libgstreamer-plugins-base1.0-dev \
-    gstreamer1.0-plugins-base \
-    gstreamer1.0-plugins-good \
-    gstreamer1.0-plugins-bad \
-    gstreamer1.0-plugins-ugly \
-    gstreamer1.0-libav \
-    gstreamer1.0-tools \
-    libdbus-1-dev \
-    # Packaging tools
-    file \
-    dpkg-dev \
-    && rm -rf /var/lib/apt/lists/*
+# If BUILD_AASDK=false, install libaasdk packages; otherwise build from submodule
+RUN set -e; \
+        apt-get update; \
+        PKGS="\
+        build-essential \
+        cmake \
+        git \
+        pkg-config \
+        lsb-release \
+        python3 \
+        python3-requests \
+        qt6-base-dev \
+        qt6-declarative-dev \
+        qt6-tools-dev \
+        qt6-websockets-dev \
+        qt6-connectivity-dev \
+        qt6-multimedia-dev \
+        qt6-qpa-plugins \
+        qml6-module-qtquick \
+        qml6-module-qtquick-controls \
+        qml6-module-qtquick-layouts \
+        qml6-module-qtquick-window \
+        qml6-module-qtmultimedia \
+        libboost-all-dev \
+        libprotobuf-dev \
+        protobuf-compiler \
+        libssl-dev \
+        libusb-1.0-0-dev \
+        libasound2-dev \
+        libpulse-dev \
+        libgstreamer1.0-dev \
+        libgstreamer-plugins-base1.0-dev \
+        gstreamer1.0-plugins-base \
+        gstreamer1.0-plugins-good \
+        gstreamer1.0-plugins-bad \
+        gstreamer1.0-plugins-ugly \
+        gstreamer1.0-libav \
+        gstreamer1.0-tools \
+        libdbus-1-dev \
+        file \
+        dpkg-dev"; \
+    if [ "$BUILD_AASDK" = "false" ]; then \
+      PKGS="$PKGS libaasdk0 libaasdk-dev"; \
+    fi; \
+    apt-get install -y $PKGS; \
+    rm -rf /var/lib/apt/lists/*
 
 # Set work directory
 WORKDIR /build
@@ -78,16 +90,17 @@ WORKDIR /build
 # Copy source code
 COPY . .
 
-# Build project
-RUN mkdir -p build logs && cd build && \
+# Build project (parallel build: core, ui, ui-slim)
+RUN mkdir -p build /build/logs && cd build && \
     cmake .. \
       -DCMAKE_BUILD_TYPE=Release \
       -DCMAKE_PROJECT_VERSION=${VERSION} \
       -DDEBIAN_SUITE=${DEBIAN_SUITE} \
-            -DENABLE_SLIM_UI=ON \
+      -DENABLE_SLIM_UI=ON \
+      -DBUILD_AASDK=$BUILD_AASDK \
       -DCMAKE_INSTALL_PREFIX=/usr \
       -DBUILD_TESTS=OFF 2>&1 | tee /build/logs/cmake-configure.log && \
-    cmake --build . -j$(nproc) 2>&1 | tee /build/logs/cmake-build.log && \
+    cmake --build . -j$(nproc) --target crankshaft-core crankshaft-ui crankshaft-ui-slim 2>&1 | tee /build/logs/cmake-build.log && \
     cmake --install . --prefix /staging/usr 2>&1 | tee /build/logs/cmake-install.log
 
 # Build DEB packages via CPack (component install produces core/ui)

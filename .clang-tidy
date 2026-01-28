@@ -1,2 +1,14 @@
-Checks: '-*,modernize-*,bugprone-*,performance-*'
+Checks: '-*,modernize-*,bugprone-*,performance-*,readability-*,misc-*'
 WarningsAsErrors: ''
+HeaderFilterRegex: '^(core|include)'
+AnalyzeTemporaryDtors: false
+FormatStyle: file
+UseColor: true
+
+CheckOptions:
+  - key: readability-function-size.LineThreshold
+    value: '150'
+  - key: readability-function-size.StatementThreshold
+    value: '75'
+  - key: performance-for-while-in-range.MaxIterations
+    value: '10000'

@@ -30,6 +30,7 @@ ARCHITECTURE=""
 SKIP_TESTS=false
 # Build options
 ENABLE_SLIM_UI_FLAG="OFF"
+BUILD_AASDK=false
 # Default Debian suite from host, fall back to trixie
 DEBIAN_SUITE=${VERSION_CODENAME:-trixie}
 
@@ -118,6 +119,7 @@ Named parameters:
   --architecture ARCH    Target architecture (amd64|arm64|armhf) [default: auto-detect]
     --skip-tests           Skip running tests during build [default: false]
     --enable-slim-ui       Enable slim AndroidAuto UI build (ENABLE_SLIM_UI=ON)
+    --build-aasdk         Build AASDK from submodule (default: false, use system packages)
   --install-deps         Install dependencies for the specified component
   --help                 Display this help message
 
@@ -130,6 +132,7 @@ Examples:
   $0 --architecture amd64 --skip-tests    # Build for amd64 only, skip tests
   $0 --install-deps                       # Install all dependencies
   $0 --component core --install-deps      # Install only core dependencies
+  $0 --build-aasdk --build-type Release   # Build with AASDK from submodule
 EOF
     exit 1
 }
@@ -187,6 +190,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --enable-slim-ui)
             ENABLE_SLIM_UI_FLAG="ON"
+            shift
+            ;;
+        --build-aasdk)
+            BUILD_AASDK=true
             shift
             ;;
         --install-deps)
@@ -267,19 +274,19 @@ if [[ "$COMPONENT" != "all" && "$COMPONENT" != "core" && "$COMPONENT" != "ui" &&
     usage
 fi
 
-# Determine build target
+# Determine build targets
 case "$COMPONENT" in
     core)
-        BUILD_TARGET="crankshaft-core"
+        BUILD_TARGETS="crankshaft-core"
         ;;
     ui)
-        BUILD_TARGET="crankshaft-ui"
+        BUILD_TARGETS="crankshaft-ui crankshaft-ui-slim"
         ;;
     tests)
-        BUILD_TARGET="crankshaft-tests"
+        BUILD_TARGETS="crankshaft-tests"
         ;;
     all)
-        BUILD_TARGET=""
+        BUILD_TARGETS="crankshaft-core crankshaft-ui crankshaft-ui-slim"
         ;;
 esac
 
@@ -292,18 +299,14 @@ mkdir -p "${BUILD_DIR}"
 echo "Configuring CMake..."
 if [ -n "$VERSION" ]; then
     echo "Using custom version: $VERSION"
-    cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DCMAKE_PROJECT_VERSION="${VERSION}" -DDEBIAN_SUITE="${DEBIAN_SUITE}" -DENABLE_SLIM_UI="${ENABLE_SLIM_UI_FLAG}" $ARCH_CMAKE_FLAGS
+    cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DCMAKE_PROJECT_VERSION="${VERSION}" -DDEBIAN_SUITE="${DEBIAN_SUITE}" -DENABLE_SLIM_UI="${ENABLE_SLIM_UI_FLAG}" -DBUILD_AASDK="${BUILD_AASDK}" $ARCH_CMAKE_FLAGS
 else
-    cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DDEBIAN_SUITE="${DEBIAN_SUITE}" -DENABLE_SLIM_UI="${ENABLE_SLIM_UI_FLAG}" $ARCH_CMAKE_FLAGS
+    cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DDEBIAN_SUITE="${DEBIAN_SUITE}" -DENABLE_SLIM_UI="${ENABLE_SLIM_UI_FLAG}" -DBUILD_AASDK="${BUILD_AASDK}" $ARCH_CMAKE_FLAGS
 fi
 
-# Build
-echo "Building..."
-if [ -z "$BUILD_TARGET" ]; then
-    cmake --build "${BUILD_DIR}" --config "${BUILD_TYPE}" -j"$(nproc)"
-else
-    cmake --build "${BUILD_DIR}" --config "${BUILD_TYPE}" --target "${BUILD_TARGET}" -j"$(nproc)"
-fi
+# Build (parallel targets: core, ui, ui-slim)
+echo "Building targets: ${BUILD_TARGETS}..."
+cmake --build "${BUILD_DIR}" --config "${BUILD_TYPE}" --target ${BUILD_TARGETS} -j"$(nproc)"
 
 # Run tests unless skipped
 if [ "$SKIP_TESTS" = false ] && [ "$COMPONENT" != "ui" ]; then

@@ -29,6 +29,12 @@ string(REGEX REPLACE "^([0-9]+\\.[0-9]+\\.[0-9]+).*" "\\1" NUMERIC_VERSION "${CM
 
 project(crankshaft-mvp VERSION ${NUMERIC_VERSION} LANGUAGES CXX)
 
+# AASDK Dependency Management:
+# Core and ui-slim components will attempt to find installed AASDK via find_package(aasdk).
+# If not found, they fall back to building from external/aasdk submodule.
+# To use system AASDK: sudo apt install libaasdk0 libaasdk-dev
+# To force submodule build: ensure aasdk is not in CMAKE_PREFIX_PATH
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -179,7 +185,7 @@ set(CPACK_DEBIAN_COMPRESSION_TYPE "xz")
 
 # Enable component-based packaging for separate core and ui DEBs
 set(CPACK_DEB_COMPONENT_INSTALL ON)
-set(CPACK_COMPONENTS_ALL runtime development core ui)
+set(CPACK_COMPONENTS_ALL runtime development core ui ui-slim)
 
 # AASDK Runtime package metadata
 set(CPACK_COMPONENT_RUNTIME_DISPLAY_NAME "AASDK Runtime Libraries")
@@ -220,6 +226,7 @@ set(QT6_QML_PKG     "libqt6qml6")
 set(QT6_QUICK_PKG   "libqt6quick6")
 set(QT6_WS_PKG      "libqt6websockets6")
 set(QT6_BT_PKG      "libqt6bluetooth6")
+set(QT6_MULTIMEDIA_PKG "libqt6multimedia6")
 
 # QML runtime module packages (common across suites)
 # Platform plugins are now built-in to libqt6gui6/libqt6core6
@@ -230,8 +237,7 @@ set(CPACK_COMPONENT_CORE_DISPLAY_NAME "Crankshaft Core")
 set(CPACK_COMPONENT_CORE_DESCRIPTION "Crankshaft core service with WebSocket server and event bus")
 set(CPACK_COMPONENT_CORE_DEPENDS runtime)
 set(CPACK_DEBIAN_CORE_PACKAGE_NAME "crankshaft-core")
-set(CPACK_DEBIAN_CORE_PACKAGE_DEPENDS "libaasdk0 (>= ${NUMERIC_VERSION}), ${QT6_CORE_PKG}, ${QT6_NETWORK_PKG}, ${QT6_WS_PKG}, ${QT6_DBUS_PKG}, libgstreamer1.0-0, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav, libdbus-1-3, libusb-1.0-0, gstreamer1.0-libav, gstreamer1.0-tools")
-set(CPACK_DEBIAN_CORE_PACKAGE_DEPENDS "libaasdk0 (>= ${NUMERIC_VERSION}), ${QT6_CORE_PKG}, ${QT6_NETWORK_PKG}, ${QT6_WS_PKG}, ${QT6_DBUS_PKG}, ${QT6_BT_PKG}, libgstreamer1.0-0, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav, libdbus-1-3, libusb-1.0-0, gstreamer1.0-libav, gstreamer1.0-tools")
+set(CPACK_DEBIAN_CORE_PACKAGE_DEPENDS "libaasdk0 (>= ${NUMERIC_VERSION}), ${QT6_CORE_PKG}, ${QT6_NETWORK_PKG}, ${QT6_WS_PKG}, ${QT6_DBUS_PKG}, ${QT6_BT_PKG}, ${QT6_MULTIMEDIA_PKG}, libgstreamer1.0-0, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-plugins-ugly, gstreamer1.0-libav, libdbus-1-3, libusb-1.0-0, gstreamer1.0-tools")
 set(CPACK_DEBIAN_CORE_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/packaging/core/postinst;${CMAKE_SOURCE_DIR}/packaging/core/prerm;${CMAKE_SOURCE_DIR}/packaging/core/crankshaft-core.service")
 set(CPACK_DEBIAN_CORE_FILE_NAME DEB-DEFAULT)
 
@@ -249,7 +255,7 @@ set(CPACK_COMPONENT_UI-SLIM_DISPLAY_NAME "Crankshaft UI (Slim)")
 set(CPACK_COMPONENT_UI-SLIM_DESCRIPTION "Crankshaft slim QML-based user interface with integrated AndroidAuto")
 set(CPACK_COMPONENT_UI-SLIM_DEPENDS core)
 set(CPACK_DEBIAN_UI-SLIM_PACKAGE_NAME "crankshaft-slim-ui")
-set(CPACK_DEBIAN_UI-SLIM_PACKAGE_DEPENDS "crankshaft-core (>= ${NUMERIC_VERSION}), ${QT6_CORE_PKG}, ${QT6_GUI_PKG}, ${QT6_QML_PKG}, ${QT6_QUICK_PKG}, ${QT6_WS_PKG}, ${QML_RUNTIME_PKGS}, qt6-qpa-plugins")
+set(CPACK_DEBIAN_UI-SLIM_PACKAGE_DEPENDS "libaasdk0 (>= ${NUMERIC_VERSION}), crankshaft-core (>= ${NUMERIC_VERSION}), ${QT6_CORE_PKG}, ${QT6_GUI_PKG}, ${QT6_QML_PKG}, ${QT6_QUICK_PKG}, ${QT6_WS_PKG}, ${QT6_MULTIMEDIA_PKG}, ${QML_RUNTIME_PKGS}, qml6-module-qtmultimedia, qt6-qpa-plugins, gstreamer1.0-plugins-base, gstreamer1.0-plugins-good, gstreamer1.0-plugins-bad, gstreamer1.0-libav")
 set(CPACK_DEBIAN_UI-SLIM_PACKAGE_CONTROL_EXTRA "${CMAKE_SOURCE_DIR}/packaging/ui-slim/postinst;${CMAKE_SOURCE_DIR}/packaging/ui-slim/prerm;${CMAKE_SOURCE_DIR}/packaging/ui-slim/crankshaft-slim-ui.service")
 set(CPACK_DEBIAN_UI-SLIM_FILE_NAME DEB-DEFAULT)
 

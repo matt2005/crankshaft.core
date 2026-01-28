@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Project: Crankshaft
 # This file is part of Crankshaft project.
 # Copyright (C) 2025 OpenCarDev Team
@@ -17,29 +17,61 @@
 #  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
 
 set -e
-
-# Pre-removal script for crankshaft-slim-ui
+set -x  # Debug: trace execution to find where prerm terminates
+export DEBIAN_FRONTEND=noninteractive
 
 case "$1" in
-    remove|upgrade|deconfigure)
-        if [ -d /run/systemd/system ]; then
-            echo "Stopping crankshaft-slim-ui service..."
-            systemctl stop crankshaft-slim-ui.service || true
-            
-            if [ "$1" = "remove" ]; then
-                echo "Disabling crankshaft-slim-ui service..."
-                systemctl disable crankshaft-slim-ui.service || true
+    remove|deconfigure)
+        echo "[prerm ui-slim] phase=remove"
+        # Stop and disable systemd service (if systemd is present)
+        if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+            echo "[prerm ui-slim] stopping service"
+            systemctl stop crankshaft-slim-ui.service >/dev/null 2>&1 || true
+            echo "[prerm ui-slim] disabling service"
+            systemctl disable crankshaft-slim-ui.service >/dev/null 2>&1 || true
+        fi
+
+        # If systemd handled stop, avoid further manual killing to prevent accidental TERM
+        if ! command -v systemctl >/dev/null 2>&1 || [ ! -d /run/systemd/system ]; then
+            if command -v start-stop-daemon >/dev/null 2>&1; then
+                echo "[prerm ui-slim] stopping by name (no systemd)"
+                start-stop-daemon --stop --quiet --oknodo --retry=TERM/5 --name crankshaft-slim-ui || true
+                echo "[prerm ui-slim] stopping by exec (no systemd)"
+                start-stop-daemon --stop --quiet --oknodo --retry=TERM/5 --exec /usr/bin/crankshaft-slim-ui || true
             fi
         fi
-        ;;
 
-    failed-upgrade)
-        ;;
+        echo "Crankshaft Slim UI pre-removal cleanup done"
+    ;;
+    upgrade)
+        echo "[prerm ui-slim] phase=upgrade"
+        # During upgrade, only stop the service gracefully
+        if command -v systemctl >/dev/null 2>&1 && [ -d /run/systemd/system ]; then
+            echo "[prerm ui-slim] stopping service"
+            systemctl stop crankshaft-slim-ui.service >/dev/null 2>&1 || true
+        fi
 
-    *)
-        echo "prerm called with unknown argument \`$1'" >&2
-        exit 1
-        ;;
+        # Wait for process to exit (with timeout)
+        for i in 1 2 3 4 5; do
+            if ! pgrep -f '[c]rankshaft-slim-ui' >/dev/null 2>&1; then
+                break
+            fi
+            echo "[prerm ui-slim] waiting for crankshaft-slim-ui to exit (attempt $i)"
+            sleep 1
+        done
+
+        # Force kill only when systemd is absent (avoid double-stop TERM)
+        if ! command -v systemctl >/dev/null 2>&1 || [ ! -d /run/systemd/system ]; then
+            if command -v start-stop-daemon >/dev/null 2>&1; then
+                echo "[prerm ui-slim] force kill by name (no systemd)"
+                start-stop-daemon --stop --quiet --oknodo --retry=KILL/5 --name crankshaft-slim-ui || true
+                echo "[prerm ui-slim] force kill by exec (no systemd)"
+                start-stop-daemon --stop --quiet --oknodo --retry=KILL/5 --exec /usr/bin/crankshaft-slim-ui || true
+            fi
+        fi
+
+        echo "Crankshaft Slim UI stopped for upgrade"
+    ;;
 esac
 
 exit 0
