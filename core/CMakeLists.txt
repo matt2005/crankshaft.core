@@ -69,16 +69,31 @@ else()
   message(STATUS "BUILD_AASDK is OFF, looking for system AASDK package")
   
   # Try find_package first (for CMake-aware installations)
+  set(AASDK_SYSTEM_FOUND OFF)
   find_package(aasdk QUIET)
   if(aasdk_FOUND)
+    set(AASDK_SYSTEM_FOUND ON)
     message(STATUS "Using installed AASDK library (via CMake)")
     # When using installed AASDK, we need system protobuf
     find_package(Protobuf REQUIRED)
   else()
+    find_package(AASDK QUIET)
+    if(AASDK_FOUND)
+      set(AASDK_SYSTEM_FOUND ON)
+      message(STATUS "Using installed AASDK library (via CMake)")
+      # When using installed AASDK, we need system protobuf
+      find_package(Protobuf REQUIRED)
+    endif()
+  endif()
+
+  if(NOT AASDK_SYSTEM_FOUND)
     # Fall back to pkg-config
     find_package(PkgConfig QUIET)
     if(PkgConfig_FOUND)
       pkg_check_modules(AASDK QUIET aasdk)
+      if(NOT AASDK_FOUND)
+        pkg_check_modules(AASDK QUIET libaasdk)
+      endif()
       if(AASDK_FOUND)
         message(STATUS "Using installed AASDK library (via pkg-config)")
         # When using installed AASDK, we need system protobuf
