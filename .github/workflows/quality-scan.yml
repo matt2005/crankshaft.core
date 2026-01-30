@@ -188,7 +188,7 @@ jobs:
           steps.cppcheck.outcome == 'failure' ||
           steps.license.outcome == 'failure'
         run: |
-          echo "âŒ Critical quality checks failed. Please fix the issues above."
+          echo "âŒ Critical quality checks failed. Please fix the issues above."
           exit 1
 
 
