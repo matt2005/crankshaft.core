@@ -81,10 +81,6 @@ RUN set -e; \
     if [ "$BUILD_AASDK" = "false" ]; then \
       if apt-cache show libaasdk-dev >/dev/null 2>&1; then \
         PKGS="$PKGS libaasdk0 libaasdk-dev"; \
-      elif apt-cache show aasdk-dev >/dev/null 2>&1; then \
-        PKGS="$PKGS aasdk-dev"; \
-      elif apt-cache show aasdk >/dev/null 2>&1; then \
-        PKGS="$PKGS aasdk"; \
       else \
         echo "AASDK packages not found in APT repository"; \
         echo "Ensure AASDK packages are published for ${DEBIAN_SUITE} or set BUILD_AASDK=true"; \
