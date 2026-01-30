@@ -10,3 +10,4 @@ rules:
     max: 2
     level: warning
   document-start: disable
+  comments-indentation: disable
