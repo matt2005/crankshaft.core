@@ -137,7 +137,7 @@ jobs:
             -DCMAKE_C_COMPILER_LAUNCHER=ccache \
             -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
             ..
-          ninja -j$(nproc) crankshaft-core crankshaft-ui crankshaft-ui-slim 2>&1 | tail -20
+          ninja -j$(nproc) crankshaft-core crankshaft-ui crankshaft-slim-ui 2>&1 | tail -20
         continue-on-error: true
         env:
           CCACHE_MAXSIZE: 500M
