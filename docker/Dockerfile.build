@@ -1,40 +1,3 @@
-# Project: Crankshaft
-# This file is part of Crankshaft project.
-# Copyright (C) 2025 OpenCarDev Team
-#
-#  Crankshaft is free software: you can redistribute it and/or modify
-#  it under the terms of the GNU General Public License as published by
-#  the Free Software Foundation; either version 3 of the License, or
-#  (at your option) any later version.
-#
-#  Crankshaft is distributed in the hope that it will be useful,
-#  but WITHOUT ANY WARRANTY; without even the implied warranty of
-#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#  GNU General Public License for more details.
-#
-#  You should have received a copy of the GNU General Public License
-#  along with Crankshaft. If not, see <http://www.gnu.org/licenses/>.
-
-ARG DEBIAN_VERSION=trixie
-# Default suite mirrors base image tag unless overridden
-ARG DEBIAN_SUITE=${DEBIAN_VERSION}
-FROM debian:${DEBIAN_VERSION} AS builder
-
-ARG VERSION=0.0.0+dev
-ARG ARCH=amd64
-# BUILD_AASDK: true=build from submodule, false=install system packages
-ARG BUILD_AASDK=false
-
-# Set up environment variables
-ENV DEBIAN_FRONTEND=noninteractive
-ENV BUILD_AASDK=${BUILD_AASDK}
-# Set locale to avoid encoding issues
-ENV LANG=C.UTF-8
-ENV LC_ALL=C.UTF-8
-
-COPY scripts/install_opencardev_repo.sh .
-RUN ./install_opencardev_repo.sh
-
 # Install build dependencies
 # Cache bust: 2025-12-18 - Added qt6-connectivity-dev, multimedia-dev, QML6 modules for UI support
 # If BUILD_AASDK=false, install libaasdk packages; otherwise build from submodule
@@ -61,8 +24,6 @@ RUN set -e; \
         qml6-module-qtquick-window \
         qml6-module-qtmultimedia \
         libboost-all-dev \
-        libprotobuf-dev \
-        protobuf-compiler \
         libssl-dev \
         libusb-1.0-0-dev \
         libasound2-dev \
@@ -78,56 +39,18 @@ RUN set -e; \
         libdbus-1-dev \
         file \
         dpkg-dev"; \
-    if [ "$BUILD_AASDK" = "false" ]; then \
-      PKGS="$PKGS libaasdk0 libaasdk-dev"; \
+    if [ "$BUILD_AASDK" = "true" ]; then \
+      echo "Building AASDK from submodule - installing protobuf"; \
+      PKGS="$PKGS libprotobuf-dev protobuf-compiler"; \
+    else \
+      echo "Using system AASDK packages - protobuf provided by libaasdk-dev"; \
+      if apt-cache show libaasdk-dev >/dev/null 2>&1; then \
+        PKGS="$PKGS libaasdk libaasdk-dev"; \
+      else \
+        echo "AASDK packages not found in APT repository"; \
+        echo "Ensure AASDK packages are published for ${DEBIAN_SUITE} or set BUILD_AASDK=true"; \
+        exit 1; \
+      fi; \
     fi; \
     apt-get install -y $PKGS; \
     rm -rf /var/lib/apt/lists/*
-
-# Set work directory
-WORKDIR /build
-
-# Copy source code
-COPY . .
-
-# Build project (parallel build: core, ui, ui-slim)
-RUN mkdir -p build /build/logs && cd build && \
-    cmake .. \
-      -DCMAKE_BUILD_TYPE=Release \
-      -DCMAKE_PROJECT_VERSION=${VERSION} \
-      -DDEBIAN_SUITE=${DEBIAN_SUITE} \
-      -DENABLE_SLIM_UI=ON \
-      -DBUILD_AASDK=$BUILD_AASDK \
-      -DCMAKE_INSTALL_PREFIX=/usr \
-      -DBUILD_TESTS=OFF 2>&1 | tee /build/logs/cmake-configure.log && \
-    cmake --build . -j$(nproc) --target crankshaft-core crankshaft-ui crankshaft-ui-slim 2>&1 | tee /build/logs/cmake-build.log && \
-    cmake --install . --prefix /staging/usr 2>&1 | tee /build/logs/cmake-install.log
-
-# Build DEB packages via CPack (component install produces core/ui)
-RUN mkdir -p /output && cd build && \
-        cpack --config CPackConfig.cmake -G DEB -C Release \
-            -B /output 2>&1 | tee /build/logs/cpack-deb.log
-
-# Build source tarball via CPack
-RUN mkdir -p /output && cd build && \
-        cpack --config CPackSourceConfig.cmake -G TGZ -C Release \
-            -B /output 2>&1 | tee /build/logs/cpack-source.log
-
-# Verify output directory contents
-RUN echo "=== Output directory contents ===" && \
-    ls -lah /output/ && \
-    echo "=== Build logs ===" && \
-    ls -lah /build/logs/ && \
-    echo "=== Checking for .deb files ===" && \
-    find /output -name "*.deb" -o -name "*.tar.gz" && \
-    echo "=== Total files ===" && \
-    find /output -type f | wc -l
-
-# Export stage - create minimal image with only the artifacts
-FROM alpine:latest AS exporter
-RUN apk add --no-cache findutils
-COPY --from=builder /output /output
-COPY --from=builder /build/logs /logs
-WORKDIR /
-# List all artifacts for debugging
-RUN find /output -type f
