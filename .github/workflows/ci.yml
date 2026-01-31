@@ -164,7 +164,7 @@ jobs:
     with:
       quality-scan-status: 'skipped'
       architectures: ${{ github.event.inputs.amd64only == 'true' && 'amd64' || ((github.ref_name == 'main' || github.ref_name == 'develop' || github.base_ref == 'main' || github.base_ref == 'develop') && 'amd64 arm64 armhf' || 'amd64') }}
-      build-aasdk: ${{ github.event.inputs.build-aasdk || false }}
+      build-aasdk: ${{ github.event.inputs.build-aasdk == 'true' }}
 
   dispatch-cd-fastpath:
     needs: build-packages
