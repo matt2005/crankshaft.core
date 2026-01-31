@@ -61,8 +61,6 @@ RUN set -e; \
         qml6-module-qtquick-window \
         qml6-module-qtmultimedia \
         libboost-all-dev \
-        libprotobuf-dev \
-        protobuf-compiler \
         libssl-dev \
         libusb-1.0-0-dev \
         libasound2-dev \
@@ -78,7 +76,11 @@ RUN set -e; \
         libdbus-1-dev \
         file \
         dpkg-dev"; \
-    if [ "$BUILD_AASDK" = "false" ]; then \
+    if [ "$BUILD_AASDK" = "true" ]; then \
+      echo "Building AASDK from submodule - protobuf comes from AASDK build"; \
+    else \
+      echo "Using system AASDK packages - installing protobuf from apt"; \
+      PKGS="$PKGS libprotobuf-dev protobuf-compiler"; \
       if apt-cache show libaasdk-dev >/dev/null 2>&1; then \
         PKGS="$PKGS libaasdk libaasdk-dev"; \
       else \
