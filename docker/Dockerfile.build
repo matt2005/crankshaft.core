@@ -79,8 +79,16 @@ RUN set -e; \
     if [ "$BUILD_AASDK" = "true" ]; then \
       echo "Building AASDK from submodule - protobuf comes from AASDK build"; \
     else \
-      echo "Using system AASDK packages - installing protobuf from apt"; \
-      PKGS="$PKGS libprotobuf-dev protobuf-compiler"; \
+      echo "Using system AASDK packages - installing pre-built aap-protobuf from AASDK"; \
+      if apt-cache show aap-protobuf-dev >/dev/null 2>&1; then \
+        PKGS="$PKGS aap-protobuf aap-protobuf-dev"; \
+      else \
+        echo "ERROR: aap-protobuf packages not found in APT repository"; \
+        echo "AASDK must build and publish protobuf packages before crankshaft.core can build"; \
+        echo "Either: 1) Set BUILD_AASDK=true to build from submodule"; \
+        echo "        2) Ensure aap-protobuf DEB packages are published to opencardev APT repo"; \
+        exit 1; \
+      fi; \
       if apt-cache show libaasdk-dev >/dev/null 2>&1; then \
         PKGS="$PKGS libaasdk libaasdk-dev"; \
       else \
