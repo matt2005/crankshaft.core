@@ -119,8 +119,21 @@ RUN mkdir -p /output && cd build && \
         cpack --config CPackSourceConfig.cmake -G TGZ -C Release \
             -B /output 2>&1 | tee /build/logs/cpack-source.log
 
-# Final stage - export artifacts
-FROM scratch AS exporter
-COPY --from=builder /output/*.deb /
-COPY --from=builder /output/*.tar.gz /
-COPY --from=builder /build/logs/*.log /logs/
+# Verify output directory contents
+RUN echo "=== Output directory contents ===" && \
+    ls -lah /output/ && \
+    echo "=== Build logs ===" && \
+    ls -lah /build/logs/ && \
+    echo "=== Checking for .deb files ===" && \
+    find /output -name "*.deb" -o -name "*.tar.gz" && \
+    echo "=== Total files ===" && \
+    find /output -type f | wc -l
+
+# Export stage - create minimal image with only the artifacts
+FROM alpine:latest AS exporter
+RUN apk add --no-cache findutils
+COPY --from=builder /output /output
+COPY --from=builder /build/logs /logs
+WORKDIR /
+# List all artifacts for debugging
+RUN find /output -type f

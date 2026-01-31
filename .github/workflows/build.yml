@@ -207,6 +207,7 @@ jobs:
       - name: Build Debian package
         run: |
           docker buildx build \
+            --target exporter \
             --platform ${{ matrix.platform }} \
             --build-arg VERSION=${{ needs.prepare.outputs.version }} \
             --build-arg ARCH=${{ matrix.arch }} \
@@ -218,10 +219,14 @@ jobs:
             .
           
           # Verify build artifacts were created
-          if [ ! -f build-output/*.deb ]; then
+          echo "Contents of build-output:"
+          ls -lah build-output/ 2>/dev/null || echo "build-output directory not found"
+          find build-output -type f 2>/dev/null || echo "No files in build-output"
+          
+          if ! find build-output -name "*.deb" -type f 2>/dev/null | grep -q .; then
             echo "::error::No .deb packages found in build output"
             echo "Build failed - checking logs:"
-            cat build-output/logs/*.log 2>/dev/null || echo "No logs found"
+            find build-output -name "*.log" -exec cat {} \; 2>/dev/null || echo "No logs found"
             exit 1
           fi
 
