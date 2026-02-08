@@ -53,46 +53,28 @@ pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
 # Find OpenSSL for AASDK
 find_package(OpenSSL REQUIRED)
 
-# Configure AASDK build option
-set(BUILD_AASDK OFF CACHE BOOL "Build AASDK from submodule (OFF = use system packages)")
+# Find AASDK (built externally by build.sh)
+message(STATUS "Looking for AASDK system package")
 
-if(BUILD_AASDK)
-  # Force build from submodule
-  message(STATUS "BUILD_AASDK is ON, building AASDK from submodule")
-  if(EXISTS ${CMAKE_SOURCE_DIR}/external/aasdk/CMakeLists.txt)
-    add_subdirectory(${CMAKE_SOURCE_DIR}/external/aasdk ${CMAKE_BINARY_DIR}/external/aasdk)
-  else()
-    message(FATAL_ERROR "AASDK submodule not found. Run: git submodule update --init --recursive")
-  endif()
+# Try find_package first (for CMake-aware installations)
+find_package(aasdk REQUIRED)
+if(aasdk_FOUND)
+  message(STATUS "Using installed AASDK library (via CMake)")
+  # When using installed AASDK, we need system protobuf
+  find_package(Protobuf REQUIRED)
 else()
-  # Try to find installed AASDK package
-  message(STATUS "BUILD_AASDK is OFF, looking for system AASDK package")
-  
-  # Try find_package first (for CMake-aware installations)
-  set(AASDK_SYSTEM_FOUND OFF)
-  find_package(aasdk QUIET)
-  if(aasdk_FOUND)
-    set(AASDK_SYSTEM_FOUND ON)
+  find_package(AASDK REQUIRED)
+  if(AASDK_FOUND)
     message(STATUS "Using installed AASDK library (via CMake)")
     # When using installed AASDK, we need system protobuf
     find_package(Protobuf REQUIRED)
   else()
-    find_package(AASDK QUIET)
-    if(AASDK_FOUND)
-      set(AASDK_SYSTEM_FOUND ON)
-      message(STATUS "Using installed AASDK library (via CMake)")
-      # When using installed AASDK, we need system protobuf
-      find_package(Protobuf REQUIRED)
-    endif()
-  endif()
-
-  if(NOT AASDK_SYSTEM_FOUND)
     # Fall back to pkg-config
     find_package(PkgConfig QUIET)
     if(PkgConfig_FOUND)
-      pkg_check_modules(AASDK QUIET aasdk)
+      pkg_check_modules(AASDK REQUIRED aasdk)
       if(NOT AASDK_FOUND)
-        pkg_check_modules(AASDK QUIET libaasdk)
+        pkg_check_modules(AASDK REQUIRED libaasdk)
       endif()
       if(AASDK_FOUND)
         message(STATUS "Using installed AASDK library (via pkg-config)")
@@ -106,10 +88,10 @@ else()
           INTERFACE_LINK_DIRECTORIES "${AASDK_LIBRARY_DIRS}"
         )
       else()
-        message(FATAL_ERROR "AASDK not found in system packages and BUILD_AASDK is OFF. Either: 1) install AASDK package, or 2) use -DBUILD_AASDK=ON")
+        message(FATAL_ERROR "AASDK not found. Use --with-aasdk option in build.sh to build and install AASDK")
       endif()
     else()
-      message(FATAL_ERROR "AASDK not found in system packages and BUILD_AASDK is OFF. Either: 1) install AASDK package, or 2) use -DBUILD_AASDK=ON")
+      message(FATAL_ERROR "AASDK not found. Use --with-aasdk option in build.sh to build and install AASDK")
     endif()
   endif()
 endif()
@@ -173,7 +155,6 @@ target_include_directories(crankshaft-core PRIVATE
   ${GSTREAMER_AUDIO_INCLUDE_DIRS}
   ${DBUS_INCLUDE_DIRS}
   ${LIBUSB_INCLUDE_DIRS}
-  ${CMAKE_SOURCE_DIR}/external/aasdk/include
 )
 
 # Prefer a vendored json-schema-validator include under external/

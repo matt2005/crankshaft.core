@@ -100,16 +100,13 @@ set_target_properties(test_websocket PROPERTIES
 
 target_include_directories(test_websocket PRIVATE
   ${CMAKE_SOURCE_DIR}/core
+  ${CMAKE_SOURCE_DIR}/core/services
+  ${CMAKE_SOURCE_DIR}/core/hal
   ${GSTREAMER_INCLUDE_DIRS}
   ${GSTREAMER_APP_INCLUDE_DIRS}
   ${GSTREAMER_VIDEO_INCLUDE_DIRS}
   ${GSTREAMER_AUDIO_INCLUDE_DIRS}
   ${LIBUSB_INCLUDE_DIRS}
-  # Fallback include path for aap_protobuf generated headers when aasdk is built
-  ${CMAKE_BINARY_DIR}/aasdk/protobuf
-  # aasdk public headers (source and generated build include)
-  ${CMAKE_SOURCE_DIR}/external/aasdk/include
-  ${CMAKE_BINARY_DIR}/aasdk/include
 )
 
 target_link_libraries(test_websocket PRIVATE
@@ -249,3 +246,16 @@ add_test(NAME ExtensionLifecycleTest COMMAND test_extension_lifecycle)
 
 # Enable CTest for the test project
 enable_testing()
+
+# Custom target to build all tests
+add_custom_target(crankshaft-tests
+    DEPENDS
+        test_eventbus
+        test_websocket
+        test_websocket_validation
+        test_contract_schemas
+        test_aa_lifecycle
+        test_settings_persistence
+        test_extension_lifecycle
+    COMMENT "Building all crankshaft tests"
+)

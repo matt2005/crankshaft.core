@@ -19,170 +19,59 @@
 set -e
 set -u
 
+# Script to build Crankshaft consistently across Docker and local environments
+# Usage: ./build.sh [release|debug] [--component COMPONENT] [--clean] [--package] [--with-aasdk]
+
 # Default values
-BUILD_TYPE="Debug"
+BUILD_TYPE="debug"
 COMPONENT="all"
-BUILD_DIR="build"
+CLEAN_BUILD=false
 CREATE_PACKAGE=false
-INSTALL_DEPS=false
-VERSION=""
-ARCHITECTURE=""
+WITH_AASDK=false
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SOURCE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
+BUILD_DIR=""
 SKIP_TESTS=false
-# Build options
 ENABLE_SLIM_UI_FLAG="OFF"
-BUILD_AASDK=false
-# Default Debian suite from host, fall back to trixie
-DEBIAN_SUITE=${VERSION_CODENAME:-trixie}
 
-# Dependency installation functions
-install_core_deps() {
-    echo "Installing core dependencies..."
-    sudo apt-get update
-    sudo apt-get install -y \
-        build-essential \
-        cmake \
-        git \
-        pkg-config \
-        lsb-release \
-        python3 \
-        python3-requests \
-        libdbus-1-dev \
-        libgstreamer1.0-dev \
-        libgstreamer-plugins-base1.0-dev \
-        gstreamer1.0-plugins-base \
-        gstreamer1.0-plugins-good \
-        gstreamer1.0-plugins-bad \
-        gstreamer1.0-plugins-ugly \
-        gstreamer1.0-libav \
-        gstreamer1.0-tools \
-        qt6-connectivity-dev \
-        qt6-qpa-plugins \
-        libasound2-dev \
-        libpulse-dev \
-        file \
-        dpkg-dev
-    echo "Core dependencies installed successfully"
-}
+# Auto-detect build type based on git branch
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+if [ "$CURRENT_BRANCH" = "main" ] || [ "$CURRENT_BRANCH" = "master" ]; then
+    BUILD_TYPE="release"
+else
+    BUILD_TYPE="debug"
+fi
 
-install_aasdk_deps() {
-    echo "Installing AASDK dependencies..."
-    sudo apt-get update
-    sudo apt-get install -y \
-        libusb-1.0-0-dev \
-        libssl-dev \
-        libprotobuf-dev \
-        protobuf-compiler \
-        libboost-system-dev \
-        libboost-log-dev \
-        libboost-thread-dev \
-        libboost-all-dev
-    echo "AASDK dependencies installed successfully"
-}
-
-install_ui_deps() {
-    echo "Installing UI dependencies..."
-    sudo apt-get update
-    sudo apt-get install -y \
-        qt6-base-dev \
-        qt6-declarative-dev \
-        qt6-tools-dev \
-        qt6-websockets-dev \
-        qt6-qpa-plugins \
-        qml6-module-qtquick \
-        qml6-module-qtquick-controls \
-        qml6-module-qtquick-layouts \
-        qml6-module-qtquick-window \
-        libgl1-mesa-dev \
-        libvulkan-dev
-    echo "UI dependencies installed successfully"
-}
-
-install_all_deps() {
-    echo "Installing all dependencies..."
-    install_core_deps
-    install_aasdk_deps
-    install_ui_deps
-    echo "All dependencies installed successfully"
-}
-
-# Usage information
-usage() {
-    cat << EOF
-Usage: $0 [OPTIONS]
-
-Named parameters:
-  --build-type TYPE      Build configuration (Debug|Release) [default: Debug]
-  --component COMP       Component to build (all|core|ui|tests) [default: all]
-  --package              Create DEB packages after building [default: false]
-  --version VERSION      Override project version (default: from CMakeLists.txt)
-  --debian-suite SUITE   Target Debian suite (trixie|bookworm) [default: trixie]
-  --architecture ARCH    Target architecture (amd64|arm64|armhf) [default: auto-detect]
-    --skip-tests           Skip running tests during build [default: false]
-    --enable-slim-ui       Enable slim AndroidAuto UI build (ENABLE_SLIM_UI=ON)
-    --build-aasdk         Build AASDK from submodule (default: false, use system packages)
-  --install-deps         Install dependencies for the specified component
-  --help                 Display this help message
-
-Examples:
-  $0                                      # Build all components in Debug mode
-  $0 --build-type Release                 # Build all components in Release mode
-  $0 --component ui --build-type Debug    # Build only UI in Debug mode
-  $0 --build-type Release --package       # Build all in Release mode and create packages
-  $0 --build-type Release --package --debian-suite trixie  # Package for trixie
-  $0 --architecture amd64 --skip-tests    # Build for amd64 only, skip tests
-  $0 --install-deps                       # Install all dependencies
-  $0 --component core --install-deps      # Install only core dependencies
-  $0 --build-aasdk --build-type Release   # Build with AASDK from submodule
-EOF
-    exit 1
-}
-
-# Parse named arguments
+# Parse arguments
 while [[ $# -gt 0 ]]; do
-    case "$1" in
-        --build-type)
-            if [[ $# -lt 2 ]]; then
-                echo "Error: --build-type requires a value"
-                usage
-            fi
-            BUILD_TYPE="$2"
-            shift 2
+    case $1 in
+        release|Release|RELEASE)
+            BUILD_TYPE="release"
+            shift
+            ;;
+        debug|Debug|DEBUG)
+            BUILD_TYPE="debug"
+            shift
             ;;
         --component)
             if [[ $# -lt 2 ]]; then
                 echo "Error: --component requires a value"
-                usage
+                exit 1
             fi
             COMPONENT="$2"
             shift 2
+            ;;
+        --clean)
+            CLEAN_BUILD=true
+            shift
             ;;
         --package)
             CREATE_PACKAGE=true
             shift
             ;;
-        --version)
-            if [[ $# -lt 2 ]]; then
-                echo "Error: --version requires a value"
-                usage
-            fi
-            VERSION="$2"
-            shift 2
-            ;;
-        --debian-suite)
-            if [[ $# -lt 2 ]]; then
-                echo "Error: --debian-suite requires a value"
-                usage
-            fi
-            DEBIAN_SUITE="$2"
-            shift 2
-            ;;
-        --architecture)
-            if [[ $# -lt 2 ]]; then
-                echo "Error: --architecture requires a value"
-                usage
-            fi
-            ARCHITECTURE="$2"
-            shift 2
+        --with-aasdk)
+            WITH_AASDK=true
+            shift
             ;;
         --skip-tests)
             SKIP_TESTS=true
@@ -192,87 +81,142 @@ while [[ $# -gt 0 ]]; do
             ENABLE_SLIM_UI_FLAG="ON"
             shift
             ;;
-        --build-aasdk)
-            BUILD_AASDK=true
-            shift
-            ;;
-        --install-deps)
-            INSTALL_DEPS=true
-            shift
-            ;;
-        --help)
-            usage
+        --help|-h)
+            echo "Usage: $0 [release|debug] [OPTIONS]"
+            echo ""
+            echo "Build types:"
+            echo "  release        Build release version (default on main/master)"
+            echo "  debug          Build debug version with symbols (default on other branches)"
+            echo ""
+            echo "Options:"
+            echo "  --component    Component to build (all|core|ui|tests) [default: all]"
+            echo "  --clean        Clean build directory before building"
+            echo "  --package      Create DEB packages after building"
+            echo "  --with-aasdk   Clone AASDK newdev branch and build/install it"
+            echo "  --skip-tests   Skip running tests"
+            echo "  --enable-slim-ui Enable slim AndroidAuto UI build"
+            echo "  --help         Show this help message"
+            echo ""
+            echo "Examples:"
+            echo "  $0 release --package"
+            echo "  $0 debug --component core --clean"
+            echo "  $0 release --with-aasdk --package"
+            exit 0
             ;;
         *)
-            echo "Error: Unknown option '$1'"
-            usage
+            echo "Unknown option: $1"
+            echo "Use --help for usage information"
+            exit 1
             ;;
     esac
 done
 
-# Handle dependency installation
-if [ "$INSTALL_DEPS" = true ]; then
-    case "$COMPONENT" in
-        all)
-            install_all_deps
-            ;;
-        core)
-            install_core_deps
-            ;;
-        ui)
-            install_ui_deps
-            ;;
-        aasdk)
-            install_aasdk_deps
-            ;;
-        *)
-            echo "Error: Invalid component for dependency installation '$COMPONENT'."
-            echo "Valid components: all, core, ui, aasdk"
-            exit 1
-            ;;
-    esac
-    exit 0
-fi
-
-# Validate build type
-if [[ "$BUILD_TYPE" != "Debug" && "$BUILD_TYPE" != "Release" ]]; then
-    echo "Error: Invalid build type '$BUILD_TYPE'. Must be 'Debug' or 'Release'."
-    usage
-fi
-
-# Validate Debian suite
-if [[ "$DEBIAN_SUITE" != "trixie" && "$DEBIAN_SUITE" != "bookworm" ]]; then
-    echo "Error: Invalid Debian suite '$DEBIAN_SUITE'. Must be 'trixie' or 'bookworm'."
-    usage
-fi
-
-# Validate architecture
-if [[ -n "$ARCHITECTURE" && "$ARCHITECTURE" != "amd64" && "$ARCHITECTURE" != "arm64" && "$ARCHITECTURE" != "armhf" ]]; then
-    echo "Error: Invalid architecture '$ARCHITECTURE'. Must be 'amd64', 'arm64', or 'armhf'."
-    usage
-fi
-
-# Set architecture-specific CMake flags if specified
-ARCH_CMAKE_FLAGS=""
-if [[ -n "$ARCHITECTURE" ]]; then
-    case "$ARCHITECTURE" in
-        amd64)
-            ARCH_CMAKE_FLAGS="-DCMAKE_SYSTEM_PROCESSOR=x86_64"
-            ;;
-        arm64)
-            ARCH_CMAKE_FLAGS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=aarch64"
-            ;;
-        armhf)
-            ARCH_CMAKE_FLAGS="-DCMAKE_SYSTEM_NAME=Linux -DCMAKE_SYSTEM_PROCESSOR=armv7l"
-            ;;
-    esac
-fi
-
 # Validate component
 if [[ "$COMPONENT" != "all" && "$COMPONENT" != "core" && "$COMPONENT" != "ui" && "$COMPONENT" != "tests" ]]; then
     echo "Error: Invalid component '$COMPONENT'. Must be 'all', 'core', 'ui', or 'tests'."
-    usage
+    exit 1
 fi
+
+# Detect architecture early for AASDK
+TARGET_ARCH=$(dpkg-architecture -qDEB_HOST_ARCH 2>/dev/null || echo "amd64")
+
+# Handle AASDK cloning and building if requested
+if [ "$WITH_AASDK" = true ]; then
+    echo ""
+    echo "Cloning AASDK newdev branch..."
+    if [ -d "${SOURCE_DIR}/aasdk-build" ]; then
+        rm -rf "${SOURCE_DIR}/aasdk-build"
+    fi
+    git clone --branch newdev https://github.com/opencardev/aasdk.git "${SOURCE_DIR}/aasdk-build"
+    cd "${SOURCE_DIR}/aasdk-build"
+    echo "Building and installing AASDK..."
+    chmod +x build.sh
+    export TARGET_ARCH="$TARGET_ARCH"
+    ./build.sh $BUILD_TYPE install
+    cd "${SOURCE_DIR}"
+    echo "AASDK build and install completed."
+fi
+
+# Determine build directory and CMake build type
+if [ "$BUILD_TYPE" = "debug" ]; then
+    BUILD_DIR="${SOURCE_DIR}/build-debug"
+    CMAKE_BUILD_TYPE="Debug"
+    echo "=== Building Crankshaft (${COMPONENT}) (Debug) ==="
+else
+    BUILD_DIR="${SOURCE_DIR}/build-release"
+    CMAKE_BUILD_TYPE="Release"
+    echo "=== Building Crankshaft (${COMPONENT}) (Release) ==="
+fi
+
+echo "Source directory: ${SOURCE_DIR}"
+echo "Build directory: ${BUILD_DIR}"
+echo "Build type: ${CMAKE_BUILD_TYPE}"
+echo "Component: ${COMPONENT}"
+echo "Package: ${CREATE_PACKAGE}"
+
+# Clean build directory if requested
+if [ "$CLEAN_BUILD" = true ]; then
+    echo ""
+    echo "Cleaning build directory..."
+    rm -rf "${BUILD_DIR}"
+fi
+
+# Create build directory
+
+# Detect architecture
+TARGET_ARCH=$(dpkg-architecture -qDEB_HOST_ARCH 2>/dev/null || echo "amd64")
+echo "Target architecture: ${TARGET_ARCH}"
+
+find_cross_compiler() {
+    local prefix="$1"
+    local compiler=""
+    
+    # First try the base name (might be a symlink to latest)
+    if command -v "${prefix}gcc" &> /dev/null && [ -x "$(command -v "${prefix}gcc")" ]; then
+        compiler="$(command -v "${prefix}gcc")"
+    else
+        # Find all versioned compilers and pick the latest that actually exists and is executable
+        local candidates=()
+        for candidate in $(ls /usr/bin/${prefix}gcc-* 2>/dev/null | sort -V); do
+            if [ -x "$candidate" ]; then
+                candidates+=("$candidate")
+            fi
+        done
+        if [ ${#candidates[@]} -gt 0 ]; then
+            compiler="${candidates[-1]}"
+        fi
+    fi
+    
+    if [ -n "$compiler" ] && [ -x "$compiler" ]; then
+        echo "$compiler"
+        return 0
+    else
+        return 1
+    fi
+}
+
+setup_cross_compilation() {
+    if [ "$TARGET_ARCH" != "amd64" ]; then
+        echo "Setting up cross-compilation for ${TARGET_ARCH}..."
+        
+        case $TARGET_ARCH in
+            arm64)
+                local c_compiler=$(find_cross_compiler "aarch64-linux-gnu-")
+                if [ $? -eq 0 ]; then
+                    CMAKE_ARGS+=(-DCMAKE_C_COMPILER="$c_compiler")
+                    CMAKE_ARGS+=(-DCMAKE_CXX_COMPILER="${c_compiler/gcc/g++}")
+                fi
+                ;;
+            armhf)
+                local c_compiler=$(find_cross_compiler "arm-linux-gnueabihf-")
+                if [ $? -eq 0 ]; then
+                    CMAKE_ARGS+=(-DCMAKE_C_COMPILER="$c_compiler")
+                    CMAKE_ARGS+=(-DCMAKE_CXX_COMPILER="${c_compiler/gcc/g++}")
+                fi
+                ;;
+        esac
+    fi
+}
 
 # Determine build targets
 case "$COMPONENT" in
@@ -280,88 +224,110 @@ case "$COMPONENT" in
         BUILD_TARGETS="crankshaft-core"
         ;;
     ui)
-        BUILD_TARGETS="crankshaft-ui crankshaft-ui-slim"
+        if [ "$ENABLE_SLIM_UI_FLAG" = "ON" ]; then
+            BUILD_TARGETS="crankshaft-ui crankshaft-slim-ui"
+        else
+            BUILD_TARGETS="crankshaft-ui"
+        fi
         ;;
     tests)
         BUILD_TARGETS="crankshaft-tests"
         ;;
     all)
-        BUILD_TARGETS="crankshaft-core crankshaft-ui crankshaft-ui-slim"
+        if [ "$ENABLE_SLIM_UI_FLAG" = "ON" ]; then
+            BUILD_TARGETS="crankshaft-core crankshaft-ui crankshaft-slim-ui"
+        else
+            BUILD_TARGETS="crankshaft-core crankshaft-ui"
+        fi
         ;;
 esac
 
-echo "Building Crankshaft MVP: Component=${COMPONENT}, Build Type=${BUILD_TYPE}, Architecture=${ARCHITECTURE:-auto}"
+# Configure CMake
+echo ""
+echo "Configuring with CMake..."
+CMAKE_ARGS=(
+    -S "${SOURCE_DIR}"
+    -B "${BUILD_DIR}"
+    -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
+    -DENABLE_SLIM_UI="${ENABLE_SLIM_UI_FLAG}"
+)
 
-# Create build directory
-mkdir -p "${BUILD_DIR}"
+setup_cross_compilation
 
-# Configure
-echo "Configuring CMake..."
-if [ -n "$VERSION" ]; then
-    echo "Using custom version: $VERSION"
-    cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DCMAKE_PROJECT_VERSION="${VERSION}" -DDEBIAN_SUITE="${DEBIAN_SUITE}" -DENABLE_SLIM_UI="${ENABLE_SLIM_UI_FLAG}" -DBUILD_AASDK="${BUILD_AASDK}" $ARCH_CMAKE_FLAGS
-else
-    cmake -S . -B "${BUILD_DIR}" -DCMAKE_BUILD_TYPE="${BUILD_TYPE}" -DDEBIAN_SUITE="${DEBIAN_SUITE}" -DENABLE_SLIM_UI="${ENABLE_SLIM_UI_FLAG}" -DBUILD_AASDK="${BUILD_AASDK}" $ARCH_CMAKE_FLAGS
-fi
+# Run CMake configuration
+cmake "${CMAKE_ARGS[@]}"
 
-# Build (parallel targets: core, ui, ui-slim)
+# Build
+echo ""
 echo "Building targets: ${BUILD_TARGETS}..."
-cmake --build "${BUILD_DIR}" --config "${BUILD_TYPE}" --target ${BUILD_TARGETS} -j"$(nproc)"
+NUM_CORES=$(nproc 2>/dev/null || echo 4)
+cmake --build "${BUILD_DIR}" --target ${BUILD_TARGETS} -j"${NUM_CORES}"
+
+echo ""
+echo "✓ Build completed successfully"
 
 # Run tests unless skipped
 if [ "$SKIP_TESTS" = false ] && [ "$COMPONENT" != "ui" ]; then
     echo ""
     echo "Running tests..."
     cd "${BUILD_DIR}"
-    ctest --output-on-failure -j"$(nproc)" || true
-    cd ..
+    ctest --output-on-failure -j"${NUM_CORES}" || true
+    cd "${SOURCE_DIR}"
 else
     if [ "$SKIP_TESTS" = true ]; then
         echo "Tests skipped (--skip-tests flag used)"
     fi
 fi
 
+# Package if requested
+if [ "$CREATE_PACKAGE" = true ]; then
+    echo ""
+    echo "Creating DEB packages..."
+    cd "${BUILD_DIR}"
+    cpack --config CPackConfig.cmake -G DEB -V
+    cd "${SOURCE_DIR}"
+    
+    echo ""
+    echo "Packages in ${BUILD_DIR}:"
+    ls -lh "${BUILD_DIR}"/*.deb 2>/dev/null || echo "No packages found"
+fi
+
 echo ""
-echo "Build complete!"
+echo "=== Build Summary ==="
+echo "Build type: ${CMAKE_BUILD_TYPE}"
+echo "Component: ${COMPONENT}"
+echo "Build directory: ${BUILD_DIR}"
+
 case "$COMPONENT" in
     core)
-        echo "Executable: ${BUILD_DIR}/core/crankshaft-core"
-        ;;
-    ui)
-        echo "Executable: ${BUILD_DIR}/ui/crankshaft-ui"
-        ;;
-    tests)
-        if [ "$SKIP_TESTS" = false ]; then
-            echo "Tests: ${BUILD_DIR}/tests/test_eventbus"
-            echo "Tests: ${BUILD_DIR}/tests/test_websocket"
+        if [ -f "${BUILD_DIR}/core/crankshaft-core" ]; then
+            echo "Core binary: ${BUILD_DIR}/core/crankshaft-core"
         fi
         ;;
+    ui)
+        if [ -f "${BUILD_DIR}/ui/crankshaft-ui" ]; then
+            echo "UI binary: ${BUILD_DIR}/ui/crankshaft-ui"
+        fi
+        if [ "$ENABLE_SLIM_UI_FLAG" = "ON" ] && [ -f "${BUILD_DIR}/ui-slim/crankshaft-slim-ui" ]; then
+            echo "Slim UI binary: ${BUILD_DIR}/ui-slim/crankshaft-slim-ui"
+        fi
+        ;;
+    tests)
+        echo "Tests built in: ${BUILD_DIR}/tests/"
+        ;;
     all)
-        echo "Executables:"
-        echo "  Core:  ${BUILD_DIR}/core/crankshaft-core"
-        echo "  UI:    ${BUILD_DIR}/ui/crankshaft-ui"
-        if [ "$SKIP_TESTS" = false ]; then
-            echo "  Tests: ${BUILD_DIR}/tests/test_eventbus"
-            echo "  Tests: ${BUILD_DIR}/tests/test_websocket"
+        echo "Binaries:"
+        if [ -f "${BUILD_DIR}/core/crankshaft-core" ]; then
+            echo "  Core: ${BUILD_DIR}/core/crankshaft-core"
+        fi
+        if [ -f "${BUILD_DIR}/ui/crankshaft-ui" ]; then
+            echo "  UI: ${BUILD_DIR}/ui/crankshaft-ui"
+        fi
+        if [ "$ENABLE_SLIM_UI_FLAG" = "ON" ] && [ -f "${BUILD_DIR}/ui-slim/crankshaft-slim-ui" ]; then
+            echo "  Slim UI: ${BUILD_DIR}/ui-slim/crankshaft-slim-ui"
         fi
         ;;
 esac
 
-# Create packages if requested
-if [ "$CREATE_PACKAGE" = true ]; then
-    echo ""
-    echo "Creating DEB packages (binary)..."
-    cd "${BUILD_DIR}"
-    cpack --config CPackConfig.cmake -G DEB -V
-    cd ..
-    
-    echo ""
-    echo "Creating source tarball package..."
-    cd "${BUILD_DIR}"
-    cpack --config CPackSourceConfig.cmake -G TGZ -V
-    cd ..
-    
-    echo ""
-    echo "Packages created in ${BUILD_DIR}:"
-    ls -lh "${BUILD_DIR}"/*.deb "${BUILD_DIR}"/*.tar.gz 2>/dev/null || echo "No packages found"
-fi
+echo ""
+echo "Done!"
