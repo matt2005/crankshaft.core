@@ -20,7 +20,7 @@
 
 # Allow selecting Debian base (bookworm or trixie). Default to trixie.
 ARG DEBIAN_VERSION=trixie
-FROM debian:${DEBIAN_VERSION}-slim
+FROM debian:${DEBIAN_VERSION}-slim AS builder
 
 # Build arguments
 ARG TARGET_ARCH=$(dpkg --print-architecture)
@@ -60,7 +60,6 @@ RUN apt-get update && apt-get install -y \
     # AASDK dependencies
     libboost-system-dev \
     libboost-log-dev \
-    libboost-unit-test-framework-dev \
     libprotobuf-dev \
     protobuf-compiler \
     libusb-1.0-0-dev \
@@ -84,6 +83,11 @@ RUN apt-get update && apt-get install -y \
     fakeroot \
     && rm -rf /var/lib/apt/lists/*
 
+# Add OpenCarDev APT repository for AASDK packages
+ARG DEBIAN_VERSION
+COPY scripts/install_opencardev_repo.sh .
+RUN ./install_opencardev_repo.sh
+
 # Set working directory
 WORKDIR /src
 
@@ -100,8 +104,15 @@ RUN mkdir -p /output
 RUN chmod +x /src/scripts/build.sh
 
 # Build Crankshaft using unified build script with slim UI and packaging
-# The --with-aasdk flag triggers AASDK build from submodule if not found elsewhere
-RUN /src/scripts/build.sh ${BUILD_TYPE} --enable-slim-ui --package
+RUN /src/scripts/build.sh ${BUILD_TYPE} --with-aasdk --aasdk-branch newdev --cxx-standard 17 --enable-slim-ui --package
+
+# Add exporter stage to copy built packages
+FROM debian:${DEBIAN_VERSION}-slim AS exporter
+
+# Set working directory
+WORKDIR /output
+# Copy built packages from builder stage
+COPY --from=builder /output/* ./
 
 # Default command
 CMD ["bash", "-c", "echo 'Crankshaft build container ready. Binaries are in build-release directory.'"]
