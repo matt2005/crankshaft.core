@@ -33,6 +33,12 @@ SOURCE_DIR="$(cd "${SCRIPT_DIR}/.." && pwd)"
 BUILD_DIR=""
 SKIP_TESTS=false
 ENABLE_SLIM_UI_FLAG="OFF"
+SKIP_MDI=false
+AASDK_BRANCH_OVERRIDE=""
+AASDK_STANDARD_OVERRIDE=""
+CXX_STANDARD_OVERRIDE=""
+AASdk_DIR_OVERRIDE=""
+EXTRA_CMAKE_ARGS=()
 
 # Auto-detect build type based on git branch
 CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
@@ -73,12 +79,56 @@ while [[ $# -gt 0 ]]; do
             WITH_AASDK=true
             shift
             ;;
+        --aasdk-branch)
+            if [[ $# -lt 2 ]]; then
+                echo "Error: --aasdk-branch requires a value (main|newdev)"
+                exit 1
+            fi
+            AASDK_BRANCH_OVERRIDE="$2"
+            shift 2
+            ;;
+        --aasdk-standard)
+            if [[ $# -lt 2 ]]; then
+                echo "Error: --aasdk-standard requires a value (17|20)"
+                exit 1
+            fi
+            AASDK_STANDARD_OVERRIDE="$2"
+            shift 2
+            ;;
+        --cxx-standard)
+            if [[ $# -lt 2 ]]; then
+                echo "Error: --cxx-standard requires a value (17|20)"
+                exit 1
+            fi
+            CXX_STANDARD_OVERRIDE="$2"
+            shift 2
+            ;;
+        --cmake-args)
+            if [[ $# -lt 2 ]]; then
+                echo "Error: --cmake-args requires a value"
+                exit 1
+            fi
+            read -r -a EXTRA_CMAKE_ARGS <<< "$2"
+            shift 2
+            ;;
+        --aasdk-dir)
+            if [[ $# -lt 2 ]]; then
+                echo "Error: --aasdk-dir requires a value (path to AASDK CMake directory)"
+                exit 1
+            fi
+            AASDK_DIR_OVERRIDE="$2"
+            shift 2
+            ;;
         --skip-tests)
             SKIP_TESTS=true
             shift
             ;;
         --enable-slim-ui)
             ENABLE_SLIM_UI_FLAG="ON"
+            shift
+            ;;
+        --skip-mdi)
+            SKIP_MDI=true
             shift
             ;;
         --help|-h)
@@ -92,15 +142,24 @@ while [[ $# -gt 0 ]]; do
             echo "  --component    Component to build (all|core|ui|tests) [default: all]"
             echo "  --clean        Clean build directory before building"
             echo "  --package      Create DEB packages after building"
-            echo "  --with-aasdk   Clone AASDK newdev branch and build/install it"
+            echo "  --with-aasdk   Clone AASDK branch and build/install it"
+            echo "  --aasdk-branch Branch to use for AASDK (main|newdev)"
+            echo "  --aasdk-standard C++ standard for AASDK (17|20)"
+            echo "  --cxx-standard C++ standard for Crankshaft (17|20)"
+            echo "  --aasdk-dir    Path to AASDK CMake directory (e.g., /usr/local/lib/cmake/aasdk)"
+            echo "  --cmake-args   Extra CMake arguments (quoted string)"
             echo "  --skip-tests   Skip running tests"
             echo "  --enable-slim-ui Enable slim AndroidAuto UI build"
+            echo "  --skip-mdi     Skip Material Design Icons download (faster build)"
             echo "  --help         Show this help message"
             echo ""
             echo "Examples:"
             echo "  $0 release --package"
             echo "  $0 debug --component core --clean"
             echo "  $0 release --with-aasdk --package"
+            echo "  $0 release --aasdk-branch newdev --cxx-standard 17"
+            echo "  $0 debug --aasdk-dir /usr/local/lib/cmake/aasdk"
+            echo "  $0 debug --cmake-args \"-Daasdk_DIR=/usr/local/lib/cmake/aasdk\""}
             exit 0
             ;;
         *)
@@ -120,14 +179,64 @@ fi
 # Detect architecture early for AASDK
 TARGET_ARCH=$(dpkg-architecture -qDEB_HOST_ARCH 2>/dev/null || echo "amd64")
 
+detect_aasdk_branch() {
+    local header=""
+    for candidate in /usr/include/aasdk/Version.hpp /usr/local/include/aasdk/Version.hpp; do
+        if [ -f "$candidate" ]; then
+            header="$candidate"
+            break
+        fi
+    done
+
+    if [ -n "$header" ]; then
+        local branch
+        branch=$(grep -E 'GIT_BRANCH' "$header" | sed -E 's/.*"([^"]+)".*/\1/' | head -1)
+        if [ -n "$branch" ] && [ "$branch" != "unknown" ]; then
+            if [[ "$branch" == *"newdev"* ]]; then
+                echo "newdev"
+                return
+            fi
+        fi
+    fi
+
+    echo "main"
+}
+
+resolve_aasdk_settings() {
+    local branch="$AASDK_BRANCH_OVERRIDE"
+    local standard="$AASDK_STANDARD_OVERRIDE"
+
+    if [ -z "$branch" ]; then
+        branch=$(detect_aasdk_branch)
+    fi
+
+    if [ -z "$standard" ]; then
+        if [ "$branch" = "newdev" ]; then
+            standard="17"
+        else
+            standard="20"
+        fi
+    fi
+
+    echo "$branch" "$standard"
+}
+
+read -r RESOLVED_AASDK_BRANCH RESOLVED_AASDK_STANDARD < <(resolve_aasdk_settings)
+
+if [ -n "$CXX_STANDARD_OVERRIDE" ]; then
+    RESOLVED_CXX_STANDARD="$CXX_STANDARD_OVERRIDE"
+else
+    RESOLVED_CXX_STANDARD="$RESOLVED_AASDK_STANDARD"
+fi
+
 # Handle AASDK cloning and building if requested
 if [ "$WITH_AASDK" = true ]; then
     echo ""
-    echo "Cloning AASDK newdev branch..."
+    echo "Cloning AASDK ${RESOLVED_AASDK_BRANCH} branch..."
     if [ -d "${SOURCE_DIR}/aasdk-build" ]; then
         rm -rf "${SOURCE_DIR}/aasdk-build"
     fi
-    git clone --branch newdev https://github.com/opencardev/aasdk.git "${SOURCE_DIR}/aasdk-build"
+    git clone --branch "${RESOLVED_AASDK_BRANCH}" https://github.com/opencardev/aasdk.git "${SOURCE_DIR}/aasdk-build"
     cd "${SOURCE_DIR}/aasdk-build"
     echo "Building and installing AASDK..."
     chmod +x build.sh
@@ -153,6 +262,9 @@ echo "Build directory: ${BUILD_DIR}"
 echo "Build type: ${CMAKE_BUILD_TYPE}"
 echo "Component: ${COMPONENT}"
 echo "Package: ${CREATE_PACKAGE}"
+echo "AASDK branch: ${RESOLVED_AASDK_BRANCH}"
+echo "AASDK standard: ${RESOLVED_AASDK_STANDARD}"
+echo "Crankshaft C++ standard: ${RESOLVED_CXX_STANDARD}"
 
 # Clean build directory if requested
 if [ "$CLEAN_BUILD" = true ]; then
@@ -250,7 +362,22 @@ CMAKE_ARGS=(
     -B "${BUILD_DIR}"
     -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
     -DENABLE_SLIM_UI="${ENABLE_SLIM_UI_FLAG}"
+    -DCRANKSHAFT_AASDK_BRANCH="${RESOLVED_AASDK_BRANCH}"
+    -DCRANKSHAFT_AASDK_STANDARD="${RESOLVED_AASDK_STANDARD}"
+    -DCRANKSHAFT_CXX_STANDARD="${RESOLVED_CXX_STANDARD}"
 )
+
+# Skip MDI download if requested
+if [ "$SKIP_MDI" = true ]; then
+    CMAKE_ARGS+=(-DFORCE_GENERATE_MDI_MAPPINGS=OFF)
+fi
+
+# Add AASDK directory override if specified
+if [ -n "${AASDK_DIR_OVERRIDE}" ]; then
+    CMAKE_ARGS+=(-Daasdk_DIR="${AASDK_DIR_OVERRIDE}" -DAASDK_DIR="${AASDK_DIR_OVERRIDE}")
+fi
+
+CMAKE_ARGS+=("${EXTRA_CMAKE_ARGS[@]}")
 
 setup_cross_compilation
 

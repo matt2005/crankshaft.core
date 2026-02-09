@@ -44,7 +44,14 @@ target_link_libraries(android-auto-service
 )
 
 # Link AASDK if available
-if(TARGET aasdk)
+if(TARGET CRANKSHAFT_AASDK)
+    target_link_libraries(android-auto-service
+        CRANKSHAFT_AASDK
+    )
+    target_compile_definitions(android-auto-service PRIVATE
+        AASDK_AVAILABLE=1
+    )
+elseif(TARGET aasdk)
     target_link_libraries(android-auto-service
         aasdk
     )

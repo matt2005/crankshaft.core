@@ -60,8 +60,32 @@ Options:
   --component COMP       Component to build (all|core|ui|tests) [default: all]
   --package              Create DEB packages after building [default: false]
   --debian-suite SUITE   Target Debian suite (trixie|bookworm) [default: host VERSION_CODENAME, fallback trixie]
+  --aasdk-branch BRANCH  AASDK branch (main|newdev) [default: auto]
+  --aasdk-standard STD   AASDK C++ standard (17|20) [default: auto]
+  --cxx-standard STD     Crankshaft C++ standard (17|20) [default: auto]
   --help                 Display help message
 ```
+
+### AASDK Compatibility (newdev vs main)
+
+Crankshaft can build against both AASDK branches:
+
+- **newdev** uses **C++17**
+- **main** uses **C++20**
+
+Configure the build to match the branch you have installed:
+
+```bash
+cmake -S . -B build \
+  -DCRANKSHAFT_AASDK_BRANCH=newdev \
+  -DCRANKSHAFT_CXX_STANDARD=17
+
+cmake -S . -B build \
+  -DCRANKSHAFT_AASDK_BRANCH=main \
+  -DCRANKSHAFT_CXX_STANDARD=20
+```
+
+The AASDK dependency is accessed via the interface target `CRANKSHAFT_AASDK`, which isolates Crankshaft from AASDK changes and makes future replacements straightforward.
 
 ### Windows (PowerShell)
 

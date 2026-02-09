@@ -106,7 +106,11 @@ int main(int argc, char* argv[]) {
 
   if (verboseUsb) {
     try {
+      // setVerboseUsb() is only available in AASDK main branch (C++20)
+      // For newdev (C++17), this method doesn't exist
+#if CRANKSHAFT_AASDK_STANDARD == 20
       aasdk::common::ModernLogger::getInstance().setVerboseUsb(true);
+#endif
     } catch (...) {
       // best effort - do not fail startup if logger not available
     }

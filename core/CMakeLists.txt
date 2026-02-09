@@ -55,46 +55,12 @@ find_package(OpenSSL REQUIRED)
 
 # Find AASDK (built externally by build.sh)
 message(STATUS "Looking for AASDK system package")
-
-# Try find_package first (for CMake-aware installations)
-find_package(aasdk REQUIRED)
-if(aasdk_FOUND)
-  message(STATUS "Using installed AASDK library (via CMake)")
-  # When using installed AASDK, we need system protobuf
-  find_package(Protobuf REQUIRED)
-else()
-  find_package(AASDK REQUIRED)
-  if(AASDK_FOUND)
-    message(STATUS "Using installed AASDK library (via CMake)")
-    # When using installed AASDK, we need system protobuf
-    find_package(Protobuf REQUIRED)
-  else()
-    # Fall back to pkg-config
-    find_package(PkgConfig QUIET)
-    if(PkgConfig_FOUND)
-      pkg_check_modules(AASDK REQUIRED aasdk)
-      if(NOT AASDK_FOUND)
-        pkg_check_modules(AASDK REQUIRED libaasdk)
-      endif()
-      if(AASDK_FOUND)
-        message(STATUS "Using installed AASDK library (via pkg-config)")
-        # When using installed AASDK, we need system protobuf
-        find_package(Protobuf REQUIRED)
-        # Create an imported target for AASDK
-        add_library(aasdk::aasdk INTERFACE IMPORTED)
-        set_target_properties(aasdk::aasdk PROPERTIES
-          INTERFACE_INCLUDE_DIRECTORIES "${AASDK_INCLUDE_DIRS}"
-          INTERFACE_LINK_LIBRARIES "${AASDK_LIBRARIES}"
-          INTERFACE_LINK_DIRECTORIES "${AASDK_LIBRARY_DIRS}"
-        )
-      else()
-        message(FATAL_ERROR "AASDK not found. Use --with-aasdk option in build.sh to build and install AASDK")
-      endif()
-    else()
-      message(FATAL_ERROR "AASDK not found. Use --with-aasdk option in build.sh to build and install AASDK")
-    endif()
-  endif()
+if(NOT CRANKSHAFT_AASDK_FOUND)
+  message(FATAL_ERROR "AASDK not found. Use --with-aasdk option in build.sh to build and install AASDK")
 endif()
+
+# When using installed AASDK, we need system protobuf
+find_package(Protobuf REQUIRED)
 
 set(SOURCES
   main.cpp
@@ -201,7 +167,7 @@ target_link_libraries(crankshaft-core PRIVATE
   OpenSSL::SSL
   OpenSSL::Crypto
   protobuf::libprotobuf
-  aasdk
+  CRANKSHAFT_AASDK
   nlohmann_json::nlohmann_json
 )
   # Note: json-schema-validator is header-only and its include directories

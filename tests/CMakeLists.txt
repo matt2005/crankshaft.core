@@ -36,6 +36,10 @@ FetchContent_MakeAvailable(nlohmann_json)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Network WebSockets Bluetooth Test Sql Multimedia)
 
+# Include AASDK compatibility module to get CRANKSHAFT_AASDK
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(CrankshaftAasdk)
+
 # Some tests pull in core implementation files that depend on system libraries
 # (GStreamer, libusb). Ensure we can find those and link them for the test
 # executables so the test binaries are self-contained.
@@ -126,7 +130,7 @@ target_link_libraries(test_websocket PRIVATE
   ${GSTREAMER_AUDIO_LIBRARIES}
   ${DBUS_LIBRARIES}
   ${LIBUSB_LIBRARIES}
-  aasdk
+  CRANKSHAFT_AASDK
 )
 
 add_test(NAME WebSocketTest COMMAND test_websocket)

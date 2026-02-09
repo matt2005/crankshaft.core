@@ -210,6 +210,34 @@ ninja
 # Connect via VNC client to localhost:5900
 ```
 
+### AASDK Compatibility (newdev vs main)
+
+Crankshaft supports both AASDK branches:
+
+- **newdev** uses **C++17**
+- **main** uses **C++20**
+
+Select the branch and C++ standard at configure time:
+
+```bash
+cmake -S . -B build \
+  -DCRANKSHAFT_AASDK_BRANCH=newdev \
+  -DCRANKSHAFT_CXX_STANDARD=17
+
+cmake -S . -B build \
+  -DCRANKSHAFT_AASDK_BRANCH=main \
+  -DCRANKSHAFT_CXX_STANDARD=20
+```
+
+The AASDK integration is wrapped by the interface target `CRANKSHAFT_AASDK` so the backend can be swapped later without touching core targets.
+
+If you build via `./scripts/build.sh`, the script auto-detects the installed AASDK branch (when available) and applies the matching C++ standard. You can override this with:
+
+```bash
+./scripts/build.sh --aasdk-branch newdev --cxx-standard 17
+./scripts/build.sh --aasdk-branch main --cxx-standard 20
+```
+
 **For detailed instructions**, see [Quick Start Guide](specs/002-infotainment-androidauto/quickstart.md).
 
 ---
