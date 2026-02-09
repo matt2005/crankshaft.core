@@ -347,9 +347,9 @@ case "$COMPONENT" in
         ;;
     all)
         if [ "$ENABLE_SLIM_UI_FLAG" = "ON" ]; then
-            BUILD_TARGETS="crankshaft-core crankshaft-ui crankshaft-slim-ui"
+            BUILD_TARGETS="crankshaft-core crankshaft-ui crankshaft-slim-ui crankshaft-tests"
         else
-            BUILD_TARGETS="crankshaft-core crankshaft-ui"
+            BUILD_TARGETS="crankshaft-core crankshaft-ui crankshaft-tests"
         fi
         ;;
 esac
