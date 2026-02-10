@@ -1152,8 +1152,8 @@ void RealAndroidAutoService::handleDeviceDetected() {
     const QString deviceId = m_device.serialNumber;
     QVariantMap deviceInfo;
     deviceInfo["model"] = m_device.model;
-    deviceInfo["androidVersion"] = m_device.androidVersion;
-    deviceInfo["connectionType"] =
+    deviceInfo["android_version"] = m_device.androidVersion;
+    deviceInfo["connection_type"] =
         (m_transportMode == TransportMode::Wireless || m_wirelessEnabled) ? "wireless" : "wired";
     deviceInfo["paired"] = true;
     deviceInfo["capabilities"] = QVariantList{"media", "maps"};
@@ -1486,9 +1486,9 @@ void RealAndroidAutoService::transitionToSessionState(SessionState newState) {
   // Emit EventBus event for WebSocket subscribers
   if (m_eventBus) {
     QVariantMap payload;
-    payload[QStringLiteral("sessionId")] = m_currentSessionId;
+    payload[QStringLiteral("session_id")] = m_currentSessionId;
     payload[QStringLiteral("state")] = stateStr;
-    payload[QStringLiteral("deviceId")] = m_currentDeviceId;
+    payload[QStringLiteral("device_id")] = m_currentDeviceId;
     payload[QStringLiteral("timestamp")] = QDateTime::currentSecsSinceEpoch();
 
     m_eventBus->publish(QStringLiteral("android-auto/status/state-changed"), payload);

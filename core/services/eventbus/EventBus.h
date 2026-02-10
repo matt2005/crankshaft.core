@@ -40,7 +40,7 @@
  * USAGE PATTERN (Singleton):
  *   // Publisher publishes event
  *   QVariantMap payload;
- *   payload["deviceId"] = "AA123";
+ *   payload["device_id"] = "AA123";
  *   payload["timestamp"] = QDateTime::currentMSecsSinceEpoch();
  *   EventBus::instance().publish("android_auto/device_connected", payload);
  *
@@ -48,7 +48,7 @@
  *   connect(&EventBus::instance(), &EventBus::messagePublished,
  *           this, [](const QString& topic, const QVariantMap& payload) {
  *       if (topic == "android_auto/device_connected") {
- *           qInfo() << "Device connected:" << payload["deviceId"];
+ *           qInfo() << "Device connected:" << payload["device_id"];
  *       }
  *   });
  *
@@ -69,7 +69,7 @@
  *    ──────────────────────────────────────────────────────────────────────
  *    0ms    HAL/AASDK              USB device detected
  *    5ms    AndroidAutoService     publish("android_auto/device_connected")
- *           Payload: {deviceId: "AA001", deviceName: "Pixel", ...}
+ *           Payload: {device_id: "AA001", device_name: "Pixel", ...}
  *    10ms   WebSocketServer        relays event to all clients
  *    15ms   UI (QML)               receives event, shows "Ready to project"
  *    20ms   User taps "Start"      sendCommand("android_auto/start_projection")
@@ -139,7 +139,7 @@ class EventBus : public QObject {
    *
    * EXAMPLE:
    *   QVariantMap payload;
-   *   payload["deviceId"] = "AA123";
+   *   payload["device_id"] = "AA123";
    *   payload["connected"] = true;
    *   payload["timestamp"] = QDateTime::currentMSecsSinceEpoch();
    *   EventBus::instance().publish("android_auto/device_connected", payload);

@@ -60,7 +60,7 @@ EventBus& EventBus::instance() {
  * ───────────────────────────────────────────────
  * Time   Component              Operation
  * ────────────────────────────────────────────────────
- * 0ms    AndroidAutoService     prepares payload {deviceId: "AA123", ...}
+ * 0ms    AndroidAutoService     prepares payload {device_id: "AA123", ...}
  * 0.1ms  AndroidAutoService     calls EventBus::instance().publish(...)
  * 0.2ms  QMutexLocker acquired  thread mutex lock
  * 0.3ms  emit messagePublished   signal emitted to subscribers
@@ -75,8 +75,8 @@ EventBus& EventBus::instance() {
  * Pattern 1: Simple event with payload
  * ───────────────────────────────────
  *   QVariantMap payload;
- *   payload["deviceId"] = "AA001";
- *   payload["deviceName"] = "Pixel 6";
+ *   payload["device_id"] = "AA001";
+ *   payload["device_name"] = "Pixel 6";
  *   payload["timestamp"] = QDateTime::currentMSecsSinceEpoch();
  *   EventBus::instance().publish("android_auto/device_connected", payload);
  *
