@@ -27,3 +27,5 @@ Makefile
 _CPack_Packages
 *.backup
 run-*-logs
+build-debug/
+build-release/
