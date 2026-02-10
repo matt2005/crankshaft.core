@@ -69,7 +69,7 @@ bool SessionStore::createSchema() {
                          "  id TEXT PRIMARY KEY,"
                          "  model TEXT NOT NULL,"
                          "  android_version TEXT,"
-                         "  connection_type TEXT CHECK(connection_type IN ('wired', 'wireless')),"
+                         "  connection_type TEXT CHECK(connection_type IN ('wired', 'wireless', 'usb')),"
                          "  paired INTEGER NOT NULL DEFAULT 0,"
                          "  last_seen INTEGER NOT NULL,"
                          "  capabilities TEXT"
@@ -107,8 +107,8 @@ bool SessionStore::createDevice(const QString& deviceId, const QVariantMap& devi
 
   query.addBindValue(deviceId);
   query.addBindValue(deviceInfo.value("model", "").toString());
-  query.addBindValue(deviceInfo.value("androidVersion", "").toString());
-  query.addBindValue(deviceInfo.value("connectionType", "wired").toString());
+  query.addBindValue(deviceInfo.value("android_version", "").toString());
+  query.addBindValue(deviceInfo.value("connection_type", "wired").toString());
   query.addBindValue(deviceInfo.value("paired", false).toBool() ? 1 : 0);
   query.addBindValue(QDateTime::currentSecsSinceEpoch());
 
@@ -141,10 +141,10 @@ QVariantMap SessionStore::getDevice(const QString& deviceId) const {
   QVariantMap device;
   device["id"] = deviceId;
   device["model"] = query.value(0).toString();
-  device["androidVersion"] = query.value(1).toString();
-  device["connectionType"] = query.value(2).toString();
+  device["android_version"] = query.value(1).toString();
+  device["connection_type"] = query.value(2).toString();
   device["paired"] = query.value(3).toInt() == 1;
-  device["lastSeen"] = query.value(4).toLongLong();
+  device["last_seen"] = query.value(4).toLongLong();
 
   const QJsonDocument capabilitiesDoc = QJsonDocument::fromJson(query.value(5).toByteArray());
   device["capabilities"] = capabilitiesDoc.toVariant();
@@ -168,10 +168,10 @@ QList<QVariantMap> SessionStore::getAllDevices() const {
     QVariantMap device;
     device["id"] = query.value(0).toString();
     device["model"] = query.value(1).toString();
-    device["androidVersion"] = query.value(2).toString();
-    device["connectionType"] = query.value(3).toString();
+    device["android_version"] = query.value(2).toString();
+    device["connection_type"] = query.value(3).toString();
     device["paired"] = query.value(4).toInt() == 1;
-    device["lastSeen"] = query.value(5).toLongLong();
+    device["last_seen"] = query.value(5).toLongLong();
 
     const QJsonDocument capabilitiesDoc = QJsonDocument::fromJson(query.value(6).toByteArray());
     device["capabilities"] = capabilitiesDoc.toVariant();
@@ -252,11 +252,11 @@ QVariantMap SessionStore::getSession(const QString& sessionId) const {
 
   QVariantMap session;
   session["id"] = sessionId;
-  session["deviceId"] = query.value(0).toString();
+  session["device_id"] = query.value(0).toString();
   session["state"] = query.value(1).toString();
-  session["startedAt"] = query.value(2).toLongLong();
-  session["endedAt"] = query.value(3).toLongLong();
-  session["lastHeartbeat"] = query.value(4).toLongLong();
+  session["started_at"] = query.value(2).toLongLong();
+  session["ended_at"] = query.value(3).toLongLong();
+  session["last_heartbeat"] = query.value(4).toLongLong();
 
   return session;
 }
@@ -276,11 +276,11 @@ QVariantMap SessionStore::getSessionByDevice(const QString& deviceId) const {
 
   QVariantMap session;
   session["id"] = query.value(0).toString();
-  session["deviceId"] = deviceId;
+  session["device_id"] = deviceId;
   session["state"] = query.value(1).toString();
-  session["startedAt"] = query.value(2).toLongLong();
-  session["endedAt"] = query.value(3).toLongLong();
-  session["lastHeartbeat"] = query.value(4).toLongLong();
+  session["started_at"] = query.value(2).toLongLong();
+  session["ended_at"] = query.value(3).toLongLong();
+  session["last_heartbeat"] = query.value(4).toLongLong();
 
   return session;
 }
