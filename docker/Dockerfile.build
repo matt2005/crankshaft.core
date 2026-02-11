@@ -106,6 +106,9 @@ RUN chmod +x /src/scripts/build.sh
 # Build Crankshaft using unified build script with slim UI and packaging
 RUN /src/scripts/build.sh ${BUILD_TYPE} --with-aasdk --aasdk-branch main --cxx-standard 20 --enable-slim-ui --package
 
+# Copy built .deb packages to output directory (if any)
+RUN cp /src/build-${BUILD_TYPE}/*.deb /output/ 2>/dev/null || true
+
 # Add exporter stage to copy built packages
 FROM scratch AS exporter
 
