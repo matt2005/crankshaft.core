@@ -122,6 +122,7 @@ FROM scratch AS exporter
 
 # Copy built packages from builder stage
 COPY --from=builder /output/* ./
+COPY --from=builder /output/logs ./logs/
 
 # Default command
 CMD ["bash", "-c", "echo 'Crankshaft build container ready. Binaries are in build-release directory.'"]
