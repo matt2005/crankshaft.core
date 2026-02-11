@@ -409,14 +409,14 @@ fi
 # Package if requested
 if [ "$CREATE_PACKAGE" = true ]; then
     echo ""
-    echo "Creating DEB packages..."
+    echo "Creating DEB and source packages..."
     cd "${BUILD_DIR}"
-    cpack --config CPackConfig.cmake -G DEB -V
+    cpack --config CPackConfig.cmake -G "DEB;TGZ" -V
     cd "${SOURCE_DIR}"
     
     echo ""
     echo "Packages in ${BUILD_DIR}:"
-    ls -lh "${BUILD_DIR}"/*.deb 2>/dev/null || echo "No packages found"
+    ls -lh "${BUILD_DIR}"/*.{deb,tar.gz} 2>/dev/null || echo "No packages found"
 fi
 
 echo ""

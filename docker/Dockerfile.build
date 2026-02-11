@@ -106,23 +106,15 @@ RUN chmod +x /src/scripts/build.sh
 # Build Crankshaft using unified build script with slim UI and packaging
 RUN /src/scripts/build.sh ${BUILD_TYPE} --with-aasdk --aasdk-branch main --cxx-standard 20 --enable-slim-ui --package
 
-# Copy AASDK build logs to output directory (if any)
-RUN mkdir -p /output/aasdk_logs && cp /src/aasdk-build/build-${BUILD_TYPE}/*.log /output/aasdk_logs/ 2>/dev/null || true
-
-# Copy AASDK built .deb packages to output directory (if any)
-RUN cp /src/aasdk-build/build-${BUILD_TYPE}/*.deb /output/ 2>/dev/null || true
-
-# Copy AASDK source tarball to output directory (if any)
-RUN cp /src/aasdk-build/build-${BUILD_TYPE}/*.tar.gz /output/ 2>/dev/null || true
-
 # Copy built .deb packages to output directory (if any)
-RUN cp /src/build-${BUILD_TYPE}/*.deb /output/ 2>/dev/null || true
+RUN cp /src/build-${BUILD_TYPE}/*.{deb,tar.gz} /output/ 2>/dev/null || true
 
 # Copy source tarball to output directory (if any)
 RUN cp /src/build-${BUILD_TYPE}/*.tar.gz /output/ 2>/dev/null || true
 
 # Copy build logs to output directory (if any)
 RUN mkdir -p /output/logs && cp /src/build-${BUILD_TYPE}/logs/*.log /output/logs/ 2>/dev/null || true
+RUN mkdir -p /output/logs && cp /src/build-${BUILD_TYPE}/*.log /output/logs/ 2>/dev/null || true
 
 # Add exporter stage to copy built packages
 FROM scratch AS exporter
