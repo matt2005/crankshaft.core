@@ -109,11 +109,15 @@ RUN /src/scripts/build.sh ${BUILD_TYPE} --with-aasdk --aasdk-branch main --cxx-s
 # Copy built .deb packages to output directory (if any)
 RUN cp /src/build-${BUILD_TYPE}/*.deb /output/ 2>/dev/null || true
 
+# Copy source tarball to output directory (if any)
+RUN cp /src/build-${BUILD_TYPE}/*.tar.gz /output/ 2>/dev/null || true
+
+# Copy build logs to output directory (if any)
+RUN mkdir -p /output/logs && cp /src/build-${BUILD_TYPE}/logs/*.log /output/logs/ 2>/dev/null || true
+
 # Add exporter stage to copy built packages
 FROM scratch AS exporter
 
-# Set working directory
-WORKDIR /output
 # Copy built packages from builder stage
 COPY --from=builder /output/* ./
 
