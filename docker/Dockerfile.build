@@ -104,7 +104,7 @@ RUN mkdir -p /output
 RUN chmod +x /src/scripts/build.sh
 
 # Build Crankshaft using unified build script with slim UI and packaging
-RUN /src/scripts/build.sh ${BUILD_TYPE} --with-aasdk --aasdk-branch newdev --cxx-standard 17 --enable-slim-ui --package
+RUN /src/scripts/build.sh ${BUILD_TYPE} --with-aasdk --aasdk-branch main --cxx-standard 20 --enable-slim-ui --package
 
 # Add exporter stage to copy built packages
 FROM debian:${DEBIAN_VERSION}-slim AS exporter
