@@ -107,7 +107,7 @@ RUN chmod +x /src/scripts/build.sh
 RUN /src/scripts/build.sh ${BUILD_TYPE} --with-aasdk --aasdk-branch main --cxx-standard 20 --enable-slim-ui --package
 
 # Add exporter stage to copy built packages
-FROM debian:${DEBIAN_VERSION}-slim AS exporter
+FROM scratch AS exporter
 
 # Set working directory
 WORKDIR /output
