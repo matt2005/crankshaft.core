@@ -239,7 +239,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: crankshaft-${{ matrix.arch }}-deb
-          path: build-output/*.deb
+          path: build-output/**/*.deb
           retention-days: 30
 
       - name: Generate build metadata
@@ -266,7 +266,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: crankshaft-${{ matrix.arch }}-source
-          path: build-output/*.tar.gz
+          path: build-output/**/*.tar.gz
           retention-days: 30
 
       - name: Upload build metadata
@@ -282,7 +282,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-logs-${{ matrix.arch }}
-          path: build-output/logs/*.log
+          path: build-output/*logs/*.log
           retention-days: 30
 
   sbom:
