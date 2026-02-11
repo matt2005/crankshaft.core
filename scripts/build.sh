@@ -241,7 +241,7 @@ if [ "$WITH_AASDK" = true ]; then
     echo "Building and installing AASDK..."
     chmod +x build.sh
     export TARGET_ARCH="$TARGET_ARCH"
-    ./build.sh $BUILD_TYPE install
+    ./build.sh $BUILD_TYPE install --skip-protobuf --skip-absl
     cd "${SOURCE_DIR}"
     echo "AASDK build and install completed."
 fi
