@@ -107,7 +107,7 @@ RUN chmod +x /src/scripts/build.sh
 RUN /src/scripts/build.sh ${BUILD_TYPE} --with-aasdk --aasdk-branch main --cxx-standard 20 --enable-slim-ui --package
 
 # Copy built .deb packages to output directory (if any)
-RUN cp /src/build-${BUILD_TYPE}/*.{deb,tar.gz} /output/ 2>/dev/null || true
+RUN cp /src/build-${BUILD_TYPE}/*.deb /output/ 2>/dev/null || true
 
 # Copy source tarball to output directory (if any)
 RUN cp /src/build-${BUILD_TYPE}/*.tar.gz /output/ 2>/dev/null || true
