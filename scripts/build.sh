@@ -123,6 +123,9 @@ if [[ "$COMPONENT" != "all" && "$COMPONENT" != "core" && "$COMPONENT" != "ui" &&
     exit 1
 fi
 
+# Detect architecture early for AASDK
+TARGET_ARCH=$(dpkg-architecture -qDEB_HOST_ARCH 2>/dev/null || echo "amd64")
+
 # Handle AASDK cloning and building if requested
 if [ "$WITH_AASDK" = true ]; then
     echo ""
@@ -172,8 +175,6 @@ fi
 # Create build directory
 mkdir -p "${BUILD_DIR}"
 
-# Detect architecture
-TARGET_ARCH=$(dpkg-architecture -qDEB_HOST_ARCH 2>/dev/null || echo "amd64")
 echo "Target architecture: ${TARGET_ARCH}"
 
 # Determine build targets
