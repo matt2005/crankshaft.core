@@ -354,6 +354,9 @@ case "$COMPONENT" in
         ;;
 esac
 
+# Create logs directory
+mkdir -p "${SOURCE_DIR}/logs"
+
 # Configure CMake
 echo ""
 echo "Configuring with CMake..."
@@ -382,13 +385,13 @@ CMAKE_ARGS+=("${EXTRA_CMAKE_ARGS[@]}")
 setup_cross_compilation
 
 # Run CMake configuration
-cmake "${CMAKE_ARGS[@]}"
+cmake "${CMAKE_ARGS[@]}" > "${SOURCE_DIR}/logs/cmake.log" 2>&1
 
 # Build
 echo ""
 echo "Building targets: ${BUILD_TARGETS}..."
 NUM_CORES=$(nproc 2>/dev/null || echo 4)
-cmake --build "${BUILD_DIR}" --target ${BUILD_TARGETS} -j"${NUM_CORES}"
+cmake --build "${BUILD_DIR}" --target ${BUILD_TARGETS} -j"${NUM_CORES}" > "${SOURCE_DIR}/logs/build.log" 2>&1
 
 echo ""
 echo "✓ Build completed successfully"
@@ -398,7 +401,7 @@ if [ "$SKIP_TESTS" = false ] && [ "$COMPONENT" != "ui" ]; then
     echo ""
     echo "Running tests..."
     cd "${BUILD_DIR}"
-    ctest --output-on-failure -j"${NUM_CORES}" || true
+    ctest --output-on-failure -j"${NUM_CORES}" > "${SOURCE_DIR}/logs/test.log" 2>&1 || true
     cd "${SOURCE_DIR}"
 else
     if [ "$SKIP_TESTS" = true ]; then
@@ -411,7 +414,7 @@ if [ "$CREATE_PACKAGE" = true ]; then
     echo ""
     echo "Creating DEB and source packages..."
     cd "${BUILD_DIR}"
-    cpack --config CPackConfig.cmake -G "DEB;TGZ" -V
+    cpack --config CPackConfig.cmake -G "DEB;TGZ" -V > "${SOURCE_DIR}/logs/cpack.log" 2>&1
     cd "${SOURCE_DIR}"
     
     echo ""
