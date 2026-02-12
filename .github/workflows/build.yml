@@ -172,281 +172,288 @@ jobs:
       matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        submodules: recursive
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
 
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v3
-      with:
-        platforms: ${{ matrix.platform }}
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: ${{ matrix.platform }}
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-    - name: Cache Docker layers
-      uses: actions/cache@v4
-      with:
-        path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ matrix.arch }}-${{ hashFiles('docker/Dockerfile.build', 'CMakeLists.txt', 'core/CMakeLists.txt', 'ui/CMakeLists.txt', 'ui-slim/CMakeLists.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-buildx-${{ matrix.arch }}-
-          ${{ runner.os }}-buildx-
+      - name: Cache Docker layers
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ matrix.arch }}-${{ hashFiles('docker/Dockerfile.build', 'CMakeLists.txt', 'core/CMakeLists.txt', 'ui/CMakeLists.txt', 'ui-slim/CMakeLists.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-${{ matrix.arch }}-
+            ${{ runner.os }}-buildx-
 
-    - name: Cache QEMU images
-      if: matrix.arch != 'amd64'
-      uses: actions/cache@v4
-      with:
-        path: /tmp/.qemu-cache
-        key: qemu-${{ matrix.arch }}-${{ hashFiles('docker/Dockerfile.build') }}
-        restore-keys: |
-          qemu-${{ matrix.arch }}-
+      - name: Cache QEMU images
+        if: matrix.arch != 'amd64'
+        uses: actions/cache@v4
+        with:
+          path: /tmp/.qemu-cache
+          key: qemu-${{ matrix.arch }}-${{ hashFiles('docker/Dockerfile.build') }}
+          restore-keys: |
+            qemu-${{ matrix.arch }}-
 
-    - name: Build Debian package
-      run: |
-        docker buildx build \
-          --platform ${{ matrix.platform }} \
-          --build-arg VERSION=${{ needs.prepare.outputs.version }} \
-          --build-arg ARCH=${{ matrix.arch }} \
-          --build-arg BUILD_AASDK=${{ inputs.build-aasdk || 'false' }} \
-          --output type=local,dest=./build-output \
-          --cache-from type=local,src=/tmp/.buildx-cache \
-          --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
-          -f docker/Dockerfile.build \
-          .
-        
-        # Verify build artifacts were created
-        if [ ! -f build-output/*.deb ]; then
-          echo "::error::No .deb packages found in build output"
-          echo "Build failed - checking logs:"
-          cat build-output/logs/*.log 2>/dev/null || echo "No logs found"
-          exit 1
-        fi
+      - name: Build Debian package
+        run: |
+          docker buildx build \
+            --target exporter \
+            --platform ${{ matrix.platform }} \
+            --build-arg VERSION=${{ needs.prepare.outputs.version }} \
+            --build-arg ARCH=${{ matrix.arch }} \
+            --build-arg BUILD_AASDK=${{ inputs.build-aasdk || 'false' }} \
+            --output type=local,dest=./build-output \
+            --cache-from type=local,src=/tmp/.buildx-cache \
+            --cache-to type=local,dest=/tmp/.buildx-cache-new,mode=max \
+            -f docker/Dockerfile.build \
+            .
+          
+          # Verify build artifacts were created
+          echo "Contents of build-output:"
+          ls -lahR build-output/ 2>/dev/null || echo "build-output directory not found"
+          find build-output -type f 2>/dev/null || echo "No files in build-output"
+          
+          if ! find build-output -name "*.deb" -type f 2>/dev/null | grep -q .; then
+            echo "::error::No .deb packages found in build output"
+            echo "Build failed - checking logs:"
+            find build-output -name "*.log" -exec cat {} \; 2>/dev/null || echo "No logs found"
+            exit 1
+          fi
 
-    - name: Move cache
-      run: |
-        rm -rf /tmp/.buildx-cache
-        mv /tmp/.buildx-cache-new /tmp/.buildx-cache
+      - name: Move cache
+        run: |
+          rm -rf /tmp/.buildx-cache
+          mv /tmp/.buildx-cache-new /tmp/.buildx-cache
 
-    - name: Upload Debian package
-      uses: actions/upload-artifact@v4
-      with:
-        name: crankshaft-${{ matrix.arch }}-deb
-        path: build-output/*.deb
-        retention-days: 30
+      - name: Upload Debian package
+        uses: actions/upload-artifact@v4
+        with:
+          name: crankshaft-${{ matrix.arch }}-deb
+          path: build-output/**/*.deb
+          retention-days: 30
 
-    - name: Generate build metadata
-      if: always()
-      run: |
-        cat > build-output/build-metadata.json << EOF
-        {
-          "build_id": "${{ github.run_id }}",
-          "build_number": "${{ github.run_number }}",
-          "architecture": "${{ matrix.arch }}",
-          "git_sha": "${{ github.sha }}",
-          "git_ref": "${{ github.ref }}",
-          "branch": "${{ github.ref_name }}",
-          "version": "${{ needs.prepare.outputs.version }}",
-          "quality_scan_status": "${{ inputs.quality-scan-status }}",
-          "build_timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-          "skip_tests": "${{ inputs.skip-tests }}",
-          "repository": "${{ github.repository }}"
-        }
-        EOF
-        cat build-output/build-metadata.json
-    - name: Upload source tarball
-      uses: actions/upload-artifact@v4
-      with:
-        name: crankshaft-${{ matrix.arch }}-source
-        path: build-output/*.tar.gz
-        retention-days: 30
+      - name: Generate build metadata
+        if: always()
+        run: |
+          cat > build-output/build-metadata.json << EOF
+          {
+            "build_id": "${{ github.run_id }}",
+            "build_number": "${{ github.run_number }}",
+            "architecture": "${{ matrix.arch }}",
+            "git_sha": "${{ github.sha }}",
+            "git_ref": "${{ github.ref }}",
+            "branch": "${{ github.ref_name }}",
+            "version": "${{ needs.prepare.outputs.version }}",
+            "quality_scan_status": "${{ inputs.quality-scan-status }}",
+            "build_timestamp": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
+            "skip_tests": "${{ inputs.skip-tests }}",
+            "repository": "${{ github.repository }}"
+          }
+          EOF
+          cat build-output/build-metadata.json
 
-    - name: Upload build metadata
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: crankshaft-${{ matrix.arch }}-metadata
-        path: build-output/build-metadata.json
-        retention-days: 90
-    - name: Upload build logs
-      if: always()
-      uses: actions/upload-artifact@v4
-      with:
-        name: build-logs-${{ matrix.arch }}
-        path: build-output/logs/*.log
-        retention-days: 30
+      - name: Upload source tarball
+        uses: actions/upload-artifact@v4
+        with:
+          name: crankshaft-${{ matrix.arch }}-source
+          path: build-output/**/*.tar.gz
+          retention-days: 30
+
+      - name: Upload build metadata
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crankshaft-${{ matrix.arch }}-metadata
+          path: build-output/build-metadata.json
+          retention-days: 90
+
+      - name: Upload build logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-logs-${{ matrix.arch }}
+          path: build-output/**/*.log
+          retention-days: 30
 
   sbom:
     name: Generate SBOM
     needs: [prepare, build]
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-        submodules: recursive
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: true
 
-    - name: Download all artifacts
-      uses: actions/download-artifact@v4
-      with:
-        path: artifacts
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
 
-    - name: Install CycloneDX tools
-      run: |
-        # Install CycloneDX CLI
-        curl -sSfL https://github.com/CycloneDX/cyclonedx-cli/releases/latest/download/cyclonedx-linux-x64 -o cyclonedx
-        chmod +x cyclonedx
-        sudo mv cyclonedx /usr/local/bin/
+      - name: Install CycloneDX tools
+        run: |
+          # Install CycloneDX CLI
+          curl -sSfL https://github.com/CycloneDX/cyclonedx-cli/releases/latest/download/cyclonedx-linux-x64 -o cyclonedx
+          chmod +x cyclonedx
+          sudo mv cyclonedx /usr/local/bin/
 
-        # Install syft for container scanning
-        curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
+          # Install syft for container scanning
+          curl -sSfL https://raw.githubusercontent.com/anchore/syft/main/install.sh | sh -s -- -b /usr/local/bin
 
-    - name: Generate base SBOM from CMake project
-      run: |
-        # Create base SBOM with project metadata
-        TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
-        cat > crankshaft-sbom.json << EOF
-        {
-          "bomFormat": "CycloneDX",
-          "specVersion": "1.5",
-          "version": 1,
-          "metadata": {
-            "timestamp": "${TS}",
-            "tools": [
-              {
-                "vendor": "OpenCarDev",
-                "name": "Crankshaft Build System",
-                "version": "${{ needs.prepare.outputs.version }}"
-              }
-            ],
-            "component": {
-              "type": "application",
-              "bom-ref": "crankshaft@${{ needs.prepare.outputs.version }}",
-              "name": "Crankshaft",
-              "version": "${{ needs.prepare.outputs.version }}",
-              "description": "Automotive infotainment system with extensible framework",
-              "licenses": [
+      - name: Generate base SBOM from CMake project
+        run: |
+          # Create base SBOM with project metadata
+          TS=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          cat > crankshaft-sbom.json << EOF
+          {
+            "bomFormat": "CycloneDX",
+            "specVersion": "1.5",
+            "version": 1,
+            "metadata": {
+              "timestamp": "${TS}",
+              "tools": [
                 {
-                  "license": {
-                    "id": "GPL-3.0-or-later"
-                  }
+                  "vendor": "OpenCarDev",
+                  "name": "Crankshaft Build System",
+                  "version": "${{ needs.prepare.outputs.version }}"
                 }
               ],
+              "component": {
+                "type": "application",
+                "bom-ref": "crankshaft@${{ needs.prepare.outputs.version }}",
+                "name": "Crankshaft",
+                "version": "${{ needs.prepare.outputs.version }}",
+                "description": "Automotive infotainment system with extensible framework",
+                "licenses": [
+                  {
+                    "license": {
+                      "id": "GPL-3.0-or-later"
+                    }
+                  }
+                ],
+                "externalReferences": [
+                  {
+                    "type": "website",
+                    "url": "https://github.com/${{ github.repository }}"
+                  },
+                  {
+                    "type": "vcs",
+                    "url": "https://github.com/${{ github.repository }}.git"
+                  }
+                ]
+              }
+            },
+            "components": []
+          }
+          EOF
+
+      - name: Scan dependencies
+        run: |
+          # Scan for C/C++ dependencies
+          if [ -f "CMakeLists.txt" ]; then
+            echo "Scanning CMake project for dependencies..."
+            # Extract Qt6 and other dependencies from CMakeLists.txt
+            grep -E "find_package|FetchContent" CMakeLists.txt core/CMakeLists.txt ui/CMakeLists.txt 2>/dev/null || true
+          fi
+
+          # Scan AASDK submodule
+          if [ -d "external/aasdk" ]; then
+            echo "Scanning AASDK dependencies..."
+            cd external/aasdk
+            syft dir:. -o cyclonedx-json > ../../aasdk-deps.json 2>/dev/null || echo "[]" > ../../aasdk-deps.json
+            cd ../..
+          fi
+
+      - name: Create comprehensive SBOM
+        run: |
+          # Create components list
+          cat > components.json << 'EOF'
+          [
+            {
+              "type": "library",
+              "bom-ref": "qt6@6.x",
+              "name": "Qt6",
+              "version": "6.x",
+              "description": "Cross-platform application framework",
+              "licenses": [{"license": {"id": "LGPL-3.0-only"}}],
               "externalReferences": [
-                {
-                  "type": "website",
-                  "url": "https://github.com/${{ github.repository }}"
-                },
-                {
-                  "type": "vcs",
-                  "url": "https://github.com/${{ github.repository }}.git"
-                }
+                {"type": "website", "url": "https://www.qt.io"}
+              ]
+            },
+            {
+              "type": "library",
+              "bom-ref": "aasdk@latest",
+              "name": "AASDK",
+              "version": "latest",
+              "description": "Android Auto SDK for embedded systems",
+              "licenses": [{"license": {"id": "MIT"}}],
+              "externalReferences": [
+                {"type": "vcs", "url": "https://github.com/opencardev/aasdk.git"}
+              ]
+            },
+            {
+              "type": "library",
+              "bom-ref": "protobuf@3.x",
+              "name": "Protocol Buffers",
+              "version": "3.x",
+              "description": "Google's data interchange format",
+              "licenses": [{"license": {"id": "BSD-3-Clause"}}],
+              "externalReferences": [
+                {"type": "website", "url": "https://protobuf.dev"}
+              ]
+            },
+            {
+              "type": "library",
+              "bom-ref": "boost@1.83",
+              "name": "Boost",
+              "version": "1.83",
+              "description": "Boost C++ Libraries",
+              "licenses": [{"license": {"id": "BSL-1.0"}}],
+              "externalReferences": [
+                {"type": "website", "url": "https://www.boost.org"}
+              ]
+            },
+            {
+              "type": "library",
+              "bom-ref": "openssl@3.x",
+              "name": "OpenSSL",
+              "version": "3.x",
+              "description": "Cryptography and SSL/TLS toolkit",
+              "licenses": [{"license": {"id": "Apache-2.0"}}],
+              "externalReferences": [
+                {"type": "website", "url": "https://www.openssl.org"}
               ]
             }
-          },
-          "components": []
-        }
-        EOF
+          ]
+          EOF
 
-    - name: Scan dependencies
-      run: |
-        # Scan for C/C++ dependencies
-        if [ -f "CMakeLists.txt" ]; then
-          echo "Scanning CMake project for dependencies..."
-          # Extract Qt6 and other dependencies from CMakeLists.txt
-          grep -E "find_package|FetchContent" CMakeLists.txt core/CMakeLists.txt ui/CMakeLists.txt 2>/dev/null || true
-        fi
+          # Merge components into SBOM
+          jq --slurpfile comps components.json '.components = $comps[0]' crankshaft-sbom.json > crankshaft-sbom-final.json
 
-        # Scan AASDK submodule
-        if [ -d "external/aasdk" ]; then
-          echo "Scanning AASDK dependencies..."
-          cd external/aasdk
-          syft dir:. -o cyclonedx-json > ../../aasdk-deps.json 2>/dev/null || echo "[]" > ../../aasdk-deps.json
-          cd ../..
-        fi
+      - name: Validate SBOM
+        run: |
+          cyclonedx validate --input-file crankshaft-sbom-final.json --input-format json || true
 
-    - name: Create comprehensive SBOM
-      run: |
-        # Create components list
-        cat > components.json << 'EOF'
-        [
-          {
-            "type": "library",
-            "bom-ref": "qt6@6.x",
-            "name": "Qt6",
-            "version": "6.x",
-            "description": "Cross-platform application framework",
-            "licenses": [{"license": {"id": "LGPL-3.0-only"}}],
-            "externalReferences": [
-              {"type": "website", "url": "https://www.qt.io"}
-            ]
-          },
-          {
-            "type": "library",
-            "bom-ref": "aasdk@latest",
-            "name": "AASDK",
-            "version": "latest",
-            "description": "Android Auto SDK for embedded systems",
-            "licenses": [{"license": {"id": "MIT"}}],
-            "externalReferences": [
-              {"type": "vcs", "url": "https://github.com/opencardev/aasdk.git"}
-            ]
-          },
-          {
-            "type": "library",
-            "bom-ref": "protobuf@3.x",
-            "name": "Protocol Buffers",
-            "version": "3.x",
-            "description": "Google's data interchange format",
-            "licenses": [{"license": {"id": "BSD-3-Clause"}}],
-            "externalReferences": [
-              {"type": "website", "url": "https://protobuf.dev"}
-            ]
-          },
-          {
-            "type": "library",
-            "bom-ref": "boost@1.83",
-            "name": "Boost",
-            "version": "1.83",
-            "description": "Boost C++ Libraries",
-            "licenses": [{"license": {"id": "BSL-1.0"}}],
-            "externalReferences": [
-              {"type": "website", "url": "https://www.boost.org"}
-            ]
-          },
-          {
-            "type": "library",
-            "bom-ref": "openssl@3.x",
-            "name": "OpenSSL",
-            "version": "3.x",
-            "description": "Cryptography and SSL/TLS toolkit",
-            "licenses": [{"license": {"id": "Apache-2.0"}}],
-            "externalReferences": [
-              {"type": "website", "url": "https://www.openssl.org"}
-            ]
-          }
-        ]
-        EOF
+      - name: Upload SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: crankshaft-sbom
+          path: crankshaft-sbom-final.json
+          retention-days: 90
 
-        # Merge components into SBOM
-        jq --slurpfile comps components.json '.components = $comps[0]' crankshaft-sbom.json > crankshaft-sbom-final.json
-
-    - name: Validate SBOM
-      run: |
-        cyclonedx validate --input-file crankshaft-sbom-final.json --input-format json || true
-
-    - name: Upload SBOM
-      uses: actions/upload-artifact@v4
-      with:
-        name: crankshaft-sbom
-        path: crankshaft-sbom-final.json
-        retention-days: 90
-
-  #changelog-on-pr:
-  #  name: Generate Changelog
-  #  needs: [build]
-  #  if: github.event_name == 'pull_request' && success()
-  #  uses: ./.github/workflows/changelog.yml@main
+  # changelog-on-pr:
+  #   name: Generate Changelog
+  #   needs: [build]
+  #   if: github.event_name == 'pull_request' && success()
+  #   uses: ./.github/workflows/changelog.yml@main

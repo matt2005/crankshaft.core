@@ -2,7 +2,7 @@ name: Auto-update Wiki from Code Comments
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - 'core/**'
       - 'ui/**'

@@ -1,3 +1,0 @@
-[submodule "external/aasdk"]
-	path = external/aasdk
-	url = https://github.com/opencardev/aasdk.git

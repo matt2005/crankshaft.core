@@ -30,12 +30,14 @@ string(REGEX REPLACE "^([0-9]+\\.[0-9]+\\.[0-9]+).*" "\\1" NUMERIC_VERSION "${CM
 project(crankshaft-mvp VERSION ${NUMERIC_VERSION} LANGUAGES CXX)
 
 # AASDK Dependency Management:
-# Core and ui-slim components will attempt to find installed AASDK via find_package(aasdk).
-# If not found, they fall back to building from external/aasdk submodule.
-# To use system AASDK: sudo apt install libaasdk0 libaasdk-dev
-# To force submodule build: ensure aasdk is not in CMAKE_PREFIX_PATH
+# AASDK is built externally by build.sh and installed as system package.
+# Core and ui-slim components find AASDK via find_package(aasdk).
+# To install AASDK: use --with-aasdk option in build.sh
 
-set(CMAKE_CXX_STANDARD 20)
+set(CRANKSHAFT_CXX_STANDARD "20" CACHE STRING "C++ standard for Crankshaft targets (17 or 20)")
+set_property(CACHE CRANKSHAFT_CXX_STANDARD PROPERTY STRINGS "17" "20")
+
+set(CMAKE_CXX_STANDARD ${CRANKSHAFT_CXX_STANDARD})
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
@@ -99,6 +101,9 @@ set(QT_QML_GENERATE_QMLLS_INI ON CACHE BOOL "Generate .qmllint.ini for QML langu
 
 # Add custom CMake modules
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+
+# AASDK compatibility layer (C++17 newdev, C++20 main)
+include(CrankshaftAasdk)
 
 # Download Material Design Icons font and generate mappings
 # - Automatically downloads MDI font v7.4.47 (1.3 MB)

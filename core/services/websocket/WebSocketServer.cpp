@@ -169,10 +169,10 @@ void WebSocketServer::handleSubscribe(QWebSocket* client, const QString& topic) 
         if (aaService->isConnected()) {
           AndroidAutoService::AndroidDevice device = aaService->getConnectedDevice();
           QVariantMap deviceMap;
-          deviceMap["serialNumber"] = device.serialNumber;
+          deviceMap["serial_number"] = device.serialNumber;
           deviceMap["manufacturer"] = device.manufacturer;
           deviceMap["model"] = device.model;
-          deviceMap["androidVersion"] = device.androidVersion;
+          deviceMap["android_version"] = device.androidVersion;
           deviceMap["connected"] = device.connected;
           onAndroidAutoConnected(deviceMap);
         }
@@ -363,10 +363,10 @@ void WebSocketServer::setupAndroidAutoConnections() {
   connect(aaService, &AndroidAutoService::connected, this,
           [this](const AndroidAutoService::AndroidDevice& device) {
             QVariantMap deviceMap;
-            deviceMap["serialNumber"] = device.serialNumber;
+            deviceMap["serial_number"] = device.serialNumber;
             deviceMap["manufacturer"] = device.manufacturer;
             deviceMap["model"] = device.model;
-            deviceMap["androidVersion"] = device.androidVersion;
+            deviceMap["android_version"] = device.androidVersion;
             deviceMap["connected"] = device.connected;
             onAndroidAutoConnected(deviceMap);
           });

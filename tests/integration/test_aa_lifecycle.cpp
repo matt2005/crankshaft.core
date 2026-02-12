@@ -19,6 +19,7 @@
 
 #include <QDateTime>
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QSqlDatabase>
 #include <QSqlError>
@@ -48,6 +49,12 @@ class TestAASessionLifecycle : public QObject {
     const QString dbPath =
         QStandardPaths::writableLocation(QStandardPaths::TempLocation) + "/cs_test_session.db";
     const QFileInfo dbInfo(dbPath);
+    
+    // Remove existing database to ensure clean schema
+    if (QFile::exists(dbPath)) {
+      QFile::remove(dbPath);
+    }
+    
     QDir().mkpath(dbInfo.path());
 
     // Initialize SessionStore with explicit test database path

@@ -36,6 +36,10 @@ FetchContent_MakeAvailable(nlohmann_json)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Network WebSockets Bluetooth Test Sql Multimedia)
 
+# Include AASDK compatibility module to get CRANKSHAFT_AASDK
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
+include(CrankshaftAasdk)
+
 # Some tests pull in core implementation files that depend on system libraries
 # (GStreamer, libusb). Ensure we can find those and link them for the test
 # executables so the test binaries are self-contained.
@@ -100,16 +104,13 @@ set_target_properties(test_websocket PROPERTIES
 
 target_include_directories(test_websocket PRIVATE
   ${CMAKE_SOURCE_DIR}/core
+  ${CMAKE_SOURCE_DIR}/core/services
+  ${CMAKE_SOURCE_DIR}/core/hal
   ${GSTREAMER_INCLUDE_DIRS}
   ${GSTREAMER_APP_INCLUDE_DIRS}
   ${GSTREAMER_VIDEO_INCLUDE_DIRS}
   ${GSTREAMER_AUDIO_INCLUDE_DIRS}
   ${LIBUSB_INCLUDE_DIRS}
-  # Fallback include path for aap_protobuf generated headers when aasdk is built
-  ${CMAKE_BINARY_DIR}/aasdk/protobuf
-  # aasdk public headers (source and generated build include)
-  ${CMAKE_SOURCE_DIR}/external/aasdk/include
-  ${CMAKE_BINARY_DIR}/aasdk/include
 )
 
 target_link_libraries(test_websocket PRIVATE
@@ -129,7 +130,7 @@ target_link_libraries(test_websocket PRIVATE
   ${GSTREAMER_AUDIO_LIBRARIES}
   ${DBUS_LIBRARIES}
   ${LIBUSB_LIBRARIES}
-  aasdk
+  CRANKSHAFT_AASDK
 )
 
 add_test(NAME WebSocketTest COMMAND test_websocket)
@@ -249,3 +250,16 @@ add_test(NAME ExtensionLifecycleTest COMMAND test_extension_lifecycle)
 
 # Enable CTest for the test project
 enable_testing()
+
+# Custom target to build all tests
+add_custom_target(crankshaft-tests
+    DEPENDS
+        test_eventbus
+        test_websocket
+        test_websocket_validation
+        test_contract_schemas
+        test_aa_lifecycle
+        test_settings_persistence
+        test_extension_lifecycle
+    COMMENT "Building all crankshaft tests"
+)

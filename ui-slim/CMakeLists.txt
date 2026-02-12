@@ -53,15 +53,14 @@ pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
 
 find_package(OpenSSL REQUIRED)
 
-# Try to find installed AASDK first, fall back to using core's build
-find_package(aasdk QUIET)
+# Find AASDK (built externally by build.sh)
+find_package(aasdk REQUIRED)
 if(aasdk_FOUND)
-  message(STATUS \"UI-Slim: Using installed AASDK library\")
+  message(STATUS "UI-Slim: Using installed AASDK library")
   # When using installed AASDK, we need system protobuf
   find_package(Protobuf REQUIRED)
 else()
-  message(STATUS \"UI-Slim: Using AASDK from core submodule build\")
-  # AASDK is built as subdirectory by core CMakeLists (provides protobuf internally)
+  message(FATAL_ERROR "AASDK not found. Use --with-aasdk option in build.sh to build and install AASDK")
 endif()
 
 # Add main executable with core service sources
@@ -150,7 +149,6 @@ target_include_directories(crankshaft-slim-ui PRIVATE
     ${CMAKE_SOURCE_DIR}/core
     ${CMAKE_SOURCE_DIR}/core/services
     ${CMAKE_SOURCE_DIR}/core/hal
-    ${CMAKE_SOURCE_DIR}/external/aasdk/include
     ${GSTREAMER_INCLUDE_DIRS}
     ${GSTREAMER_APP_INCLUDE_DIRS}
     ${GSTREAMER_VIDEO_INCLUDE_DIRS}

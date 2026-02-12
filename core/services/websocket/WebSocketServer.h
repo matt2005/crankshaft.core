@@ -183,7 +183,8 @@ class ServiceManager;
  * - EventBus::publish() called from various threads is safe
  * - broadcastEvent() converts to WS messages in event thread
  *
- * @note Thread-safe for event emission; connections must be made from same thread as server creation
+ * @note Thread-safe for event emission; connections must be made from same thread as server
+ * creation
  */
 class WebSocketServer : public QObject {
   Q_OBJECT

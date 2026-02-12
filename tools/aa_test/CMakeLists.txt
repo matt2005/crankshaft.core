@@ -30,9 +30,9 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBUSB REQUIRED libusb-1.0)
 pkg_check_modules(PROTOBUF REQUIRED protobuf)
 
-# Find or build aasdk
-set(AASDK_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/external/aasdk/include" CACHE PATH "AASDK include directory")
-set(AASDK_LIB_DIR "${CMAKE_SOURCE_DIR}/build/core/aasdk/lib" CACHE PATH "AASDK library directory")
+# Find AASDK
+find_package(aasdk REQUIRED)
+find_package(Protobuf REQUIRED)
 
 # Executable
 add_executable(aa_test
@@ -40,14 +40,13 @@ add_executable(aa_test
 )
 
 target_include_directories(aa_test PRIVATE
-    ${AASDK_INCLUDE_DIR}
     ${Boost_INCLUDE_DIRS}
     ${LIBUSB_INCLUDE_DIRS}
     ${PROTOBUF_INCLUDE_DIRS}
 )
 
 target_link_libraries(aa_test PRIVATE
-    ${AASDK_LIB_DIR}/libaasdk.so
+    aasdk::aasdk
     ${Boost_LIBRARIES}
     Threads::Threads
     ${LIBUSB_LIBRARIES}
