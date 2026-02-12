@@ -279,52 +279,16 @@ fi
 TARGET_ARCH=$(dpkg-architecture -qDEB_HOST_ARCH 2>/dev/null || echo "amd64")
 echo "Target architecture: ${TARGET_ARCH}"
 
-find_cross_compiler() {
-    local prefix="$1"
-    local compiler=""
-    
-    # First try the base name (might be a symlink to latest)
-    if command -v "${prefix}gcc" &> /dev/null && [ -x "$(command -v "${prefix}gcc")" ]; then
-        compiler="$(command -v "${prefix}gcc")"
-    else
-        # Find all versioned compilers and pick the latest that actually exists and is executable
-        local candidates=()
-        for candidate in $(ls /usr/bin/${prefix}gcc-* 2>/dev/null | sort -V); do
-            if [ -x "$candidate" ]; then
-                candidates+=("$candidate")
-            fi
-        done
-        if [ ${#candidates[@]} -gt 0 ]; then
-            compiler="${candidates[-1]}"
-        fi
-    fi
-    
-    if [ -n "$compiler" ] && [ -x "$compiler" ]; then
-        echo "$compiler"
-        return 0
-    else
-        return 1
-    fi
-}
-
 setup_cross_compilation() {
     if [ "$TARGET_ARCH" != "amd64" ]; then
         echo "Setting up cross-compilation for ${TARGET_ARCH}..."
         
         case $TARGET_ARCH in
             arm64)
-                local c_compiler=$(find_cross_compiler "aarch64-linux-gnu-")
-                if [ $? -eq 0 ]; then
-                    CMAKE_ARGS+=(-DCMAKE_C_COMPILER="$c_compiler")
-                    CMAKE_ARGS+=(-DCMAKE_CXX_COMPILER="${c_compiler/gcc/g++}")
-                fi
+                echo "Building for ARM64 - using native compilers"
                 ;;
             armhf)
-                local c_compiler=$(find_cross_compiler "arm-linux-gnueabihf-")
-                if [ $? -eq 0 ]; then
-                    CMAKE_ARGS+=(-DCMAKE_C_COMPILER="$c_compiler")
-                    CMAKE_ARGS+=(-DCMAKE_CXX_COMPILER="${c_compiler/gcc/g++}")
-                fi
+                echo "Building for ARMHF - using native compilers"
                 ;;
         esac
     fi
@@ -385,7 +349,7 @@ CMAKE_ARGS+=("${EXTRA_CMAKE_ARGS[@]}")
 setup_cross_compilation
 
 # Run CMake configuration
-cmake "${CMAKE_ARGS[@]}" > "${SOURCE_DIR}/logs/cmake.log" 2>&1
+cmake "${CMAKE_ARGS[@]}" -DTARGET_ARCH=${TARGET_ARCH} > "${SOURCE_DIR}/logs/cmake.log" 2>&1
 
 # Build
 echo ""

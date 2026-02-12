@@ -29,6 +29,63 @@ string(REGEX REPLACE "^([0-9]+\\.[0-9]+\\.[0-9]+).*" "\\1" NUMERIC_VERSION "${CM
 
 project(crankshaft-mvp VERSION ${NUMERIC_VERSION} LANGUAGES CXX)
 
+# Cross Compiling Architecture Detection
+if(TARGET_ARCH STREQUAL "armhf")
+    message(STATUS "Cross compiling for armhf")
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "armhf")
+    # Only set cross-compilation compilers if explicitly using cross-compilation
+    # For native builds (e.g., Docker with QEMU), let CMake use default compilers
+    if(DEFINED ENV{CMAKE_C_COMPILER} AND DEFINED ENV{CMAKE_CXX_COMPILER})
+        # Environment variables are set (from build.sh), use them
+        set(CMAKE_C_COMPILER $ENV{CMAKE_C_COMPILER})
+        set(CMAKE_CXX_COMPILER $ENV{CMAKE_CXX_COMPILER})
+    elseif(CMAKE_CROSSCOMPILING OR DEFINED CMAKE_TOOLCHAIN_FILE)
+        # Only set cross-compilation when actually cross-compiling
+        set(CMAKE_C_COMPILER /usr/bin/arm-linux-gnueabihf-gcc)
+        set(CMAKE_CXX_COMPILER /usr/bin/arm-linux-gnueabihf-g++)
+    endif()
+elseif(TARGET_ARCH STREQUAL "arm64")
+    message(STATUS "Cross compiling for arm64")
+    set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "arm64")
+    # Only set cross-compilation compilers if explicitly using cross-compilation
+    if(DEFINED ENV{CMAKE_C_COMPILER} AND DEFINED ENV{CMAKE_CXX_COMPILER})
+        # Environment variables are set (from build.sh), use them
+        set(CMAKE_C_COMPILER $ENV{CMAKE_C_COMPILER})
+        set(CMAKE_CXX_COMPILER $ENV{CMAKE_CXX_COMPILER})
+    elseif(CMAKE_CROSSCOMPILING OR DEFINED CMAKE_TOOLCHAIN_FILE)
+        # Only set cross-compilation when actually cross-compiling
+        set(CMAKE_C_COMPILER /usr/bin/aarch64-linux-gnu-gcc)
+        set(CMAKE_CXX_COMPILER /usr/bin/aarch64-linux-gnu-g++)
+    endif()
+else()
+    message(STATUS "Not cross compiling")
+    # Auto-detect architecture for native builds
+    execute_process(
+        COMMAND dpkg --print-architecture
+        OUTPUT_VARIABLE DETECTED_ARCH
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    if(DETECTED_ARCH)
+        set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${DETECTED_ARCH}")
+        message(STATUS "Detected architecture: ${DETECTED_ARCH}")
+    else()
+        # Fallback to system processor
+        if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64")
+            set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "amd64")
+        elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+            set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "arm64")
+        elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "armv7l")
+            set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "armhf")
+        elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "i386|i686")
+            set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "i386")
+        else()
+            set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "unknown")
+        endif()
+        message(STATUS "Fallback architecture detection: ${CPACK_DEBIAN_PACKAGE_ARCHITECTURE}")
+    endif()
+endif()
+
 # AASDK Dependency Management:
 # AASDK is built externally by build.sh and installed as system package.
 # Core and ui-slim components find AASDK via find_package(aasdk).
