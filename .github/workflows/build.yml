@@ -220,7 +220,7 @@ jobs:
           
           # Verify build artifacts were created
           echo "Contents of build-output:"
-          ls -lah build-output/ 2>/dev/null || echo "build-output directory not found"
+          ls -lahR build-output/ 2>/dev/null || echo "build-output directory not found"
           find build-output -type f 2>/dev/null || echo "No files in build-output"
           
           if ! find build-output -name "*.deb" -type f 2>/dev/null | grep -q .; then
@@ -282,7 +282,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: build-logs-${{ matrix.arch }}
-          path: build-output/logs/*.log
+          path: build-output/**/*.log
           retention-days: 30
 
   sbom:
