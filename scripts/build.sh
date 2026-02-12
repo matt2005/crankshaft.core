@@ -19,7 +19,7 @@
 set -e
 
 # Script to build Crankshaft consistently across Docker and local environments
-# Usage: ./build.sh [release|debug] [--component COMPONENT] [--clean] [--package] [--output-dir DIR] [--with-aasdk] [--aasdk-branch BRANCH] [--cxx-standard STD] [--enable-slim-ui] [--skip-tests]
+# Usage: ./build.sh [release|debug] [--component COMPONENT] [--clean] [--package] [--output-dir DIR] [--with-aasdk] [--aasdk-branch BRANCH] [--enable-slim-ui] [--skip-tests]
 
 # Default values
 CLEAN_BUILD=false
@@ -27,8 +27,6 @@ PACKAGE=false
 OUTPUT_DIR="/output"
 WITH_AASDK=false
 AASDK_BRANCH="main"
-AASDK_STANDARD="20"
-CXX_STANDARD="20"
 ENABLE_SLIM_UI=false
 SKIP_TESTS=false
 COMPONENT="all"
@@ -78,14 +76,6 @@ while [[ $# -gt 0 ]]; do
             AASDK_BRANCH="$2"
             shift 2
             ;;
-        --aasdk-standard)
-            AASDK_STANDARD="$2"
-            shift 2
-            ;;
-        --cxx-standard)
-            CXX_STANDARD="$2"
-            shift 2
-            ;;
         --enable-slim-ui)
             ENABLE_SLIM_UI=true
             shift
@@ -108,8 +98,6 @@ while [[ $# -gt 0 ]]; do
             echo "  --output-dir   Directory to copy packages (default: /output)"
             echo "  --with-aasdk   Clone AASDK branch and build/install it"
             echo "  --aasdk-branch Branch to use for AASDK (default: main)"
-            echo "  --aasdk-standard C++ standard for AASDK (default: 20)"
-            echo "  --cxx-standard C++ standard for Crankshaft (default: 20)"
             echo "  --enable-slim-ui Enable slim AndroidAuto UI build"
             echo "  --skip-tests   Skip running tests"
             echo "  --help         Show this help message"
@@ -221,8 +209,6 @@ CMAKE_ARGS=(
     -DCMAKE_BUILD_TYPE="${CMAKE_BUILD_TYPE}"
     -DENABLE_SLIM_UI="${ENABLE_SLIM_UI}"
     -DCRANKSHAFT_AASDK_BRANCH="${AASDK_BRANCH}"
-    -DCRANKSHAFT_AASDK_STANDARD="${AASDK_STANDARD}"
-    -DCRANKSHAFT_CXX_STANDARD="${CXX_STANDARD}"
     -DTARGET_ARCH="${TARGET_ARCH}"
 )
 
