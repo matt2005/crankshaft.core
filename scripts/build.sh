@@ -137,7 +137,6 @@ if [ "$WITH_AASDK" = true ]; then
     cd "${SOURCE_DIR}/aasdk-build"
     echo "Building and installing AASDK..."
     chmod +x build.sh
-    export TARGET_ARCH
     ./build.sh $BUILD_TYPE install --skip-protobuf --skip-absl
     cd "${SOURCE_DIR}"
     echo "AASDK build and install completed."
