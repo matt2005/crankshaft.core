@@ -26,6 +26,7 @@ FROM debian:${DEBIAN_VERSION}-slim AS builder
 ARG TARGET_ARCH=$(dpkg --print-architecture)
 ARG BUILD_TYPE=release
 ARG DEBIAN_FRONTEND=noninteractive
+ARG CROSS_COMPILE=false
 
 # Set locale to avoid encoding issues
 ENV LANG=C.UTF-8
