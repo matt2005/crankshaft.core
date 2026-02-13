@@ -30,7 +30,7 @@ string(REGEX REPLACE "^([0-9]+\\.[0-9]+\\.[0-9]+).*" "\\1" NUMERIC_VERSION "${CM
 project(crankshaft-mvp VERSION ${NUMERIC_VERSION} LANGUAGES CXX)
 
 # Cross Compiling Architecture Detection
-if(TARGET_ARCH STREQUAL "armhf")
+if(TARGET_ARCH MATCHES "armhf")
     message(STATUS "Cross compiling for armhf")
     set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "armhf")
     # Only set cross-compilation compilers if explicitly using cross-compilation
@@ -44,7 +44,7 @@ if(TARGET_ARCH STREQUAL "armhf")
         set(CMAKE_C_COMPILER /usr/bin/arm-linux-gnueabihf-gcc)
         set(CMAKE_CXX_COMPILER /usr/bin/arm-linux-gnueabihf-g++)
     endif()
-elseif(TARGET_ARCH STREQUAL "arm64")
+elseif(TARGET_ARCH MATCHES "arm64|aarch64")
     message(STATUS "Cross compiling for arm64")
     set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "arm64")
     # Only set cross-compilation compilers if explicitly using cross-compilation
