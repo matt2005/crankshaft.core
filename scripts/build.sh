@@ -123,7 +123,7 @@ if [[ "$COMPONENT" != "all" && "$COMPONENT" != "core" && "$COMPONENT" != "ui" &&
     exit 1
 fi
 
-# Detect architecture early for AASDK
+# Detect architecture
 TARGET_ARCH=$(dpkg-architecture -qDEB_HOST_ARCH 2>/dev/null || echo "amd64")
 
 # Handle AASDK cloning and building if requested
@@ -137,7 +137,6 @@ if [ "$WITH_AASDK" = true ]; then
     cd "${SOURCE_DIR}/aasdk-build"
     echo "Building and installing AASDK..."
     chmod +x build.sh
-    export TARGET_ARCH="$TARGET_ARCH"
     ./build.sh $BUILD_TYPE install --skip-protobuf --skip-absl
     cd "${SOURCE_DIR}"
     echo "AASDK build and install completed."
